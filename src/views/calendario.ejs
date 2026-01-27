@@ -1,0 +1,99 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<div class="container mt-5">
+  <div class="text-center mb-5">
+    <h1 class="text-white display-4 fw-bold">📅 Calendario de Partidas</h1>
+    <p class="text-secondary">Sigue todos los enfrentamientos del torneo</p>
+    <% if(isAuthenticated) { %>
+      <a href="/admin/partidas" class="btn btn-outline-warning mt-2">
+        <i class="fas fa-cogs"></i> Panel de Admin
+      </a>
+    <% } %>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-md-10">
+      <% if (partidas.length > 0) { %>
+        <% partidas.forEach(match => { %>
+          <div class="card mb-4 border-0 shadow-lg" style="background: #1a1a1a;">
+            <div class="card-header bg-dark text-secondary d-flex justify-content-between">
+              <span><i class="fas fa-trophy text-warning"></i> <%= match.fase_torneo %></span>
+              <span><%= new Date(match.fecha_partida).toLocaleString() %></span>
+            </div>
+            <div class="card-body">
+              <div class="row align-items-center text-center text-white">
+                
+                <div class="col-4">
+                  <img src="<%= match.azul_logo || 'https://via.placeholder.com/80' %>" 
+                       class="rounded-circle mb-2 <%= match.ganador_id === match.azul_id ? 'border border-4 border-success' : '' %>" 
+                       style="width: 80px; height: 80px; object-fit: cover;">
+                  <h4 class="<%= match.ganador_id === match.azul_id ? 'text-success fw-bold' : '' %>">
+                    <%= match.azul_nombre %>
+                  </h4>
+                </div>
+
+                <div class="col-4">
+                  <% if (match.ganador_id) { %>
+                    <h2 class="display-5 fw-bold text-success">FINALIZADO</h2>
+                    <span class="badge bg-success">Ganador Definido</span>
+                  <% } else { %>
+                    <h1 class="display-3 fw-bold text-danger">VS</h1>
+                    <span class="badge bg-warning text-dark">Pendiente</span>
+                  <% } %>
+                </div>
+
+                <div class="col-4">
+                  <img src="<%= match.rojo_logo || 'https://via.placeholder.com/80' %>" 
+                       class="rounded-circle mb-2 <%= match.ganador_id === match.rojo_id ? 'border border-4 border-success' : '' %>" 
+                       style="width: 80px; height: 80px; object-fit: cover;">
+                  <h4 class="<%= match.ganador_id === match.rojo_id ? 'text-success fw-bold' : '' %>">
+                    <%= match.rojo_nombre %>
+                  </h4>
+                </div>
+
+              </div>
+            </div>
+            </div> <% if (isAuthenticated) { %>
+              <div class="card-footer bg-secondary">
+                <div class="d-flex justify-content-center gap-2">
+                  
+                  <a href="/admin/partidas/<%= match.id %>/stats" class="btn btn-sm btn-warning">
+                    <i class="fas fa-chart-bar"></i> Cargar Stats
+                  </a>
+
+                  <form action="/admin/partidas/ganador" method="POST" class="d-inline">
+                    <input type="hidden" name="partidaId" value="<%= match.id %>">
+                    <% if (!match.ganador_id) { %>
+                      <button type="submit" name="ganadorId" value="<%= match.azul_id %>" class="btn btn-sm btn-outline-primary">
+                        Gana Azul
+                      </button>
+                      <button type="submit" name="ganadorId" value="<%= match.rojo_id %>" class="btn btn-sm btn-outline-danger">
+                        Gana Rojo
+                      </button>
+                    <% } else { %>
+                      <button type="button" class="btn btn-sm btn-success disabled">Partido Cerrado</button>
+                    <% } %>
+                  </form>
+
+                  <a href="/admin/partidas/delete/<%= match.id %>" class="btn btn-sm btn-dark" onclick="return confirm('¿Borrar partido?')">
+                    <i class="fas fa-trash"></i>
+                  </a>
+
+                </div>
+              </div>
+            <% } %>
+          </div>
+          </div>
+        <% }) %>
+      <% } else { %>
+        <div class="alert alert-secondary text-center">
+          <h4>Aún no hay partidas programadas.</h4>
+          <p>¡Vuelve pronto para ver los enfrentamientos!</p>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

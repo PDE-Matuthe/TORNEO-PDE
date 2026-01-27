@@ -1,0 +1,41 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<div class="container mt-5">
+  <div class="mb-4">
+    <h1 class="text-white">Equipos Inscritos</h1>
+    <p class="text-secondary">Conoce todos los equipos participantes del torneo</p>
+  </div>
+
+  <div class="row">
+    <% if (equipos.length > 0) { %>
+      <% equipos.forEach(equipo => { %>
+        <div class="col-md-4 mb-4">
+          <div class="card bg-secondary text-white h-100">
+            <div class="card-body text-center">
+              <img src="<%= equipo.logo_url || 'https://via.placeholder.com/150?text=No+Logo' %>" 
+                   alt="Logo <%= equipo.nombre %>" 
+                   class="rounded-circle mb-3" 
+                   style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #d4af37;">
+              
+              <h3 class="card-title"><%= equipo.nombre %></h3>
+              <span class="badge bg-dark mb-2"><%= equipo.region %></span>
+              
+              <div class="mt-4">
+                <a href="/equipos/<%= equipo.id %>/jugadores" class="btn btn-sm btn-warning w-100">
+                  <i class="fas fa-users"></i> Ver Roster
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    <% } else { %>
+      <div class="col-12 text-center text-white">
+        <h3>No hay equipos registrados aún.</h3>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

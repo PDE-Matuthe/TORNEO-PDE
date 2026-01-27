@@ -1,0 +1,99 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<div class="container mt-5">
+  <div class="row mb-5">
+    <div class="col-12">
+      <div class="jumbotron bg-dark text-white p-5 rounded">
+        <h1 class="display-4">⚙️ Panel de Administración</h1>
+        <p class="lead">Bienvenido al panel de control del torneo. Gestiona todos los aspectos de tu evento aquí.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Card Equipos -->
+    <div class="col-md-6 mb-4">
+      <div class="card bg-secondary text-white h-100 shadow">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <i class="fas fa-shield-alt fa-2x text-warning me-3"></i>
+            <h5 class="card-title mb-0">Gestión de Equipos</h5>
+          </div>
+          <p class="card-text text-light">
+            Crea, edita y elimina equipos. Gestiona los rosters y jugadores de cada equipo.
+          </p>
+          <a href="/admin/equipos" class="btn btn-warning text-dark fw-bold">
+            <i class="fas fa-users-cog"></i> Ir a Equipos
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card Partidas -->
+    <div class="col-md-6 mb-4">
+      <div class="card bg-secondary text-white h-100 shadow">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <i class="fas fa-gamepad fa-2x text-info me-3"></i>
+            <h5 class="card-title mb-0">Gestión de Partidas</h5>
+          </div>
+          <p class="card-text text-light">
+            Crea nuevas partidas, define ganadores, elimina partidas y carga estadísticas.
+          </p>
+          <a href="/admin/partidas" class="btn btn-info text-dark fw-bold">
+            <i class="fas fa-chess"></i> Ir a Partidas
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <!-- Card Públicas -->
+    <div class="col-md-6 mb-4">
+      <div class="card bg-dark text-white h-100 border-secondary shadow">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <i class="fas fa-eye fa-2x text-secondary me-3"></i>
+            <h5 class="card-title mb-0">Vistas Públicas</h5>
+          </div>
+          <p class="card-text text-light">
+            Visualiza cómo ven los visitantes el torneo.
+          </p>
+          <div class="d-flex gap-2">
+            <a href="/equipos" class="btn btn-outline-light btn-sm" target="_blank">
+              <i class="fas fa-external-link-alt"></i> Equipos
+            </a>
+            <a href="/calendario" class="btn btn-outline-light btn-sm" target="_blank">
+              <i class="fas fa-external-link-alt"></i> Calendario
+            </a>
+            <a href="/mvp" class="btn btn-outline-light btn-sm" target="_blank">
+              <i class="fas fa-external-link-alt"></i> MVP
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card Información -->
+    <div class="col-md-6 mb-4">
+      <div class="card bg-dark text-white h-100 border-secondary shadow">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <i class="fas fa-info-circle fa-2x text-warning me-3"></i>
+            <h5 class="card-title mb-0">Información</h5>
+          </div>
+          <p class="card-text text-light mb-3">
+            Estás en el panel de administración. Solo los administradores pueden ver este contenido.
+          </p>
+          <button class="btn btn-warning text-dark fw-bold w-100" onclick="alert('Sistema listo para usar!')">
+            <i class="fas fa-check-circle"></i> Estado: ✅ Online
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

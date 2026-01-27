@@ -1,0 +1,94 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<div class="container mt-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-white">📋 Planilla de Estadísticas</h2>
+    <a href="/calendario" class="btn btn-outline-light">Cancelar</a>
+  </div>
+
+  <form action="/admin/partidas/<%= partidaId %>/stats" method="POST">
+    
+    <div class="card mb-4 border-primary">
+      <div class="card-header bg-primary text-white fw-bold">
+        LADO AZUL
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width: 20%">Jugador</th>
+                <th>Kills</th>
+                <th>Deaths</th>
+                <th>Assists</th>
+                <th>CS/min</th>
+                <th>Dmg/min</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% equipoAzul.forEach(jug => { %>
+                <tr>
+                  <td>
+                    <input type="hidden" name="jugador_id" value="<%= jug.id %>">
+                    <span class="fw-bold"><%= jug.nombre_invocador %></span>
+                    <br><small class="text-muted"><%= jug.rol_juego %></small>
+                  </td>
+                  <td><input type="number" name="kills" class="form-control" value="0" min="0"></td>
+                  <td><input type="number" name="deaths" class="form-control" value="0" min="0"></td>
+                  <td><input type="number" name="assists" class="form-control" value="0" min="0"></td>
+                  <td><input type="number" step="0.1" name="cs_min" class="form-control" value="0.0" min="0"></td>
+                  <td><input type="number" step="0.1" name="dmg_min" class="form-control" value="0.0" min="0"></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-4 border-danger">
+      <div class="card-header bg-danger text-white fw-bold">
+        LADO ROJO
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width: 20%">Jugador</th>
+                <th>Kills</th>
+                <th>Deaths</th>
+                <th>Assists</th>
+                <th>CS/min</th>
+                <th>Dmg/min</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% equipoRojo.forEach(jug => { %>
+                <tr>
+                  <td>
+                    <input type="hidden" name="jugador_id" value="<%= jug.id %>">
+                    <span class="fw-bold"><%= jug.nombre_invocador %></span>
+                    <br><small class="text-muted"><%= jug.rol_juego %></small>
+                  </td>
+                  <td><input type="number" name="kills" class="form-control" value="0" min="0"></td>
+                  <td><input type="number" name="deaths" class="form-control" value="0" min="0"></td>
+                  <td><input type="number" name="assists" class="form-control" value="0" min="0"></td>
+                  <td><input type="number" step="0.1" name="cs_min" class="form-control" value="0.0" min="0"></td>
+                  <td><input type="number" step="0.1" name="dmg_min" class="form-control" value="0.0" min="0"></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-success w-100 py-3 fw-bold fs-5">
+      <i class="fas fa-save"></i> Guardar Estadísticas
+    </button>
+  </form>
+</div>
+
+<%- include('partials/footer') %>

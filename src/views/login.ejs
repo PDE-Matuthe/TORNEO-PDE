@@ -1,0 +1,47 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<main class="d-flex flex-grow-1 align-items-center justify-content-center">
+  <div class="row justify-content-center w-100">
+    <div class="col-md-6 col-lg-4">
+      <div class="card bg-secondary text-white shadow">
+        <div class="card-body">
+          <h1 class="text-center mb-4">🔐 Admin Login</h1>
+
+          <% if (error) { %>
+            <div class="alert alert-danger" role="alert">
+              <%= error %>
+            </div>
+          <% } %>
+
+          <form method="POST" action="/login">
+            <div class="mb-3">
+              <label for="email" class="form-label">Correo Electrónico</label>
+              <input type="email" class="form-control" id="email" name="email" required autofocus>
+            </div>
+            <div class="mb-3">
+              <label for="password" class="form-label">Contraseña</label>
+              <div class="input-group">
+                <input type="password" class="form-control" id="password" name="password" required>
+                <button type="button" class="btn btn-outline-light" id="togglePassword">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-warning w-100 fw-bold text-dark">Iniciar Sesión</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('partials/footer') %>
+
+<script>
+  document.getElementById('togglePassword').addEventListener('click', () => {
+    const passwordField = document.getElementById('password');
+    const type = passwordField.type === 'password' ? 'text' : 'password';
+    passwordField.type = type;
+  });
+</script>

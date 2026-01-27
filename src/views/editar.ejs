@@ -1,0 +1,44 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card bg-secondary text-white">
+        <div class="card-header bg-dark">
+          <h3>Editar Equipo</h3>
+        </div>
+        <div class="card-body">
+          <form action="/admin/equipos/editar/<%= equipo.id %>" method="POST">
+            
+            <div class="mb-3">
+              <label for="nombre" class="form-label">Nombre del Equipo</label>
+              <input type="text" name="nombre" class="form-control" placeholder="Ej: T1, G2 Esports" required autofocus value="<%= equipo.nombre %>">
+            </div>
+
+            <div class="mb-3">
+              <label for="region" class="form-label">Región</label>
+              <select name="region" class="form-select" required>
+                <option value="LAS" <%= equipo.region === 'LAS' ? 'selected' : '' %>>LAS (Latinoamérica Sur)</option>
+                <option value="LAN" <%= equipo.region === 'LAN' ? 'selected' : '' %>>LAN (Latinoamérica Norte)</option>
+                <option value="NA" <%= equipo.region === 'NA' ? 'selected' : '' %>>NA (Norteamérica)</option>
+                <option value="EUW" <%= equipo.region === 'EUW' ? 'selected' : '' %>>EUW (Europa Oeste)</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="logoUrl" class="form-label">URL del Logo (Imagen)</label>
+              <input type="url" name="logoUrl" class="form-control" placeholder="https://ejemplo.com/milogo.png" value="<%= equipo.logo_url %>">
+              <div class="form-text text-light">Copia el link de una imagen en internet (Discord, Imgur, Google).</div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Guardar Cambios</button>
+            <a href="/admin/equipos" class="btn btn-secondary w-100 mt-2">Cancelar</a>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,61 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<div class="container mt-5">
+  <div class="text-center mb-5">
+    <h1 class="text-warning display-4 fw-bold">🏆 Ranking MVP</h1>
+    <p class="text-secondary">Los mejores jugadores del torneo según su rendimiento</p>
+  </div>
+
+  <div class="card bg-dark border-warning shadow-lg">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-dark table-hover mb-0 text-center align-middle">
+          <thead class="text-warning text-uppercase" style="letter-spacing: 1px;">
+            <tr>
+              <th>#</th>
+              <th class="text-start">Jugador</th>
+              <th>Rol</th>
+              <th>KDA Ratio</th>
+              <th>K / D / A (Total)</th>
+              <th>CS/min</th>
+              <th>Dmg/min</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (topPlayers.length > 0) { %>
+              <% topPlayers.forEach((player, index) => { %>
+                <tr class="<%= index === 0 ? 'bg-gradient border-bottom border-warning' : '' %>">
+                  <td class="fw-bold fs-5"><%= index + 1 %></td>
+                  <td class="text-start">
+                    <div class="d-flex align-items-center">
+                      <img src="<%= player.equipo_logo || 'https://via.placeholder.com/40' %>" 
+                           class="rounded-circle me-2" style="width: 40px; height: 40px;">
+                      <div>
+                        <span class="fw-bold d-block"><%= player.nombre_invocador %></span>
+                        <small class="text-muted"><%= player.equipo %></small>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="badge bg-secondary"><%= player.rol_juego %></span></td>
+                  <td class="fw-bold text-warning fs-5"><%= player.kda_ratio %></td>
+                  <td><%= player.total_kills %> / <span class="text-danger"><%= player.total_deaths %></span> / <%= player.total_assists %></td>
+                  <td><%= Number(player.avg_cs).toFixed(1) %></td>
+                  <td><%= Number(player.avg_dmg).toFixed(0) %></td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="7" class="py-5 text-muted">
+                  Aún no hay estadísticas registradas para generar el ranking.
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

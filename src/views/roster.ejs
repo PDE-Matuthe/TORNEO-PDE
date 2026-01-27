@@ -1,0 +1,123 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<div class="container mt-5">
+  
+  <div class="card bg-dark text-white mb-4 border-warning">
+    <div class="card-body d-flex align-items-center">
+      <img src="<%= equipo.logo_url || 'https://via.placeholder.com/150' %>" 
+           style="width: 80px; height: 80px; object-fit: cover;" 
+           class="rounded-circle me-3 border border-2 border-warning">
+      <div>
+        <h2 class="mb-0"><%= equipo.nombre %></h2>
+        <span class="badge bg-secondary"><%= equipo.region %></span>
+      </div>
+      <div class="ms-auto">
+        <a href="/admin/equipos" class="btn btn-outline-light">Volver a Equipos</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-4">
+      <div class="card bg-secondary text-white mb-4">
+        <div class="card-header">
+          <h5><i class="fas fa-user-plus"></i> Agregar Integrante</h5>
+        </div>
+        <div class="card-body">
+          <form action="/admin/equipos/<%= equipo.id %>/jugadores" method="POST">
+            
+            <div class="mb-3">
+              <label class="form-label">Riot ID (Nombre Invocador)</label>
+              <input type="text" name="nombre_invocador" class="form-control" placeholder="Faker#KR1" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Rol en el Equipo</label>
+              <select name="tipo_rol" class="form-select" required>
+                <option value="TITULAR">Jugador Titular</option>
+                <option value="SUPLENTE">Suplente</option>
+                <option value="COACH">Coach / Staff</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Posición (In-Game)</label>
+              <select name="rol_juego" class="form-select">
+                <option value="">-- Ninguno (Para Coach) --</option>
+                <option value="TOP">TOP</option>
+                <option value="JUNGLE">JUNGLE</option>
+                <option value="MID">MID</option>
+                <option value="ADC">ADC</option>
+                <option value="SUPPORT">SUPPORT</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Rango Actual</label>
+              <input type="text" name="rango" class="form-control" placeholder="Ej: Challenger 800LP">
+            </div>
+
+            <button type="submit" class="btn btn-warning w-100 text-dark fw-bold">Agregar al Roster</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-8">
+      <div class="card bg-light">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">Plantilla Actual (Roster)</h5>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-dark">
+              <tr>
+                <th>Rol</th>
+                <th>Posición</th>
+                <th>Invocador</th>
+                <th>Rango</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (jugadores.length > 0) { %>
+                <% jugadores.forEach(jug => { %>
+                  <tr>
+                    <td>
+                      <% if(jug.tipo_rol === 'TITULAR') { %>
+                        <span class="badge bg-success">TITULAR</span>
+                      <% } else if (jug.tipo_rol === 'COACH') { %>
+                        <span class="badge bg-danger">COACH</span>
+                      <% } else { %>
+                        <span class="badge bg-secondary">SUPLENTE</span>
+                      <% } %>
+                    </td>
+                    <td class="fw-bold"><%= jug.rol_juego || '-' %></td>
+                    <td><%= jug.nombre_invocador %></td>
+                    <td><%= jug.rango %></td>
+                    <td>
+                      <a href="/admin/equipos/<%= equipo.id %>/jugadores/delete/<%= jug.id %>" 
+                         class="btn btn-sm btn-outline-danger"
+                         onclick="return confirm('¿Eliminar a este jugador?')">
+                        <i class="fas fa-trash"></i>
+                      </a>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="5" class="text-center py-4">
+                    <p class="text-muted mb-0">Aún no hay jugadores registrados en este equipo.</p>
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

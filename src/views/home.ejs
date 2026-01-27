@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home - Tareas App</title>
+  <%- include ('partials/head.ejs') %>
+</head>
+
+<body>
+  <%- include ('partials/nav.ejs') %>
+    <main>
+
+      <div class="hero-section text-center">
+        <div class="container">
+          <h1 class="display-4">Bienvenido a Tareas App</h1>
+          <p class="lead">Organiza y gestiona tus tareas de forma sencilla.</p>
+          <a href="/crear" class="btn btn-custom btn-lg">Crear Nueva Tarea</a>
+        </div>
+      </div>
+
+      <div class="container my-5">
+        <div class="row d-flex justify-content-center">
+          <div class="col-md-4 mb-4">
+            <div class="card card-custom">
+              <div class="card-body">
+                <h5 class="card-title">Organiza tus tareas</h5>
+                <p class="card-text">Crea y organiza todas tus tareas diarias de manera fácil y rápida.</p>
+                <a href="/crear" class="btn btn-custom">Comienza ahora</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4 mb-4">
+            <div class="card card-custom">
+              <div class="card-body">
+                <h5 class="card-title">Revisa tus tareas pendientes</h5>
+                <p class="card-text">Consulta todas tus tareas pendientes y mantenlas al día.</p>
+                <a href="/tareas" class="btn btn-custom">Ver mis tareas</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <%- include ('partials/footer.ejs') %>
+</body>
+
+</html>

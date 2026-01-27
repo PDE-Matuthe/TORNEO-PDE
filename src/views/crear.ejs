@@ -1,0 +1,43 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card bg-secondary text-white">
+        <div class="card-header bg-dark">
+          <h3>Registrar Nuevo Equipo</h3>
+        </div>
+        <div class="card-body">
+          <form action="/admin/equipos/crear" method="POST">
+            
+            <div class="mb-3">
+              <label for="nombre" class="form-label">Nombre del Equipo</label>
+              <input type="text" name="nombre" class="form-control" placeholder="Ej: T1, G2 Esports" required autofocus>
+            </div>
+
+            <div class="mb-3">
+              <label for="region" class="form-label">Región</label>
+              <select name="region" class="form-select" required>
+                <option value="LAS">LAS (Latinoamérica Sur)</option>
+                <option value="LAN">LAN (Latinoamérica Norte)</option>
+                <option value="NA">NA (Norteamérica)</option>
+                <option value="EUW">EUW (Europa Oeste)</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="logoUrl" class="form-label">URL del Logo (Imagen)</label>
+              <input type="url" name="logoUrl" class="form-control" placeholder="https://ejemplo.com/milogo.png">
+              <div class="form-text text-light">Copia el link de una imagen en internet (Discord, Imgur, Google).</div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Guardar Equipo</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
