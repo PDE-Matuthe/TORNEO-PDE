@@ -18,19 +18,25 @@ router.use((req, res, next) => {
   next()
 })
 
+// Define tu ruta secreta (solo compártela con el staff)
+const RUTA_SECRETA = '/acceso-staff-pde-2026'; 
+
 // --- Middleware de Seguridad ---
 const isAuthenticated = (req, res, next) => {
   if (req.session && req.session.usuarioId && req.session.isAdmin) {
     next()
   } else {
-    req.session.redirectTo = req.originalUrl
-    res.redirect('/login')
+    // Si intentan entrar a admin sin permiso, NO los mandes al login (eso revela que existe).
+    // Mándalos al inicio (Home) o a una página 404 falso.
+    res.redirect('/'); 
   }
 }
 
 // --- Rutas de Autenticación ---
-router.get('/login', renderLoginPage)
-router.post('/login', handleLogin)
+// Cambia '/login' por tu ruta secreta
+router.get(RUTA_SECRETA, renderLoginPage)
+router.post(RUTA_SECRETA, handleLogin) // Asegúrate que tu form en login.ejs apunte aquí o tenga action=""
+router.get('/logout', handleLogout)
 router.get('/logout', handleLogout)
 
 // --- Rutas PÚBLICAS (Visitantes sin autenticación) ---
