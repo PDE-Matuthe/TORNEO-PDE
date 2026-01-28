@@ -1,99 +1,343 @@
 <%- include('partials/head') %>
 <%- include('partials/nav') %>
 
-<div class="container mt-5">
-  <div class="text-center mb-5">
-    <h1 class="text-white display-4 fw-bold">📅 Calendario de Partidas</h1>
-    <p class="text-secondary">Sigue todos los enfrentamientos del torneo</p>
-    <% if(isAuthenticated) { %>
-      <a href="/admin/partidas" class="btn btn-outline-warning mt-2">
-        <i class="fas fa-cogs"></i> Panel de Admin
-      </a>
+<div class="hero-section">
+  <div class="container">
+    <h1>📅 Calendario</h1>
+    <p class="lead">Sigue el calendario de partidas del torneo</p>
+  </div>
+</div>
+
+<div class="container mt-5 mb-5">
+  <% 
+    // Agrupar partidas por fecha (considerando zona horaria)
+    const today = new Date();
+    const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    const groupedByDate = {};
+    partidas.forEach(match => {
+      const matchDate = new Date(match.fecha_partida);
+      // Crear una fecha local sin considerar la zona horaria
+      const matchLocal = new Date(matchDate.getFullYear(), matchDate.getMonth(), matchDate.getDate());
+      const dateKey = matchLocal.toISOString().split('T')[0];
+      
+      if (!groupedByDate[dateKey]) {
+        groupedByDate[dateKey] = [];
+      }
+      groupedByDate[dateKey].push(match);
+    });
+
+    // Ordenar fechas
+    const sortedDates = Object.keys(groupedByDate).sort();
+    
+    // Obtener partidas de hoy
+    const todayKey = todayLocal.toISOString().split('T')[0];
+    const todayMatches = groupedByDate[todayKey] || [];
+  %>
+
+  <!-- Partidos Anteriores -->
+  <% 
+    const pastDates = sortedDates.filter(dateKey => dateKey < todayKey);
+    if (pastDates.length > 0) { 
+  %>
+    <div class="mb-5">
+      <h2 style="color: var(--color-amarillo); margin-bottom: 2rem;">📋 Partidos Anteriores</h2>
+      <% pastDates.forEach(dateKey => { %>
+        <% 
+          const matchesForDate = groupedByDate[dateKey];
+          const dateObj = new Date(dateKey + 'T00:00:00');
+          const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'long' });
+          const dateFormatted = dateObj.toLocaleDateString('es-ES');
+        %>
+        <div class="mb-4">
+          <h4 style="color: var(--color-amarillo); margin-bottom: 1.5rem; font-weight: 600; border-bottom: 2px solid var(--color-rojo-oscuro); padding-bottom: 0.5rem;">
+            <%= dayName.charAt(0).toUpperCase() + dayName.slice(1) %> - <%= dateFormatted %>
+          </h4>
+          <div class="card card-custom">
+            <% matchesForDate.forEach((match, index) => { %>
+              <div class="p-4" style="border-bottom: 1px solid rgba(117, 20, 21, 0.3); <%= index === matchesForDate.length - 1 ? 'border-bottom: none;' : '' %>">
+                <div class="row align-items-center">
+                  <!-- Hora -->
+                  <div class="col-md-1 text-center">
+                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-amarillo);">
+                      <%= new Date(match.fecha_partida).getHours().toString().padStart(2, '0') %>:<%= new Date(match.fecha_partida).getMinutes().toString().padStart(2, '0') %>
+                    </div>
+                  </div>
+
+                  <!-- Equipo Azul -->
+                  <div class="col-md-2 text-center">
+                    <img src="<%= match.azul_logo || 'https://via.placeholder.com/50' %>" 
+                         class="rounded-circle mb-2" 
+                         style="width: 50px; height: 50px; object-fit: cover; border: 2px solid <%= match.ganador_id === match.azul_id ? 'var(--color-amarillo)' : 'var(--color-rojo-oscuro)' %>;">
+                    <div style="color: var(--color-gris-claro); font-weight: 600; font-size: 0.9rem;">
+                      <%= match.azul_nombre %>
+                    </div>
+                  </div>
+
+                  <!-- VS / Estado -->
+                  <div class="col-md-2 text-center">
+                    <% if (match.ganador_id) { %>
+                      <span class="badge" style="background-color: #4caf50; color: white; padding: 0.5rem 0.75rem; font-size: 0.85rem;">✓ Finalizado</span>
+                    <% } else { %>
+                      <span style="color: var(--color-amarillo); font-weight: bold; font-size: 1rem;">VS</span>
+                    <% } %>
+                  </div>
+
+                  <!-- Equipo Rojo -->
+                  <div class="col-md-2 text-center">
+                    <img src="<%= match.rojo_logo || 'https://via.placeholder.com/50' %>" 
+                         class="rounded-circle mb-2" 
+                         style="width: 50px; height: 50px; object-fit: cover; border: 2px solid <%= match.ganador_id === match.rojo_id ? 'var(--color-amarillo)' : 'var(--color-rojo-oscuro)' %>;">
+                    <div style="color: var(--color-gris-claro); font-weight: 600; font-size: 0.9rem;">
+                      <%= match.rojo_nombre %>
+                    </div>
+                  </div>
+
+                  <!-- Fase -->
+                  <div class="col-md-2 text-center">
+                    <span class="badge" style="background-color: var(--color-rojo-oscuro); color: var(--color-amarillo);">
+                      <%= match.fase_torneo %>
+                    </span>
+                  </div>
+
+                  <!-- Admin Actions -->
+                  <% if (isAuthenticated) { %>
+                    <div class="col-md-3 text-center">
+                      <div class="d-flex gap-2 justify-content-center flex-wrap">
+                        <a href="/admin/partidas/<%= match.id %>/stats" class="btn btn-sm btn-custom" title="Cargar Stats">
+                          📊 Stats
+                        </a>
+                        <a href="/admin/partidas/delete/<%= match.id %>" class="btn btn-sm" style="background-color: #c72c3a; color: var(--color-amarillo);" onclick="return confirm('¿Borrar partido?')" title="Eliminar">
+                          🗑️
+                        </a>
+                      </div>
+                    </div>
+                  <% } %>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <!-- Sección HOY -->
+  <div class="mb-5" id="seccionHoy">
+    <h2 style="color: var(--color-amarillo); margin-bottom: 2rem;">🔴 Partidas de Hoy</h2>
+    <% if (todayMatches.length > 0) { %>
+      <div class="card card-custom">
+        <% todayMatches.forEach((match, index) => { %>
+          <div class="p-4" style="border-bottom: 1px solid rgba(117, 20, 21, 0.3); <%= index === todayMatches.length - 1 ? 'border-bottom: none;' : '' %>">
+            <div class="row align-items-center">
+              <!-- Hora -->
+              <div class="col-md-1 text-center">
+                <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-amarillo);">
+                  <%= new Date(match.fecha_partida).getHours().toString().padStart(2, '0') %>:<%= new Date(match.fecha_partida).getMinutes().toString().padStart(2, '0') %>
+                </div>
+              </div>
+
+              <!-- Equipo Azul -->
+              <div class="col-md-2 text-center">
+                <img src="<%= match.azul_logo || 'https://via.placeholder.com/50' %>" 
+                     class="rounded-circle mb-2" 
+                     style="width: 50px; height: 50px; object-fit: cover; border: 3px solid <%= match.ganador_id === match.azul_id ? 'var(--color-amarillo)' : 'var(--color-rojo-oscuro)' %>;">
+                <div style="color: var(--color-gris-claro); font-weight: 600; font-size: 0.9rem;">
+                  <%= match.azul_nombre %>
+                </div>
+              </div>
+
+              <!-- VS / Estado -->
+              <div class="col-md-2 text-center">
+                <% if (match.ganador_id) { %>
+                  <span class="badge" style="background-color: #4caf50; color: white; padding: 0.5rem 0.75rem;">✓ Finalizado</span>
+                <% } else { %>
+                  <span style="color: var(--color-amarillo); font-weight: bold; font-size: 1rem;">VS</span>
+                <% } %>
+              </div>
+
+              <!-- Equipo Rojo -->
+              <div class="col-md-2 text-center">
+                <img src="<%= match.rojo_logo || 'https://via.placeholder.com/50' %>" 
+                     class="rounded-circle mb-2" 
+                     style="width: 50px; height: 50px; object-fit: cover; border: 3px solid <%= match.ganador_id === match.rojo_id ? 'var(--color-amarillo)' : 'var(--color-rojo-oscuro)' %>;">
+                <div style="color: var(--color-gris-claro); font-weight: 600; font-size: 0.9rem;">
+                  <%= match.rojo_nombre %>
+                </div>
+              </div>
+
+              <!-- Fase -->
+              <div class="col-md-2 text-center">
+                <span class="badge" style="background-color: var(--color-rojo-oscuro); color: var(--color-amarillo);">
+                  <%= match.fase_torneo %>
+                </span>
+              </div>
+
+              <!-- Admin Actions -->
+              <% if (isAuthenticated) { %>
+                <div class="col-md-3 text-center">
+                  <div class="d-flex gap-2 justify-content-center flex-wrap">
+                    <a href="/admin/partidas/<%= match.id %>/stats" class="btn btn-sm btn-custom">
+                      📊 Stats
+                    </a>
+                    
+                    <% if (!match.ganador_id) { %>
+                      <form action="/admin/partidas/ganador" method="POST" class="d-inline">
+                        <input type="hidden" name="partidaId" value="<%= match.id %>">
+                        <button type="submit" name="ganadorId" value="<%= match.azul_id %>" class="btn btn-sm" style="background-color: #3498db; color: white;">
+                          🟦 <%= match.azul_nombre %>
+                        </button>
+                      </form>
+                      <form action="/admin/partidas/ganador" method="POST" class="d-inline">
+                        <input type="hidden" name="partidaId" value="<%= match.id %>">
+                        <button type="submit" name="ganadorId" value="<%= match.rojo_id %>" class="btn btn-sm" style="background-color: #e74c3c; color: white;">
+                          🟥 <%= match.rojo_nombre %>
+                        </button>
+                      </form>
+                    <% } else { %>
+                      <button type="button" class="btn btn-sm" style="background-color: #4caf50; color: white;" disabled>Cerrado</button>
+                    <% } %>
+                    
+                    <a href="/admin/partidas/delete/<%= match.id %>" class="btn btn-sm" style="background-color: #c72c3a; color: var(--color-amarillo);" onclick="return confirm('¿Borrar partido?')">
+                      🗑️
+                    </a>
+                  </div>
+                </div>
+              <% } %>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <div class="card card-custom">
+        <div class="card-body text-center p-5">
+          <p style="color: var(--color-gris-claro); font-size: 1.1rem;">No hay partidas programadas para hoy</p>
+          <small style="color: rgba(221, 221, 221, 0.7);">¡Vuelve a consultar pronto!</small>
+        </div>
+      </div>
     <% } %>
   </div>
 
-  <div class="row justify-content-center">
-    <div class="col-md-10">
-      <% if (partidas.length > 0) { %>
-        <% partidas.forEach(match => { %>
-          <div class="card mb-4 border-0 shadow-lg" style="background: #1a1a1a;">
-            <div class="card-header bg-dark text-secondary d-flex justify-content-between">
-              <span><i class="fas fa-trophy text-warning"></i> <%= match.fase_torneo %></span>
-              <span><%= new Date(match.fecha_partida).toLocaleString() %></span>
-            </div>
-            <div class="card-body">
-              <div class="row align-items-center text-center text-white">
-                
-                <div class="col-4">
-                  <img src="<%= match.azul_logo || 'https://via.placeholder.com/80' %>" 
-                       class="rounded-circle mb-2 <%= match.ganador_id === match.azul_id ? 'border border-4 border-success' : '' %>" 
-                       style="width: 80px; height: 80px; object-fit: cover;">
-                  <h4 class="<%= match.ganador_id === match.azul_id ? 'text-success fw-bold' : '' %>">
-                    <%= match.azul_nombre %>
-                  </h4>
-                </div>
+  <!-- Próximos días -->
+  <% 
+    const futureDates = sortedDates.filter(dateKey => dateKey !== todayKey && dateKey > todayKey);
+    if (futureDates.length > 0) { 
+  %>
+    <div class="mb-5">
+      <h2 style="color: var(--color-amarillo); margin-bottom: 2rem;">⏰ Próximas Partidas</h2>
+      <% futureDates.forEach(dateKey => { %>
+        <% 
+          const matchesForDate = groupedByDate[dateKey];
+          const dateObj = new Date(dateKey + 'T00:00:00');
+          const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'long' });
+          const dateFormatted = dateObj.toLocaleDateString('es-ES');
+        %>
+        <div class="mb-4">
+          <h4 style="color: var(--color-amarillo); margin-bottom: 1.5rem; font-weight: 600; border-bottom: 2px solid var(--color-rojo-oscuro); padding-bottom: 0.5rem;">
+            <%= dayName.charAt(0).toUpperCase() + dayName.slice(1) %> - <%= dateFormatted %>
+          </h4>
+          <div class="card card-custom">
+            <% matchesForDate.forEach((match, index) => { %>
+              <div class="p-4" style="border-bottom: 1px solid rgba(117, 20, 21, 0.3); <%= index === matchesForDate.length - 1 ? 'border-bottom: none;' : '' %>">
+                <div class="row align-items-center">
+                  <!-- Hora -->
+                  <div class="col-md-1 text-center">
+                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-amarillo);">
+                      <%= new Date(match.fecha_partida).getHours().toString().padStart(2, '0') %>:<%= new Date(match.fecha_partida).getMinutes().toString().padStart(2, '0') %>
+                    </div>
+                  </div>
 
-                <div class="col-4">
-                  <% if (match.ganador_id) { %>
-                    <h2 class="display-5 fw-bold text-success">FINALIZADO</h2>
-                    <span class="badge bg-success">Ganador Definido</span>
-                  <% } else { %>
-                    <h1 class="display-3 fw-bold text-danger">VS</h1>
-                    <span class="badge bg-warning text-dark">Pendiente</span>
+                  <!-- Equipo Azul -->
+                  <div class="col-md-2 text-center">
+                    <img src="<%= match.azul_logo || 'https://via.placeholder.com/50' %>" 
+                         class="rounded-circle mb-2" 
+                         style="width: 50px; height: 50px; object-fit: cover; border: 2px solid var(--color-rojo-oscuro);">
+                    <div style="color: var(--color-gris-claro); font-weight: 600; font-size: 0.9rem;">
+                      <%= match.azul_nombre %>
+                    </div>
+                  </div>
+
+                  <!-- VS -->
+                  <div class="col-md-2 text-center">
+                    <span style="color: var(--color-amarillo); font-weight: bold; font-size: 1rem;">VS</span>
+                  </div>
+
+                  <!-- Equipo Rojo -->
+                  <div class="col-md-2 text-center">
+                    <img src="<%= match.rojo_logo || 'https://via.placeholder.com/50' %>" 
+                         class="rounded-circle mb-2" 
+                         style="width: 50px; height: 50px; object-fit: cover; border: 2px solid var(--color-rojo-oscuro);">
+                    <div style="color: var(--color-gris-claro); font-weight: 600; font-size: 0.9rem;">
+                      <%= match.rojo_nombre %>
+                    </div>
+                  </div>
+
+                  <!-- Fase -->
+                  <div class="col-md-2 text-center">
+                    <span class="badge" style="background-color: var(--color-rojo-oscuro); color: var(--color-amarillo);">
+                      <%= match.fase_torneo %>
+                    </span>
+                  </div>
+
+                  <!-- Admin Actions -->
+                  <% if (isAuthenticated) { %>
+                    <div class="col-md-3 text-center">
+                      <div class="d-flex gap-2 justify-content-center flex-wrap">
+                        <a href="/admin/partidas/<%= match.id %>/stats" class="btn btn-sm btn-custom">
+                          📊 Stats
+                        </a>
+                        
+                        <% if (!match.ganador_id) { %>
+                          <form action="/admin/partidas/ganador" method="POST" class="d-inline">
+                            <input type="hidden" name="partidaId" value="<%= match.id %>">
+                            <button type="submit" name="ganadorId" value="<%= match.azul_id %>" class="btn btn-sm" style="background-color: #3498db; color: white;">
+                              🟦 Gana
+                            </button>
+                          </form>
+                          <form action="/admin/partidas/ganador" method="POST" class="d-inline">
+                            <input type="hidden" name="partidaId" value="<%= match.id %>">
+                            <button type="submit" name="ganadorId" value="<%= match.rojo_id %>" class="btn btn-sm" style="background-color: #e74c3c; color: white;">
+                              🟥 Gana
+                            </button>
+                          </form>
+                        <% } else { %>
+                          <button type="button" class="btn btn-sm" style="background-color: #4caf50; color: white;" disabled>Cerrado</button>
+                        <% } %>
+                        
+                        <a href="/admin/partidas/delete/<%= match.id %>" class="btn btn-sm" style="background-color: #c72c3a; color: var(--color-amarillo);" onclick="return confirm('¿Borrar partido?')">
+                          🗑️
+                        </a>
+                      </div>
+                    </div>
                   <% } %>
                 </div>
-
-                <div class="col-4">
-                  <img src="<%= match.rojo_logo || 'https://via.placeholder.com/80' %>" 
-                       class="rounded-circle mb-2 <%= match.ganador_id === match.rojo_id ? 'border border-4 border-success' : '' %>" 
-                       style="width: 80px; height: 80px; object-fit: cover;">
-                  <h4 class="<%= match.ganador_id === match.rojo_id ? 'text-success fw-bold' : '' %>">
-                    <%= match.rojo_nombre %>
-                  </h4>
-                </div>
-
               </div>
-            </div>
-            </div> <% if (isAuthenticated) { %>
-              <div class="card-footer bg-secondary">
-                <div class="d-flex justify-content-center gap-2">
-                  
-                  <a href="/admin/partidas/<%= match.id %>/stats" class="btn btn-sm btn-warning">
-                    <i class="fas fa-chart-bar"></i> Cargar Stats
-                  </a>
-
-                  <form action="/admin/partidas/ganador" method="POST" class="d-inline">
-                    <input type="hidden" name="partidaId" value="<%= match.id %>">
-                    <% if (!match.ganador_id) { %>
-                      <button type="submit" name="ganadorId" value="<%= match.azul_id %>" class="btn btn-sm btn-outline-primary">
-                        Gana Azul
-                      </button>
-                      <button type="submit" name="ganadorId" value="<%= match.rojo_id %>" class="btn btn-sm btn-outline-danger">
-                        Gana Rojo
-                      </button>
-                    <% } else { %>
-                      <button type="button" class="btn btn-sm btn-success disabled">Partido Cerrado</button>
-                    <% } %>
-                  </form>
-
-                  <a href="/admin/partidas/delete/<%= match.id %>" class="btn btn-sm btn-dark" onclick="return confirm('¿Borrar partido?')">
-                    <i class="fas fa-trash"></i>
-                  </a>
-
-                </div>
-              </div>
-            <% } %>
+            <% }) %>
           </div>
-          </div>
-        <% }) %>
-      <% } else { %>
-        <div class="alert alert-secondary text-center">
-          <h4>Aún no hay partidas programadas.</h4>
-          <p>¡Vuelve pronto para ver los enfrentamientos!</p>
         </div>
-      <% } %>
+      <% }) %>
     </div>
-  </div>
+  <% } %>
+
+  <!-- Sin partidas -->
+  <% if (partidas.length === 0) { %>
+    <div class="card card-custom">
+      <div class="card-body text-center p-5">
+        <h3 style="color: var(--color-amarillo); margin-bottom: 1rem;">Aún no hay partidas programadas</h3>
+        <p style="color: var(--color-gris-claro);">¡Vuelve pronto para ver los enfrentamientos del torneo!</p>
+      </div>
+    </div>
+  <% } %>
 </div>
+
+<script>
+  // Hacer scroll a la sección "Hoy" cuando la página carga
+  window.addEventListener('load', function() {
+    const seccionHoy = document.getElementById('seccionHoy');
+    if (seccionHoy) {
+      seccionHoy.scrollIntoView({ behavior: 'smooth' });
+    }
+  });
+</script>
 
 <%- include('partials/footer') %>

@@ -31,9 +31,9 @@ export const getMVPLeaderboard = async () => {
       AVG(s.cs_min) as avg_cs,
       AVG(s.dmg_min) as avg_dmg
     FROM estadisticas s
-    JOIN jugadores j ON s.jugador_id = j.id
-    JOIN equipos e ON j.equipo_id = e.id
-    GROUP BY j.id
+    JOIN jugadores j ON BIN_TO_UUID(s.jugador_id) = BIN_TO_UUID(j.id)
+    JOIN equipos e ON BIN_TO_UUID(j.equipo_id) = BIN_TO_UUID(e.id)
+    GROUP BY BIN_TO_UUID(j.id), j.nombre_invocador, j.rol_juego, BIN_TO_UUID(e.id), e.nombre, e.logo_url
     ORDER BY kda_ratio DESC, total_kills DESC
     LIMIT 10
   `)

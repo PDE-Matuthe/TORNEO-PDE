@@ -72,7 +72,7 @@ export const updateEquipoById = async (req, res) => {
 export const renderEquiposPagePublic = async (req, res) => {
   try {
     // Obtenemos TODOS los equipos (no filtrados por usuario)
-    const [equipos] = await pool.query('SELECT * FROM equipos')
+    const [equipos] = await pool.query('SELECT BIN_TO_UUID(id) as id, nombre, region, logo_url, verificado FROM equipos')
     res.render('equipos-public', { title: 'Equipos', equipos, isPublic: true })
   } catch (error) {
     console.error('Error al obtener equipos:', error.message)
