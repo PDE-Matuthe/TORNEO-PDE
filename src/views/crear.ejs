@@ -1,43 +1,47 @@
 <%- include('partials/head') %>
 <%- include('partials/nav') %>
 
-<div class="container mt-5">
-  <div class="row justify-content-center">
-    <div class="col-md-6">
-      <div class="card bg-secondary text-white">
-        <div class="card-header bg-dark">
-          <h3>Registrar Nuevo Equipo</h3>
-        </div>
-        <div class="card-body">
-          <form action="/admin/equipos/crear" method="POST">
-            
-            <div class="mb-3">
-              <label for="nombre" class="form-label">Nombre del Equipo</label>
-              <input type="text" name="nombre" class="form-control" placeholder="Ej: T1, G2 Esports" required autofocus>
-            </div>
-
-            <div class="mb-3">
-              <label for="region" class="form-label">Región</label>
-              <select name="region" class="form-select" required>
-                <option value="LAS">LAS (Latinoamérica Sur)</option>
-                <option value="LAN">LAN (Latinoamérica Norte)</option>
-                <option value="NA">NA (Norteamérica)</option>
-                <option value="EUW">EUW (Europa Oeste)</option>
-              </select>
-            </div>
-
-            <div class="mb-3">
-              <label for="logoUrl" class="form-label">URL del Logo (Imagen)</label>
-              <input type="url" name="logoUrl" class="form-control" placeholder="https://ejemplo.com/milogo.png">
-              <div class="form-text text-light">Copia el link de una imagen en internet (Discord, Imgur, Google).</div>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100">Guardar Equipo</button>
-          </form>
-        </div>
-      </div>
-    </div>
+<main class="max-w-4xl mx-auto px-4 py-8">
+  <!-- Breadcrumb -->
+  <div class="mb-6 text-slate-400 text-sm">
+    <a href="/admin" class="text-gold hover:text-white">Dashboard</a>
+    <span class="mx-2">/</span>
+    <a href="<%= referrerPath || '/admin' %>" class="text-gold hover:text-white"><%= typeof entityType !== 'undefined' ? entityType : 'Entidad' %></a>
+    <span class="mx-2">/</span>
+    <span>Crear</span>
   </div>
-</div>
+
+  <div class="card">
+    <div class="card-header">
+      <h1 class="card-title">
+        <i class="fas fa-plus text-gold mr-2"></i>
+        Crear Nuevo <%= typeof entityType !== 'undefined' ? entityType : 'Registro' %>
+      </h1>
+    </div>
+
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger">
+        <i class="fas fa-exclamation-circle mr-2"></i> <%= error %>
+      </div>
+    <% } %>
+
+    <form method="POST" class="space-y-6">
+      <!-- Dynamic Form Fields -->
+      <div id="formContent">
+        <!-- Form fields will be injected here based on entity type -->
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex gap-3 justify-end pt-4 border-t border-slate-700">
+        <a href="<%= referrerPath || '/admin' %>" class="px-6 py-2 border border-slate-600 rounded hover:bg-slate-700 transition">
+          <i class="fas fa-times mr-2"></i> Cancelar
+        </a>
+        <button type="submit" class="btn-primary">
+          <i class="fas fa-plus mr-2"></i> Crear
+        </button>
+      </div>
+    </form>
+  </div>
+</main>
 
 <%- include('partials/footer') %>

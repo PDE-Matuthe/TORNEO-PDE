@@ -1,7 +1,59 @@
 </div>
-<footer>
-  <p class="mb-0">🏆 TORNEO LEAGUE OF LEGENDS &copy; <%= new Date().getFullYear() %></p>
-  <small style="color: rgba(221, 221, 221, 0.7);">Desarrollado con pasión para los gamers</small>
+<footer class="footer mt-16">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+      <!-- About -->
+      <div>
+        <h3 class="text-gold font-bold mb-3">
+          <i class="fas fa-crown mr-2"></i> Torneo PDE
+        </h3>
+        <p class="text-slate-400 text-sm">
+          Platform de gestión de torneos de League of Legends desarrollada para la comunidad PDE.
+        </p>
+      </div>
+      
+      <!-- Links -->
+      <div>
+        <h3 class="text-gold font-bold mb-3">Enlaces Rápidos</h3>
+        <ul class="space-y-2 text-sm">
+          <li><a href="/equipos" class="text-slate-400 hover:text-gold transition">Equipos</a></li>
+          <li><a href="/calendario" class="text-slate-400 hover:text-gold transition">Calendario</a></li>
+          <li><a href="/mvp" class="text-slate-400 hover:text-gold transition">MVP Ranking</a></li>
+        </ul>
+      </div>
+      
+      <!-- Contact -->
+      <div>
+        <h3 class="text-gold font-bold mb-3">Contacto</h3>
+        <p class="text-slate-400 text-sm">
+          <i class="fas fa-envelope mr-2"></i> info@torneopde.com
+        </p>
+        <p class="text-slate-400 text-sm mt-2">
+          <i class="fas fa-map-marker-alt mr-2"></i> Comunidad PDE
+        </p>
+      </div>
+    </div>
+    
+    <div class="border-t border-slate-700 pt-8">
+      <div class="flex justify-between items-center">
+        <p class="text-slate-400 text-sm">
+          <i class="fas fa-copyright mr-1"></i> <%= new Date().getFullYear() %> Torneo PDE. Todos los derechos reservados.
+        </p>
+        <div class="flex space-x-4">
+          <a href="#" class="text-slate-400 hover:text-gold transition" title="Facebook">
+            <i class="fab fa-facebook"></i>
+          </a>
+          <a href="#" class="text-slate-400 hover:text-gold transition" title="Twitter">
+            <i class="fab fa-twitter"></i>
+          </a>
+          <a href="#" class="text-slate-400 hover:text-gold transition" title="Discord">
+            <i class="fab fa-discord"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
 </footer>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
 </html>

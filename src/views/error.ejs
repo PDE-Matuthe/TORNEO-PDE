@@ -1,0 +1,58 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<main class="min-h-screen flex items-center justify-center px-4">
+  <div class="max-w-md text-center">
+    <div class="card">
+      <div class="mb-6">
+        <h1 class="text-6xl font-bold text-red-500 mb-2">
+          <%= typeof codigo !== 'undefined' ? codigo : '404' %>
+        </h1>
+        <div class="w-16 h-1 bg-gradient-to-r from-red-500 to-orange-500 mx-auto"></div>
+      </div>
+      
+      <h2 class="text-2xl font-bold text-white mb-3">
+        <% if (typeof codigo !== 'undefined') { %>
+          <% if (codigo === 404) { %>
+            Página no encontrada
+          <% } else if (codigo === 500) { %>
+            Error del servidor
+          <% } else if (codigo === 403) { %>
+            Acceso denegado
+          <% } else { %>
+            Error
+          <% } %>
+        <% } else { %>
+          Error
+        <% } %>
+      </h2>
+      
+      <p class="text-slate-400 mb-8">
+        <%= typeof mensaje !== 'undefined' ? mensaje : 'Algo salió mal. Por favor, intenta más tarde.' %>
+      </p>
+      
+      <div class="bg-slate-800 rounded p-4 mb-8 text-left text-sm">
+        <p class="text-slate-500 mb-2"><i class="fas fa-info-circle mr-2"></i> Detalles:</p>
+        <code class="text-yellow-500 text-xs">
+          <%= typeof detalles !== 'undefined' ? detalles : 'Sin información adicional' %>
+        </code>
+      </div>
+      
+      <div class="flex gap-3">
+        <a href="/" class="btn-primary flex-1">
+          <i class="fas fa-home mr-2"></i> Inicio
+        </a>
+        <a href="javascript:history.back()" class="px-4 py-2 border border-slate-600 rounded hover:bg-slate-700 transition">
+          <i class="fas fa-arrow-left mr-2"></i> Atrás
+        </a>
+      </div>
+    </div>
+    
+    <!-- Fun Easter Egg -->
+    <div class="mt-8 text-slate-600 text-sm">
+      <p><i class="fas fa-gamepad mr-2"></i> Si ves esto, significa que algo no salió como esperábamos...</p>
+    </div>
+  </div>
+</main>
+
+<%- include('partials/footer') %>

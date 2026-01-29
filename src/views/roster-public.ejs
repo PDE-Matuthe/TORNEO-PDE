@@ -1,43 +1,124 @@
 <%- include('partials/head') %>
 <%- include('partials/nav') %>
 
-<div class="hero-section">
-  <div class="container">
-    <h1>🏢 Roster del Equipo</h1>
-    <p class="lead">Conoce a los integrantes del equipo</p>
+<main class="max-w-7xl mx-auto px-4 py-8">
+  <!-- Breadcrumb -->
+  <div class="mb-6 text-slate-400 text-sm">
+    <a href="/equipos" class="text-gold hover:text-white">Equipos</a>
+    <span class="mx-2">/</span>
+    <span><%= typeof equipo !== 'undefined' && equipo ? equipo.nombre : 'Equipo' %></span>
   </div>
-</div>
 
-<div class="container mt-5 mb-5">
-  
-  <div class="card card-custom mb-5">
-    <div class="card-body d-flex align-items-center">
-      <img src="<%= equipo.logo_url || 'https://via.placeholder.com/150' %>" 
-           style="width: 80px; height: 80px; object-fit: cover;" 
-           class="rounded-circle me-4" style="border: 4px solid var(--color-amarillo);">
-      <div class="flex-grow-1">
-        <h2 style="color: var(--color-amarillo); margin-bottom: 0.5rem;"><%= equipo.nombre %></h2>
-        <span class="badge" style="background-color: var(--color-rojo-oscuro); color: var(--color-amarillo);"><%= equipo.region %></span>
+  <!-- Team Header -->
+  <div class="card mb-8">
+    <div class="flex flex-col md:flex-row items-center gap-6">
+      <!-- Logo -->
+      <% if (typeof equipo !== 'undefined' && equipo && equipo.logo_url) { %>
+        <img src="<%= equipo.logo_url %>" 
+             alt="<%= equipo.nombre %>" 
+             class="w-32 h-32 object-contain border-2 border-gold rounded p-2">
+      <% } else { %>
+        <div class="w-32 h-32 bg-slate-700 rounded border-2 border-slate-600 flex items-center justify-center">
+          <i class="fas fa-shield-alt text-5xl text-slate-500"></i>
+        </div>
+      <% } %>
+      
+      <!-- Team Info -->
+      <div class="flex-1">
+        <h1 class="text-4xl font-bold text-gold mb-2">
+          <%= typeof equipo !== 'undefined' && equipo ? equipo.nombre : 'Sin nombre' %>
+        </h1>
+        <div class="flex items-center gap-4">
+          <span class="stat-badge">
+            <i class="fas fa-map-marker-alt mr-2"></i> 
+            <%= typeof equipo !== 'undefined' && equipo ? equipo.region : 'N/A' %>
+          </span>
+          <span class="stat-badge">
+            <i class="fas fa-users mr-2"></i> 
+            <%= typeof jugadores !== 'undefined' && jugadores ? jugadores.length : 0 %> Jugadores
+          </span>
+        </div>
       </div>
-      <div class="ms-auto">
-        <a href="/equipos" class="btn btn-custom">← Volver a Equipos</a>
-      </div>
+      
+      <!-- Back Button -->
+      <a href="/equipos" class="btn-primary">
+        <i class="fas fa-arrow-left mr-2"></i> Volver
+      </a>
     </div>
   </div>
 
-  <div class="row">
-    <div class="col-12">
-      <div class="card card-custom">
-        <div class="card-body p-0">
-          <h5 style="color: var(--color-amarillo); padding: 1.5rem 1.5rem 0 1.5rem; margin-bottom: 1.5rem; border-bottom: 2px solid var(--color-rojo-oscuro); padding-bottom: 1rem;">
-            Plantilla - <%= equipo.nombre %>
-          </h5>
-          <div class="table-responsive">
-            <table class="table table-hover mb-0 align-middle">
-              <thead>
-                <tr>
-                  <th style="width: 15%;">Rol</th>
-                  <th style="width: 15%;">Posición</th>
+  <!-- Roster Table -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">
+        <i class="fas fa-users text-gold mr-2"></i> Plantilla
+      </h3>
+    </div>
+    
+    <% if (typeof jugadores !== 'undefined' && jugadores && jugadores.length > 0) { %>
+      <div class="overflow-x-auto">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="width: 25%;">Jugador</th>
+              <th style="width: 20%;">Rol</th>
+              <th style="width: 20%;">Nombre Invocador</th>
+              <th style="width: 35%;">Estadísticas</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% const roleEmojis = { 'TOP': '⬆️', 'JUNGLE': '🌳', 'MID': '↔️', 'ADC': '➡️', 'SUPPORT': '🛡️' }; %>
+            <% jugadores.forEach(jug => { %>
+              <tr>
+                <td>
+                  <p class="font-bold text-white"><%= jug.nombre_invocador %></p>
+                  <% if (jug.nombre_real) { %>
+                    <p class="text-xs text-slate-400"><%= jug.nombre_real %></p>
+                  <% } %>
+                </td>
+                <td>
+                  <span class="stat-badge">
+                    <%= roleEmojis[jug.rol_juego] || '○' %> 
+                    <%= jug.rol_juego %>
+                  </span>
+                </td>
+                <td>
+                  <code class="text-slate-300 bg-slate-700 px-2 py-1 rounded text-sm">
+                    <%= jug.nombre_invocador %>
+                  </code>
+                </td>
+                <td>
+                  <% if (jug.stats) { %>
+                    <div class="flex gap-3 text-xs">
+                      <span title="Kills">
+                        <span class="text-green-400 font-bold"><%= jug.stats.total_kills || 0 %></span> K
+                      </span>
+                      <span title="Deaths">
+                        <span class="text-red-400 font-bold"><%= jug.stats.total_deaths || 0 %></span> D
+                      </span>
+                      <span title="Assists">
+                        <span class="text-gold font-bold"><%= jug.stats.total_assists || 0 %></span> A
+                      </span>
+                    </div>
+                  <% } else { %>
+                    <span class="text-slate-500">Sin partidas</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <div class="p-8 text-center">
+        <i class="fas fa-inbox text-4xl text-slate-600 mb-3"></i>
+        <p class="text-slate-400">Este equipo aún no tiene jugadores registrados</p>
+      </div>
+    <% } %>
+  </div>
+</main>
+
+<%- include('partials/footer') %>
                   <th style="width: 40%;">Nombre de Invocador</th>
                   <th style="width: 30%;">Rango</th>
                 </tr>

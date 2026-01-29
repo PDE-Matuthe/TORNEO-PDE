@@ -1,0 +1,87 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<main class="max-w-7xl mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-8">
+    <div>
+      <h1 class="text-4xl font-bold mb-2">
+        <i class="fas fa-users text-gold mr-3"></i> Gestión de Jugadores
+      </h1>
+      <p class="text-slate-400">Administra todos los jugadores registrados</p>
+    </div>
+    <a href="/admin/jugadores/crear" class="btn-success">
+      <i class="fas fa-plus mr-2"></i> Nuevo Jugador
+    </a>
+  </div>
+
+  <% if (typeof jugadores !== 'undefined' && jugadores && jugadores.length > 0) { %>
+    <div class="card">
+      <div class="overflow-x-auto">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="width: 25%;">Nombre Invocador</th>
+              <th style="width: 15%;">Rol</th>
+              <th style="width: 25%;">Equipo</th>
+              <th style="width: 20%;">Estadísticas</th>
+              <th style="width: 15%;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% jugadores.forEach(jugador => { %>
+              <tr>
+                <td>
+                  <p class="font-bold text-white"><%= jugador.nombre_invocador %></p>
+                  <% if (jugador.nombre_real) { %>
+                    <p class="text-xs text-slate-400"><%= jugador.nombre_real %></p>
+                  <% } %>
+                </td>
+                <td>
+                  <% const roleEmojis = { 'TOP': '⬆️', 'JUNGLE': '🌳', 'MID': '↔️', 'ADC': '➡️', 'SUPPORT': '🛡️' }; %>
+                  <span class="stat-badge">
+                    <%= roleEmojis[jugador.rol_juego] || '○' %>
+                    <%= jugador.rol_juego %>
+                  </span>
+                </td>
+                <td>
+                  <p class="text-white"><%= jugador.equipo_nombre || 'Sin equipo' %></p>
+                </td>
+                <td>
+                  <% if (typeof jugador.partidas_jugadas !== 'undefined') { %>
+                    <div class="flex gap-2 text-xs">
+                      <span class="text-green-400"><%= jugador.partidas_jugadas %> partidas</span>
+                    </div>
+                  <% } else { %>
+                    <span class="text-slate-500">Sin estadísticas</span>
+                  <% } %>
+                </td>
+                <td>
+                  <div class="flex gap-2">
+                    <a href="/admin/jugadores/<%= jugador.id %>/editar" class="btn-primary btn-sm" title="Editar">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="/admin/jugadores/<%= jugador.id %>/delete" class="btn-danger btn-sm" onclick="return confirm('¿Eliminar jugador?')" title="Eliminar">
+                      <i class="fas fa-trash"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% } else { %>
+    <div class="card text-center py-12">
+      <i class="fas fa-inbox text-6xl text-slate-600 mb-4"></i>
+      <h2 class="text-2xl font-bold text-slate-300">No hay jugadores registrados</h2>
+      <p class="text-slate-400 mt-2 mb-6">Crea el primer jugador para comenzar</p>
+      <a href="/admin/jugadores/crear" class="btn-primary">
+        <i class="fas fa-plus mr-2"></i> Crear Jugador
+      </a>
+    </div>
+  <% } %>
+</main>
+
+<%- include('partials/footer') %>

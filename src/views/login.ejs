@@ -1,36 +1,92 @@
 <%- include('partials/head') %>
 <%- include('partials/nav') %>
 
-<main class="d-flex flex-grow-1 align-items-center justify-content-center">
-  <div class="row justify-content-center w-100">
-    <div class="col-md-6 col-lg-4">
-      <div class="card bg-secondary text-white shadow">
-        <div class="card-body">
-          <h1 class="text-center mb-4">🔐 Admin Login</h1>
+<main class="min-h-screen flex items-center justify-center px-4 py-12">
+  <div class="w-full max-w-md">
+    <!-- Login Card -->
+    <div class="card shadow-lg">
+      <div class="card-header">
+        <h1 class="card-title text-center">
+          <i class="fas fa-sign-in-alt text-gold mr-2"></i> Iniciar Sesión
+        </h1>
+        <p class="text-center text-slate-400 text-sm mt-2">Panel Administrativo - Torneo PDE</p>
+      </div>
 
-          <% if (error) { %>
-            <div class="alert alert-danger" role="alert">
-              <%= error %>
-            </div>
-          <% } %>
-
-          <form method="POST" action="/acceso-staff-pde-2026">
-            <div class="mb-3">
-              <label for="email" class="form-label">Correo Electrónico</label>
-              <input type="email" class="form-control" id="email" name="email" required autofocus>
-            </div>
-            <div class="mb-3">
-              <label for="password" class="form-label">Contraseña</label>
-              <div class="input-group">
-                <input type="password" class="form-control" id="password" name="password" required>
-                <button type="button" class="btn btn-outline-light" id="togglePassword">
-                  <i class="bi bi-eye"></i>
-                </button>
-              </div>
-            </div>
-            <button type="submit" class="btn btn-warning w-100 fw-bold text-dark">Iniciar Sesión</button>
-          </form>
+      <!-- Alerts -->
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-circle mr-2"></i> <%= error %>
         </div>
+      <% } %>
+
+      <!-- Login Form -->
+      <form method="POST" action="/login" class="space-y-4">
+        <div class="form-group">
+          <label for="email">
+            <i class="fas fa-envelope text-gold mr-2"></i> Email
+          </label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            required 
+            placeholder="admin@torneopde.com"
+            class="w-full"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="password">
+            <i class="fas fa-lock text-gold mr-2"></i> Contraseña
+          </label>
+          <div class="flex">
+            <input 
+              type="password" 
+              id="password" 
+              name="password" 
+              required 
+              placeholder="••••••••"
+              class="w-full rounded-r-none"
+            >
+            <button 
+              type="button" 
+              id="togglePassword"
+              class="bg-slate-700 hover:bg-slate-600 border border-l-0 border-slate-500 px-3 rounded-r transition"
+            >
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center">
+          <input 
+            type="checkbox" 
+            id="remember" 
+            name="remember" 
+            class="w-4 h-4 rounded"
+          >
+          <label for="remember" class="ml-2 text-sm text-slate-400">
+            Recuérdame en este dispositivo
+          </label>
+        </div>
+
+        <button type="submit" class="btn-primary w-full">
+          <i class="fas fa-sign-in-alt mr-2"></i> Ingresar
+        </button>
+      </form>
+    </div>
+
+    <!-- Help Section -->
+    <div class="mt-6 p-4 bg-slate-800 rounded border border-slate-700">
+      <h3 class="text-gold font-bold mb-2">
+        <i class="fas fa-info-circle mr-2"></i> Credenciales Demo
+      </h3>
+      <p class="text-slate-400 text-sm">
+        Si no tienes cuenta, solicita acceso al administrador.
+      </p>
+      <div class="mt-3 p-3 bg-slate-900 rounded text-xs text-slate-300 font-mono">
+        <p>Email: admin@example.com</p>
+        <p>Contraseña: (consultar administrador)</p>
       </div>
     </div>
   </div>
@@ -39,9 +95,10 @@
 <%- include('partials/footer') %>
 
 <script>
-  document.getElementById('togglePassword').addEventListener('click', () => {
+  document.getElementById('togglePassword').addEventListener('click', function() {
     const passwordField = document.getElementById('password');
     const type = passwordField.type === 'password' ? 'text' : 'password';
     passwordField.type = type;
+    this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
   });
 </script>

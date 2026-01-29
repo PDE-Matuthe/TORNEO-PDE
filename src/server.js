@@ -3,6 +3,11 @@ import router from './routes/rutas.js'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 import session from 'express-session'
+import dotenv from 'dotenv'
+import pool from './config/db.js'
+
+// Cargar variables de entorno
+dotenv.config()
 
 // Create express app
 const app = express()
@@ -20,7 +25,7 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(
   session({
-    secret: 'mi_clave_secreta',
+    secret: process.env.SESSION_SECRET || 'mi_clave_secreta',
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -37,4 +42,8 @@ app.use((req, res, next) => {
 app.use(router)
 
 // Start the server
-app.listen(3000, () => console.log('Server is running on http://localhost:3000'))
+const PORT = process.env.PORT || 3000
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor ejecutándose en http://localhost:${PORT}`)
+  console.log(`📝 Entorno: ${process.env.NODE_ENV || 'development'}`)
+})

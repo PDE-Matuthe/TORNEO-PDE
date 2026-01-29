@@ -1,58 +1,205 @@
 <%- include('partials/head') %>
 <%- include('partials/nav') %>
 
-<div class="hero-section">
-  <div class="container">
-    <h1>📅 Calendario</h1>
-    <p class="lead">Sigue el calendario de partidas del torneo</p>
+<main class="max-w-7xl mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-4xl font-bold mb-2">
+      <i class="fas fa-calendar text-gold mr-3"></i> Calendario de Partidas
+    </h1>
+    <p class="text-slate-400">Sigue el cronograma completo del torneo</p>
   </div>
-</div>
 
-<div class="container mt-5 mb-5">
   <% 
-    // Agrupar partidas por fecha (considerando zona horaria)
+    // Agrupar partidas por fecha
     const today = new Date();
     const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    
     const groupedByDate = {};
-    partidas.forEach(match => {
-      const matchDate = new Date(match.fecha_partida);
-      // Crear una fecha local sin considerar la zona horaria
-      const matchLocal = new Date(matchDate.getFullYear(), matchDate.getMonth(), matchDate.getDate());
-      const dateKey = matchLocal.toISOString().split('T')[0];
-      
-      if (!groupedByDate[dateKey]) {
-        groupedByDate[dateKey] = [];
-      }
-      groupedByDate[dateKey].push(match);
-    });
-
-    // Ordenar fechas
-    const sortedDates = Object.keys(groupedByDate).sort();
     
-    // Obtener partidas de hoy
+    if (typeof partidas !== 'undefined' && Array.isArray(partidas)) {
+      partidas.forEach(match => {
+        const matchDate = new Date(match.fecha_partida);
+        const matchLocal = new Date(matchDate.getFullYear(), matchDate.getMonth(), matchDate.getDate());
+        const dateKey = matchLocal.toISOString().split('T')[0];
+        
+        if (!groupedByDate[dateKey]) {
+          groupedByDate[dateKey] = [];
+        }
+        groupedByDate[dateKey].push(match);
+      });
+    }
+    
+    const sortedDates = Object.keys(groupedByDate).sort();
     const todayKey = todayLocal.toISOString().split('T')[0];
-    const todayMatches = groupedByDate[todayKey] || [];
   %>
 
-  <!-- Partidos Anteriores -->
-  <% 
-    const pastDates = sortedDates.filter(dateKey => dateKey < todayKey);
-    if (pastDates.length > 0) { 
-  %>
-    <div class="mb-5">
-      <h2 style="color: var(--color-amarillo); margin-bottom: 2rem;">📋 Partidos Anteriores</h2>
-      <% pastDates.forEach(dateKey => { %>
-        <% 
-          const matchesForDate = groupedByDate[dateKey];
-          const dateObj = new Date(dateKey + 'T00:00:00');
-          const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'long' });
-          const dateFormatted = dateObj.toLocaleDateString('es-ES');
-        %>
-        <div class="mb-4">
-          <h4 style="color: var(--color-amarillo); margin-bottom: 1.5rem; font-weight: 600; border-bottom: 2px solid var(--color-rojo-oscuro); padding-bottom: 0.5rem;">
-            <%= dayName.charAt(0).toUpperCase() + dayName.slice(1) %> - <%= dateFormatted %>
-          </h4>
+  <% if (sortedDates.length === 0) { %>
+    <div class="card text-center py-12">
+      <i class="fas fa-calendar-times text-6xl text-slate-600 mb-4"></i>
+      <h2 class="text-2xl font-bold text-slate-300">No hay partidas programadas</h2>
+      <p class="text-slate-400 mt-2">Pronto se publicarán las partidas del torneo</p>
+    </div>
+  <% } else { %>
+    <!-- Partidas Futuras -->
+    <% const futureDates = sortedDates.filter(d => d >= todayKey); %>
+    <% if (futureDates.length > 0) { %>
+      <h2 class="text-2xl font-bold text-gold mb-6">
+        <i class="fas fa-arrow-right mr-2"></i> Próximos Encuentros
+      </h2>
+      
+      <div class="space-y-4 mb-12">
+        <% futureDates.forEach(dateKey => { %>
+          <% const dateObj = new Date(dateKey + 'T00:00:00'); %>
+          <% const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'long' }); %>
+          <% const dateFormatted = dateObj.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }); %>
+          
+          <div class="bg-slate-800 rounded-lg overflow-hidden">
+            <div class="bg-gradient-to-r from-slate-700 to-slate-800 px-4 py-3 border-l-4 border-gold">
+              <p class="font-bold text-white capitalize"><%= dayName %></p>
+              <p class="text-slate-400 text-sm"><%= dateFormatted %></p>
+            </div>
+            
+            <div class="divide-y divide-slate-700">
+              <% groupedByDate[dateKey].forEach(match => { %>
+                <div class="p-4 hover:bg-slate-700 transition">
+                  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <!-- Team Azul -->
+                    <div class="flex items-center gap-3 flex-1">
+                      <% if (match.equipo1 && match.equipo1.logoUrl) { %>
+                        <img src="<%= match.equipo1.logoUrl %>" alt="<%= match.equipo1.nombre %>" class="w-12 h-12 object-contain">
+                      <% } else { %>
+                        <div class="w-12 h-12 bg-slate-600 rounded flex items-center justify-center">
+                          <i class="fas fa-shield-alt text-slate-400"></i>
+                        </div>
+                      <% } %>
+                      <div>
+                        <p class="font-bold text-white"><%= match.equipo1 ? match.equipo1.nombre : 'TBD' %></p>
+                        <p class="text-xs text-slate-500">Equipo Azul</p>
+                      </div>
+                    </div>
+                    
+                    <!-- Score / Time -->
+                    <div class="flex flex-col items-center md:px-8 py-2 md:py-0">
+                      <% if (match.estado === 'completada') { %>
+                        <div class="text-center">
+                          <p class="text-2xl font-bold">
+                            <span class="<%= match.ganador_color === 'azul' ? 'text-blue-400' : 'text-slate-400' %>"><%= match.puntos_equipo1 %></span>
+                            -
+                            <span class="<%= match.ganador_color === 'rojo' ? 'text-red-400' : 'text-slate-400' %>"><%= match.puntos_equipo2 %></span>
+                          </p>
+                          <p class="text-xs text-green-500 font-bold">FINALIZADA</p>
+                        </div>
+                      <% } else { %>
+                        <p class="text-slate-400 text-sm">
+                          <i class="fas fa-clock mr-1"></i>
+                          <%= new Date(match.fecha_partida).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) %>
+                        </p>
+                        <p class="text-xs text-slate-500 font-bold mt-1">Próximamente</p>
+                      <% } %>
+                    </div>
+                    
+                    <!-- Team Rojo -->
+                    <div class="flex items-center gap-3 flex-1 md:flex-row-reverse">
+                      <% if (match.equipo2 && match.equipo2.logoUrl) { %>
+                        <img src="<%= match.equipo2.logoUrl %>" alt="<%= match.equipo2.nombre %>" class="w-12 h-12 object-contain">
+                      <% } else { %>
+                        <div class="w-12 h-12 bg-slate-600 rounded flex items-center justify-center">
+                          <i class="fas fa-shield-alt text-slate-400"></i>
+                        </div>
+                      <% } %>
+                      <div class="md:text-right">
+                        <p class="font-bold text-white"><%= match.equipo2 ? match.equipo2.nombre : 'TBD' %></p>
+                        <p class="text-xs text-slate-500">Equipo Rojo</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Fase Info -->
+                  <div class="mt-3 pt-3 border-t border-slate-700">
+                    <p class="text-xs text-slate-400">
+                      <i class="fas fa-layer-group mr-1"></i> 
+                      <span class="text-gold"><%= match.fase_torneo || 'Fase General' %></span>
+                      <% if (match.nombre_torneo) { %>
+                        <span class="mx-2">|</span>
+                        <%= match.nombre_torneo %>
+                      <% } %>
+                    </p>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+
+    <!-- Partidas Pasadas -->
+    <% const pastDates = sortedDates.filter(d => d < todayKey); %>
+    <% if (pastDates.length > 0) { %>
+      <h2 class="text-2xl font-bold text-slate-400 mb-6 mt-12">
+        <i class="fas fa-history mr-2"></i> Resultados Anteriores
+      </h2>
+      
+      <div class="space-y-4">
+        <% pastDates.reverse().slice(0, 10).forEach(dateKey => { %>
+          <% const dateObj = new Date(dateKey + 'T00:00:00'); %>
+          <% const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'long' }); %>
+          <% const dateFormatted = dateObj.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }); %>
+          
+          <div class="bg-slate-800 rounded-lg overflow-hidden opacity-75">
+            <div class="bg-gradient-to-r from-slate-700 to-slate-800 px-4 py-3 border-l-4 border-slate-600">
+              <p class="font-bold text-slate-300 capitalize"><%= dayName %></p>
+              <p class="text-slate-500 text-sm"><%= dateFormatted %></p>
+            </div>
+            
+            <div class="divide-y divide-slate-700">
+              <% groupedByDate[dateKey].forEach(match => { %>
+                <div class="p-4">
+                  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <!-- Team Azul -->
+                    <div class="flex items-center gap-3 flex-1">
+                      <% if (match.equipo1 && match.equipo1.logoUrl) { %>
+                        <img src="<%= match.equipo1.logoUrl %>" alt="<%= match.equipo1.nombre %>" class="w-12 h-12 object-contain">
+                      <% } %>
+                      <div>
+                        <p class="font-bold <%= match.ganador_color === 'azul' ? 'text-blue-400' : 'text-slate-400' %>">
+                          <%= match.equipo1 ? match.equipo1.nombre : 'TBD' %>
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <!-- Score -->
+                    <div class="text-center">
+                      <p class="text-xl font-bold">
+                        <span class="<%= match.ganador_color === 'azul' ? 'text-blue-400' : '' %>"><%= match.puntos_equipo1 %></span>
+                        -
+                        <span class="<%= match.ganador_color === 'rojo' ? 'text-red-400' : '' %>"><%= match.puntos_equipo2 %></span>
+                      </p>
+                    </div>
+                    
+                    <!-- Team Rojo -->
+                    <div class="flex items-center gap-3 flex-1 md:flex-row-reverse">
+                      <% if (match.equipo2 && match.equipo2.logoUrl) { %>
+                        <img src="<%= match.equipo2.logoUrl %>" alt="<%= match.equipo2.nombre %>" class="w-12 h-12 object-contain">
+                      <% } %>
+                      <div class="md:text-right">
+                        <p class="font-bold <%= match.ganador_color === 'rojo' ? 'text-red-400' : 'text-slate-400' %>">
+                          <%= match.equipo2 ? match.equipo2.nombre : 'TBD' %>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+  <% } %>
+</main>
+
+<%- include('partials/footer') %>
           <div class="card card-custom">
             <% matchesForDate.forEach((match, index) => { %>
               <div class="p-4" style="border-bottom: 1px solid rgba(117, 20, 21, 0.3); <%= index === matchesForDate.length - 1 ? 'border-bottom: none;' : '' %>">

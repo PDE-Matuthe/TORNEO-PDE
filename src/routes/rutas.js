@@ -1,81 +1,106 @@
+// ==========================================
+// RUTAS: Torneo PDE
+// ==========================================
 import { Router } from 'express'
-import { renderLoginPage, handleLogin, handleLogout } from '../controllers/authController.js'
-// Importamos el nuevo controlador de equipos
-import { renderEquiposPage, renderCrearEquipo, registerEquipo, deleteEquipoById, updateEquipoById, renderEditarEquipo, renderEquiposPagePublic, renderRosterPagePublic } from '../controllers/equiposController.js'
-// Importamos el controlador de jugadores
-import { renderRosterPage, addJugadorToEquipo, removeJugador } from '../controllers/jugadoresController.js'
-// Importamos el controlador de partidas
-import { renderCalendario, renderAdminPartidas, createMatch, updateWinner, deleteMatch } from '../controllers/partidasController.js'
-// Importamos el controlador de estadísticas
-import { renderMVPPage, renderCargarStats, saveMatchStats } from '../controllers/statsController.js'
+
+// Controllers
+import * as authController from '../controllers/authController.js'
+import * as publicController from '../controllers/publicController.js'
+import * as torneosController from '../controllers/torneosController.js'
+import * as equiposController from '../controllers/equiposController.js'
+import * as jugadoresController from '../controllers/jugadoresController.js'
+import * as partidasController from '../controllers/partidasController.js'
+import * as statsController from '../controllers/statsController.js'
+
+// Middleware
+import { isAuthenticated, isAdmin, userLocals } from '../middleware/auth.js'
 
 const router = Router()
 
-// Middleware para pasar isAuthenticated a todas las vistas
-router.use((req, res, next) => {
-  res.locals.isAuthenticated = !!req.session.usuarioId
-  res.locals.isAdmin = !!req.session.isAdmin
-  next()
+// Middleware global: Pasar info del usuario a todas las vistas
+router.use(userLocals)
+
+// ==========================================
+// RUTAS PÚBLICAS (Sin autenticación)
+// ==========================================
+
+// HOME
+router.get('/', publicController.getHome)
+
+// CALENDARIO
+router.get('/calendario', publicController.getCalendario)
+
+// BRACKET (LLAVES)
+router.get('/bracket', publicController.getBracket)
+
+// EQUIPOS
+router.get('/equipos', publicController.getEquiposPublic)
+router.get('/equipo/:id', publicController.getEquipoRoster)
+
+// MVP RANKING
+router.get('/mvp', statsController.getMVPPublic)
+
+// PERFIL JUGADOR
+router.get('/jugador/:id', statsController.getPerfilJugador)
+
+// ==========================================
+// RUTAS DE AUTENTICACIÓN
+// ==========================================
+
+// LOGIN
+router.get('/login', authController.getLogin)
+router.post('/login', authController.postLogin)
+
+// LOGOUT
+router.get('/logout', authController.getLogout)
+
+// ==========================================
+// RUTAS ADMIN (Protegidas por middleware)
+// ==========================================
+
+// DASHBOARD ADMIN
+router.get('/admin', isAuthenticated, isAdmin, publicController.getAdminDashboard)
+
+// ------- TORNEOS -------
+router.get('/admin/torneos', isAuthenticated, isAdmin, torneosController.getTorneos)
+router.post('/admin/torneos', isAuthenticated, isAdmin, torneosController.postCreateTorneo)
+router.post('/admin/torneos/:id/update', isAuthenticated, isAdmin, torneosController.postUpdateTorneo)
+router.post('/admin/torneos/:id/activate', isAuthenticated, isAdmin, torneosController.postActivateTorneo)
+router.post('/admin/torneos/:id/delete', isAuthenticated, isAdmin, torneosController.postDeleteTorneo)
+router.post('/admin/torneos/:id/add-equipo', isAuthenticated, isAdmin, torneosController.postAddEquipoToTorneo)
+router.post('/admin/torneos/:id/remove-equipo', isAuthenticated, isAdmin, torneosController.postRemoveEquipoFromTorneo)
+
+// ------- EQUIPOS -------
+router.get('/admin/equipos', isAuthenticated, isAdmin, equiposController.getEquipos)
+router.post('/admin/equipos', isAuthenticated, isAdmin, equiposController.postCreateEquipo)
+router.post('/admin/equipos/:id/update', isAuthenticated, isAdmin, equiposController.postUpdateEquipo)
+router.post('/admin/equipos/:id/delete', isAuthenticated, isAdmin, equiposController.postDeleteEquipo)
+
+// ------- JUGADORES -------
+router.get('/admin/jugadores', isAuthenticated, isAdmin, jugadoresController.getJugadores)
+router.post('/admin/jugadores', isAuthenticated, isAdmin, jugadoresController.postCreateJugador)
+router.post('/admin/jugadores/:id/update', isAuthenticated, isAdmin, jugadoresController.postUpdateJugador)
+router.post('/admin/jugadores/:id/delete', isAuthenticated, isAdmin, jugadoresController.postDeleteJugador)
+
+// ------- PARTIDAS -------
+router.get('/admin/partidas', isAuthenticated, isAdmin, partidasController.getPartidas)
+router.get('/admin/partidas/:id', isAuthenticated, isAdmin, partidasController.getPartidaDetalle)
+router.post('/admin/partidas', isAuthenticated, isAdmin, partidasController.postCreatePartida)
+router.post('/admin/partidas/:id/import-riot', isAuthenticated, isAdmin, partidasController.postImportRiotStats)
+router.post('/admin/partidas/:id/delete', isAuthenticated, isAdmin, partidasController.postDeletePartida)
+
+// ------- ESTADÍSTICAS -------
+router.get('/admin/stats', isAuthenticated, isAdmin, partidasController.getStats)
+router.get('/admin/stats-torneo/:torneoId', isAuthenticated, isAdmin, statsController.getStatsTorneo)
+
+// ==========================================
+// ERROR 404
+// ==========================================
+router.use((req, res) => {
+  res.status(404).render('error', {
+    codigo: 404,
+    mensaje: 'Página no encontrada'
+  })
 })
-
-// Define tu ruta secreta (solo compártela con el staff)
-const RUTA_SECRETA = '/acceso-staff-pde-2026'; 
-
-// --- Middleware de Seguridad ---
-const isAuthenticated = (req, res, next) => {
-  if (req.session && req.session.usuarioId && req.session.isAdmin) {
-    next()
-  } else {
-    // Si intentan entrar a admin sin permiso, NO los mandes al login (eso revela que existe).
-    // Mándalos al inicio (Home) o a una página 404 falso.
-    res.redirect('/'); 
-  }
-}
-
-// --- Rutas de Autenticación ---
-// Cambia '/login' por tu ruta secreta
-router.get(RUTA_SECRETA, renderLoginPage)
-router.post(RUTA_SECRETA, handleLogin) // Asegúrate que tu form en login.ejs apunte aquí o tenga action=""
-router.get('/logout', handleLogout)
-router.get('/logout', handleLogout)
-
-// --- Rutas PÚBLICAS (Visitantes sin autenticación) ---
-router.get('/', (req, res) => res.render('home', { title: 'Torneo LoL - Inicio' }))
-router.get('/equipos', renderEquiposPagePublic)                    // Ver lista de equipos (pública)
-router.get('/equipos/:id/jugadores', renderRosterPagePublic)      // Ver roster de un equipo (pública)
-router.get('/calendario', renderCalendario)                         // Ver calendario (pública)
-router.get('/mvp', renderMVPPage)                                   // Ver MVP (pública)
-
-// --- Dashboard Admin ---
-router.get('/admin', isAuthenticated, (req, res) => res.render('admin-dashboard', { title: 'Panel de Administración' }))
-
-// --- Rutas de Gestión de Equipos (Protegidas - Solo Admin) ---
-router.get('/admin/equipos', isAuthenticated, renderEquiposPage) // Panel admin de equipos
-
-router.get('/admin/equipos/crear', isAuthenticated, renderCrearEquipo) // Formulario crear
-router.post('/admin/equipos/crear', isAuthenticated, registerEquipo)   // Guardar nuevo
-
-router.get('/admin/equipos/editar/:id', isAuthenticated, renderEditarEquipo) // Formulario editar
-router.post('/admin/equipos/editar/:id', isAuthenticated, updateEquipoById)  // Guardar cambios
-
-router.get('/admin/equipos/delete/:id', isAuthenticated, deleteEquipoById)   // Borrar
-
-// --- Rutas de Jugadores (Admin) ---
-router.get('/admin/equipos/:id/jugadores', isAuthenticated, renderRosterPage)       // Ver/Editar lista
-router.post('/admin/equipos/:id/jugadores', isAuthenticated, addJugadorToEquipo)    // Agregar jugador
-router.get('/admin/equipos/:id/jugadores/delete/:jugadorId', isAuthenticated, removeJugador) // Borrar
-
-// --- Rutas de ADMINISTRACIÓN DE PARTIDAS (Protegidas) ---
-router.get('/admin/partidas', isAuthenticated, renderAdminPartidas) // Panel Admin
-router.post('/admin/partidas/crear', isAuthenticated, createMatch)  // Crear Partida
-router.post('/admin/partidas/ganador', isAuthenticated, updateWinner) // Definir Ganador
-router.get('/admin/partidas/delete/:id', isAuthenticated, deleteMatch) // Borrar
-
-// --- Rutas de ESTADÍSTICAS (Cargar stats - Solo Admin) ---
-router.get('/admin/partidas/:partidaId/stats', isAuthenticated, renderCargarStats)
-router.post('/admin/partidas/:partidaId/stats', isAuthenticated, saveMatchStats)
-
-// Ruta 404 (Siempre al final)
-router.use((req, res) => res.status(404).send('Página no encontrada'))
 
 export default router

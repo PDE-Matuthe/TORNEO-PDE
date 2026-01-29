@@ -4,50 +4,174 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Torneo League of Legends</title>
-  <%- include ('partials/head.ejs') %>
+  <title>Torneo League of Legends - Inicio</title>
+  <%- include('partials/head') %>
 </head>
 
 <body>
-  <%- include ('partials/nav.ejs') %>
+  <%- include('partials/nav') %>
+  
   <main>
-    <div class="hero-section">
-      <div class="container">
-        <h1>🏆 Torneo League of Legends</h1>
-        <p class="lead">Sigue el enfrentamiento de los mejores equipos y jugadores del torneo</p>
+    <!-- Hero Section -->
+    <div class="relative bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 py-20 overflow-hidden">
+      <div class="absolute inset-0 opacity-20">
+        <div class="absolute inset-0 bg-gradient-to-r from-blue-600 to-red-600"></div>
+      </div>
+      
+      <div class="max-w-7xl mx-auto px-4 relative z-10">
+        <div class="text-center">
+          <h1 class="text-5xl md:text-6xl font-bold mb-4">
+            <i class="fas fa-crown text-gold mr-3"></i>
+            <span class="gradient-gold">Torneo League of Legends</span>
+          </h1>
+          <p class="text-xl text-slate-300 mb-8">
+            Sigue el enfrentamiento de los mejores equipos y jugadores del torneo PDE
+          </p>
+          <div class="flex justify-center gap-4">
+            <a href="/calendario" class="btn-primary">
+              <i class="fas fa-calendar mr-2"></i> Ver Calendario
+            </a>
+            <a href="/equipos" class="btn-success">
+              <i class="fas fa-users mr-2"></i> Ver Equipos
+            </a>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="container">
-      <div class="row mt-5">
-        <div class="col-md-4 mb-4">
-          <div class="card card-custom">
-            <div class="card-body text-center">
-              <h5 class="card-title">🏢 Ver Equipos</h5>
-              <p class="card-text">Consulta todos los equipos participantes en el torneo y conoce a los mejores jugadores.</p>
-              <a href="/equipos" class="btn btn-custom w-100">Ver Equipos</a>
+    <!-- Featured Section -->
+    <div class="max-w-7xl mx-auto px-4 py-16">
+      <h2 class="text-3xl font-bold mb-8 text-center">
+        <i class="fas fa-star text-gold mr-2"></i> Destaca
+      </h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Card 1: Equipos -->
+        <a href="/equipos" class="card hover:shadow-lg transform hover:scale-105 transition cursor-pointer">
+          <div class="text-center">
+            <i class="fas fa-shield-alt text-5xl text-gold mb-4"></i>
+            <h3 class="card-title">Equipos Participantes</h3>
+            <p class="text-slate-400 mb-4">
+              Consulta todos los equipos del torneo y conoce a los mejores jugadores de cada uno.
+            </p>
+            <div class="text-gold font-bold">
+              <i class="fas fa-arrow-right mr-2"></i> Explorar Equipos
             </div>
+          </div>
+        </a>
+
+        <!-- Card 2: Calendario -->
+        <a href="/calendario" class="card hover:shadow-lg transform hover:scale-105 transition cursor-pointer">
+          <div class="text-center">
+            <i class="fas fa-calendar text-5xl text-gold mb-4"></i>
+            <h3 class="card-title">Calendario de Partidas</h3>
+            <p class="text-slate-400 mb-4">
+              Revisa todas las partidas programadas y los resultados del torneo en tiempo real.
+            </p>
+            <div class="text-gold font-bold">
+              <i class="fas fa-arrow-right mr-2"></i> Ver Calendario
+            </div>
+          </div>
+        </a>
+
+        <!-- Card 3: MVP -->
+        <a href="/mvp" class="card hover:shadow-lg transform hover:scale-105 transition cursor-pointer">
+          <div class="text-center">
+            <i class="fas fa-star text-5xl text-gold mb-4"></i>
+            <h3 class="card-title">Ranking MVP</h3>
+            <p class="text-slate-400 mb-4">
+              Conoce a los mejores jugadores del torneo según su desempeño en las partidas.
+            </p>
+            <div class="text-gold font-bold">
+              <i class="fas fa-arrow-right mr-2"></i> Ver Ranking
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="bg-slate-800 bg-opacity-50 py-16 my-8">
+      <div class="max-w-7xl mx-auto px-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          <div>
+            <p class="text-4xl font-bold text-gold mb-2"><%= typeof stats !== 'undefined' && stats.torneos || '0' %></p>
+            <p class="text-slate-400">Torneos</p>
+          </div>
+          <div>
+            <p class="text-4xl font-bold text-gold mb-2"><%= typeof stats !== 'undefined' && stats.equipos || '0' %></p>
+            <p class="text-slate-400">Equipos</p>
+          </div>
+          <div>
+            <p class="text-4xl font-bold text-gold mb-2"><%= typeof stats !== 'undefined' && stats.jugadores || '0' %></p>
+            <p class="text-slate-400">Jugadores</p>
+          </div>
+          <div>
+            <p class="text-4xl font-bold text-gold mb-2"><%= typeof stats !== 'undefined' && stats.partidas || '0' %></p>
+            <p class="text-slate-400">Partidas</p>
           </div>
         </div>
+      </div>
+    </div>
 
-        <div class="col-md-4 mb-4">
-          <div class="card card-custom">
-            <div class="card-body text-center">
-              <h5 class="card-title">📅 Calendario</h5>
-              <p class="card-text">Revisa todas las partidas programadas y los resultados del torneo en tiempo real.</p>
-              <a href="/calendario" class="btn btn-custom w-100">Ver Calendario</a>
-            </div>
-          </div>
+    <!-- League of Legends Theme Info -->
+    <div class="max-w-7xl mx-auto px-4 py-16">
+      <h2 class="text-3xl font-bold mb-8 text-center">
+        <i class="fas fa-gamepad text-gold mr-2"></i> Sobre el Torneo
+      </h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div>
+          <h3 class="text-xl font-bold text-gold mb-4">
+            <i class="fas fa-info-circle mr-2"></i> ¿Qué es Torneo PDE?
+          </h3>
+          <p class="text-slate-300 mb-4">
+            Torneo PDE es una plataforma integral de gestión y seguimiento de torneos de League of Legends. 
+            Proporciona estadísticas en tiempo real, seguimiento de jugadores y análisis detallado de partidas 
+            usando la API oficial de Riot Games.
+          </p>
+          <p class="text-slate-400">
+            Diseñado para comunidades de esports competitivos que buscan profesionalismo y precisión en 
+            la administración de sus eventos.
+          </p>
         </div>
+        
+        <div>
+          <h3 class="text-xl font-bold text-gold mb-4">
+            <i class="fas fa-rocket mr-2"></i> Características Principales
+          </h3>
+          <ul class="space-y-2 text-slate-300">
+            <li><i class="fas fa-check text-green-500 mr-2"></i> Integración con Riot Games API</li>
+            <li><i class="fas fa-check text-green-500 mr-2"></i> Estadísticas automáticas de jugadores</li>
+            <li><i class="fas fa-check text-green-500 mr-2"></i> Ranking MVP en tiempo real</li>
+            <li><i class="fas fa-check text-green-500 mr-2"></i> Calendario interactivo de partidas</li>
+            <li><i class="fas fa-check text-green-500 mr-2"></i> Gestión completa de equipos</li>
+            <li><i class="fas fa-check text-green-500 mr-2"></i> Panel administrativo avanzado</li>
+          </ul>
+        </div>
+      </div>
+    </div>
 
-        <div class="col-md-4 mb-4">
-          <div class="card card-custom">
-            <div class="card-body text-center">
-              <h5 class="card-title">⭐ Ranking MVP</h5>
-              <p class="card-text">Conoce a los mejores jugadores del torneo según su desempeño en las partidas.</p>
-              <a href="/mvp" class="btn btn-custom w-100">Ver Ranking</a>
-            </div>
-          </div>
+    <!-- CTA Section -->
+    <div class="bg-gradient-to-r from-slate-900 to-slate-800 py-12 mt-8">
+      <div class="max-w-7xl mx-auto px-4 text-center">
+        <h2 class="text-3xl font-bold mb-4">
+          <i class="fas fa-play text-gold mr-2"></i> ¿Listo para comenzar?
+        </h2>
+        <p class="text-slate-400 mb-6">Explora los equipos y partidas del torneo ahora mismo</p>
+        <div class="flex justify-center gap-4">
+          <a href="/equipos" class="btn-primary">
+            <i class="fas fa-users mr-2"></i> Ver Equipos
+          </a>
+          <a href="/calendario" class="btn-success">
+            <i class="fas fa-calendar mr-2"></i> Ver Partidas
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <%- include('partials/footer') %>
         </div>
       </div>
     </div>

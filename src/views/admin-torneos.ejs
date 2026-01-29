@@ -1,0 +1,73 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<main class="max-w-7xl mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-8">
+    <div>
+      <h1 class="text-4xl font-bold mb-2">
+        <i class="fas fa-trophy text-gold mr-3"></i> Gestión de Torneos
+      </h1>
+      <p class="text-slate-400">Crea y administra los torneos del sistema</p>
+    </div>
+    <a href="/admin/torneos/crear" class="btn-success">
+      <i class="fas fa-plus mr-2"></i> Nuevo Torneo
+    </a>
+  </div>
+
+  <% if (typeof torneos !== 'undefined' && torneos && torneos.length > 0) { %>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <% torneos.forEach(torneo => { %>
+        <div class="card hover:shadow-gold transition">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 class="text-2xl font-bold text-white"><%= torneo.nombre %></h3>
+              <p class="text-slate-400 text-sm"><%= torneo.descripcion || 'Sin descripción' %></p>
+            </div>
+            <span class="stat-badge <%= torneo.activo === 1 ? 'bg-green-900 text-green-300' : 'bg-slate-700 text-slate-400' %>">
+              <%= torneo.activo === 1 ? 'Activo' : 'Inactivo' %>
+            </span>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-3 mb-4 text-sm">
+            <div class="bg-slate-700 p-2 rounded text-center">
+              <p class="text-slate-400 text-xs">Estado</p>
+              <p class="font-bold text-gold"><%= torneo.estado %></p>
+            </div>
+            <div class="bg-slate-700 p-2 rounded text-center">
+              <p class="text-slate-400 text-xs">Equipos</p>
+              <p class="font-bold text-gold"><%= typeof torneo.equipo_count !== 'undefined' ? torneo.equipo_count : '?' %></p>
+            </div>
+          </div>
+          
+          <div class="flex gap-2 pt-4 border-t border-slate-700">
+            <a href="/admin/torneos/<%= torneo.id %>/editar" class="btn-primary flex-1 text-center py-2">
+              <i class="fas fa-edit mr-1"></i> Editar
+            </a>
+            <% if (torneo.activo === 0) { %>
+              <form action="/admin/torneos/<%= torneo.id %>/activar" method="POST" class="flex-1">
+                <button type="submit" class="btn-success w-full" onclick="return confirm('¿Activar este torneo?')">
+                  <i class="fas fa-play mr-1"></i> Activar
+                </button>
+              </form>
+            <% } %>
+            <a href="/admin/torneos/<%= torneo.id %>/delete" class="btn-danger flex-1 text-center py-2" onclick="return confirm('¿Eliminar torneo?')">
+              <i class="fas fa-trash mr-1"></i> Borrar
+            </a>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  <% } else { %>
+    <div class="card text-center py-12">
+      <i class="fas fa-inbox text-6xl text-slate-600 mb-4"></i>
+      <h2 class="text-2xl font-bold text-slate-300">No hay torneos creados</h2>
+      <p class="text-slate-400 mt-2 mb-6">Crea el primer torneo para comenzar</p>
+      <a href="/admin/torneos/crear" class="btn-primary">
+        <i class="fas fa-plus mr-2"></i> Crear Torneo
+      </a>
+    </div>
+  <% } %>
+</main>
+
+<%- include('partials/footer') %>

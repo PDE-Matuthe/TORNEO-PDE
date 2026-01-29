@@ -1,44 +1,118 @@
 <%- include('partials/head') %>
 <%- include('partials/nav') %>
 
-<div class="container mt-5">
-  <div class="row">
-    
-    <div class="col-md-4">
-      <div class="card bg-secondary text-white sticky-top" style="top: 20px; z-index: 1;">
-        <div class="card-header bg-primary fw-bold">
-          <i class="fas fa-plus-circle"></i> Nueva Partida
-        </div>
-        <div class="card-body">
-          <form action="/admin/partidas/crear" method="POST">
-            
-            <div class="mb-3">
-              <label class="form-label">Fase del Torneo</label>
-              <select name="fase" class="form-select">
-                <option>Fase de Grupos</option>
-                <option>Cuartos de Final</option>
-                <option>Semifinal</option>
-                <option>Gran Final</option>
-              </select>
-            </div>
+<main class="max-w-7xl mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-8">
+    <div>
+      <h1 class="text-4xl font-bold mb-2">
+        <i class="fas fa-gamepad text-gold mr-3"></i> Gestión de Partidas
+      </h1>
+      <p class="text-slate-400">Crea y administra todas las partidas del torneo</p>
+    </div>
+    <a href="/admin/partidas/crear" class="btn-success">
+      <i class="fas fa-plus mr-2"></i> Nueva Partida
+    </a>
+  </div>
 
-            <div class="mb-3">
-              <label class="form-label text-info">Equipo Azul (Lado Izq)</label>
-              <select name="equipo_azul" class="form-select" required>
-                <% equipos.forEach(eq => { %>
-                  <option value="<%= eq.id %>"><%= eq.nombre %></option>
-                <% }) %>
-              </select>
-            </div>
+  <!-- Riot API Import Section -->
+  <div class="card mb-8 border-2 border-gold">
+    <div class="card-header">
+      <h3 class="card-title">
+        <i class="fas fa-rocket text-gold mr-2"></i> Importar Estadísticas de Riot API
+      </h3>
+    </div>
+    <p class="text-slate-400 mb-4">Carga automáticamente estadísticas de una partida de Riot Games</p>
+    <form action="/admin/partidas/import-riot" method="POST" class="flex gap-3">
+      <input 
+        type="text" 
+        name="riot_match_id" 
+        placeholder="Ej: LAKC1_xxxxxxxxxxxxx" 
+        class="flex-1"
+        required
+      >
+      <button type="submit" class="btn-primary">
+        <i class="fas fa-upload mr-2"></i> Importar
+      </button>
+    </form>
+  </div>
 
-            <div class="mb-3">
-              <label class="form-label text-danger">Equipo Rojo (Lado Der)</label>
-              <select name="equipo_rojo" class="form-select" required>
-                <% equipos.forEach(eq => { %>
-                  <option value="<%= eq.id %>"><%= eq.nombre %></option>
-                <% }) %>
-              </select>
-            </div>
+  <% if (typeof partidas !== 'undefined' && partidas && partidas.length > 0) { %>
+    <div class="card">
+      <div class="overflow-x-auto">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="width: 20%;">Fecha</th>
+              <th style="width: 30%;">Equipos</th>
+              <th style="width: 15%;">Resultado</th>
+              <th style="width: 15%;">Fase</th>
+              <th style="width: 20%;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% partidas.forEach(partida => { %>
+              <tr>
+                <td>
+                  <p class="text-white font-bold">
+                    <%= new Date(partida.fecha_partida).toLocaleDateString('es-ES') %>
+                  </p>
+                  <p class="text-xs text-slate-400">
+                    <%= new Date(partida.fecha_partida).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) %>
+                  </p>
+                </td>
+                <td>
+                  <div class="flex items-center gap-2">
+                    <span class="team-azul-text font-bold"><%= partida.equipo1_nombre || 'TBD' %></span>
+                    <span class="text-slate-500">vs</span>
+                    <span class="team-rojo-text font-bold"><%= partida.equipo2_nombre || 'TBD' %></span>
+                  </div>
+                </td>
+                <td>
+                  <% if (partida.ganador_color) { %>
+                    <% if (partida.ganador_color === 'azul') { %>
+                      <span class="team-azul-text font-bold"><%= partida.equipo1_nombre || 'TBD' %></span>
+                      <p class="text-xs text-slate-400"><%= partida.puntos_equipo1 %>-<%= partida.puntos_equipo2 %></p>
+                    <% } else { %>
+                      <span class="team-rojo-text font-bold"><%= partida.equipo2_nombre || 'TBD' %></span>
+                      <p class="text-xs text-slate-400"><%= partida.puntos_equipo1 %>-<%= partida.puntos_equipo2 %></p>
+                    <% } %>
+                  <% } else { %>
+                    <span class="text-slate-500">Pendiente</span>
+                  <% } %>
+                </td>
+                <td>
+                  <span class="stat-badge"><%= partida.fase_torneo || 'General' %></span>
+                </td>
+                <td>
+                  <div class="flex gap-2">
+                    <a href="/admin/partidas/<%= partida.id %>/editar" class="btn-primary btn-sm" title="Editar">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="/admin/partidas/<%= partida.id %>/delete" class="btn-danger btn-sm" onclick="return confirm('¿Eliminar partida?')" title="Eliminar">
+                      <i class="fas fa-trash"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% } else { %>
+    <div class="card text-center py-12">
+      <i class="fas fa-inbox text-6xl text-slate-600 mb-4"></i>
+      <h2 class="text-2xl font-bold text-slate-300">No hay partidas creadas</h2>
+      <p class="text-slate-400 mt-2 mb-6">Crea la primera partida para comenzar</p>
+      <a href="/admin/partidas/crear" class="btn-primary">
+        <i class="fas fa-plus mr-2"></i> Crear Partida
+      </a>
+    </div>
+  <% } %>
+</main>
+
+<%- include('partials/footer') %>
 
             <div class="row">
               <div class="col-6 mb-3">

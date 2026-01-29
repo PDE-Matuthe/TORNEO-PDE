@@ -1,0 +1,78 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<main class="max-w-7xl mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-8">
+    <div>
+      <h1 class="text-4xl font-bold mb-2">
+        <i class="fas fa-shield-alt text-gold mr-3"></i> Gestión de Equipos
+      </h1>
+      <p class="text-slate-400">Administra todos los equipos participantes</p>
+    </div>
+    <a href="/admin/equipos/crear" class="btn-success">
+      <i class="fas fa-plus mr-2"></i> Nuevo Equipo
+    </a>
+  </div>
+
+  <% if (typeof equipos !== 'undefined' && equipos && equipos.length > 0) { %>
+    <div class="card">
+      <div class="overflow-x-auto">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="width: 25%;">Nombre</th>
+              <th style="width: 20%;">Región</th>
+              <th style="width: 20%;">Logo</th>
+              <th style="width: 15%;">Jugadores</th>
+              <th style="width: 20%;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% equipos.forEach(equipo => { %>
+              <tr>
+                <td>
+                  <p class="font-bold text-white"><%= equipo.nombre %></p>
+                </td>
+                <td>
+                  <span class="stat-badge"><%= equipo.region %></span>
+                </td>
+                <td>
+                  <% if (equipo.logo_url) { %>
+                    <img src="<%= equipo.logo_url %>" alt="<%= equipo.nombre %>" class="w-10 h-10 object-contain rounded">
+                  <% } else { %>
+                    <span class="text-slate-500">Sin logo</span>
+                  <% } %>
+                </td>
+                <td>
+                  <span class="text-gold font-bold"><%= typeof equipo.jugador_count !== 'undefined' ? equipo.jugador_count : '0' %></span>
+                </td>
+                <td>
+                  <div class="flex gap-2">
+                    <a href="/admin/equipos/<%= equipo.id %>/editar" class="btn-primary btn-sm" title="Editar">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="/admin/equipos/<%= equipo.id %>/delete" class="btn-danger btn-sm" onclick="return confirm('¿Eliminar equipo?')" title="Eliminar">
+                      <i class="fas fa-trash"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% } else { %>
+    <div class="card text-center py-12">
+      <i class="fas fa-inbox text-6xl text-slate-600 mb-4"></i>
+      <h2 class="text-2xl font-bold text-slate-300">No hay equipos creados</h2>
+      <p class="text-slate-400 mt-2 mb-6">Crea el primer equipo para comenzar</p>
+      <a href="/admin/equipos/crear" class="btn-primary">
+        <i class="fas fa-plus mr-2"></i> Crear Equipo
+      </a>
+    </div>
+  <% } %>
+</main>
+
+<%- include('partials/footer') %>

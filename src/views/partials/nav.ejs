@@ -1,37 +1,83 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <div class="container">
-    <a class="navbar-brand" href="/">🏆 Torneo LoL</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class="navbar-toggler-icon"></span>
+<nav class="navbar sticky-top z-40">
+  <div class="max-w-7xl mx-auto px-4 py-4 w-full flex justify-between items-center">
+    <!-- Logo / Brand -->
+    <a href="/" class="navbar-brand text-2xl font-bold">
+      <i class="fas fa-crown text-yellow-500 mr-2"></i> <span class="gradient-gold">Torneo PDE</span>
+    </a>
+    
+    <!-- Mobile Toggle -->
+    <button id="mobileMenuBtn" class="md:hidden text-gold hover:text-white transition">
+      <i class="fas fa-bars text-2xl"></i>
     </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="/equipos">🏢 Equipos</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/calendario">📅 Calendario</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/mvp">⭐ Ranking MVP</a>
-          </li>
-        <% if (isAuthenticated && isAdmin) { %>
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
-              ⚙️ Admin
-            </a>
-            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="adminDropdown">
-              <li><a class="dropdown-item" href="/admin">Dashboard</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="/admin/equipos">Gestionar Equipos</a></li>
-              <li><a class="dropdown-item" href="/admin/partidas">Gestionar Partidas</a></li>
-            </ul>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link btn btn-danger ms-2" href="/logout">Cerrar Sesión</a>
-          </li>
-        <% } %>
-      </ul>
+    
+    <!-- Navigation Links -->
+    <div id="navMenu" class="hidden md:flex md:items-center md:space-x-6">
+      <!-- Public Links -->
+      <a href="/equipos" class="nav-link">
+        <i class="fas fa-users text-gold mr-1"></i> Equipos
+      </a>
+      <a href="/calendario" class="nav-link">
+        <i class="fas fa-calendar text-gold mr-1"></i> Calendario
+      </a>
+      <a href="/mvp" class="nav-link">
+        <i class="fas fa-star text-gold mr-1"></i> Ranking MVP
+      </a>
+      
+      <% if (typeof usuario !== 'undefined' && usuario && usuario.isAdmin) { %>
+        <!-- Admin Links -->
+        <div class="border-l border-slate-600 pl-6 flex items-center space-x-4">
+          <div class="relative group">
+            <button class="nav-link flex items-center">
+              <i class="fas fa-cog text-gold mr-1"></i> Admin
+              <i class="fas fa-chevron-down text-xs ml-1"></i>
+            </button>
+            <div class="hidden group-hover:block absolute right-0 mt-0 w-48 bg-slate-800 border border-slate-600 rounded shadow-lg">
+              <a href="/admin" class="block px-4 py-2 text-sm hover:bg-slate-700 border-b border-slate-600">
+                <i class="fas fa-chart-line mr-2"></i> Dashboard
+              </a>
+              <a href="/admin/torneos" class="block px-4 py-2 text-sm hover:bg-slate-700 border-b border-slate-600">
+                <i class="fas fa-trophy mr-2"></i> Torneos
+              </a>
+              <a href="/admin/equipos" class="block px-4 py-2 text-sm hover:bg-slate-700 border-b border-slate-600">
+                <i class="fas fa-users mr-2"></i> Equipos
+              </a>
+              <a href="/admin/jugadores" class="block px-4 py-2 text-sm hover:bg-slate-700 border-b border-slate-600">
+                <i class="fas fa-user mr-2"></i> Jugadores
+              </a>
+              <a href="/admin/partidas" class="block px-4 py-2 text-sm hover:bg-slate-700 border-b border-slate-600">
+                <i class="fas fa-gamepad mr-2"></i> Partidas
+              </a>
+              <a href="/logout" class="block px-4 py-2 text-sm hover:bg-red-900 text-red-400">
+                <i class="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión
+              </a>
+            </div>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  </div>
+  
+  <!-- Mobile Menu -->
+  <div id="mobileMenuContent" class="hidden md:hidden border-t border-slate-600">
+    <div class="px-4 py-3 space-y-2">
+      <a href="/equipos" class="block nav-link">Equipos</a>
+      <a href="/calendario" class="block nav-link">Calendario</a>
+      <a href="/mvp" class="block nav-link">Ranking MVP</a>
+      <% if (typeof usuario !== 'undefined' && usuario && usuario.isAdmin) { %>
+        <hr class="border-slate-600 my-2">
+        <a href="/admin" class="block nav-link">Admin Dashboard</a>
+        <a href="/admin/torneos" class="block nav-link">Gestionar Torneos</a>
+        <a href="/admin/equipos" class="block nav-link">Gestionar Equipos</a>
+        <a href="/admin/partidas" class="block nav-link">Gestionar Partidas</a>
+        <a href="/logout" class="block nav-link text-red-400">Cerrar Sesión</a>
+      <% } %>
     </div>
   </div>
 </nav>
+
+<script>
+document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+  const menu = document.getElementById('mobileMenuContent');
+  menu.classList.toggle('hidden');
+});
+</script>
