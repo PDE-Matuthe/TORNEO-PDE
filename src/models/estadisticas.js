@@ -57,17 +57,18 @@ export async function getEstadisticasByJugador (jugadorId) {
 export async function getMVPRanking (torneoId) {
   try {
     const [rows] = await pool.query(
-      `SELECT BIN_TO_UUID(e.jugador_id) as jugador_id, j.nombre_invocador,
-              BIN_TO_UUID(e.equipo_id) as equipo_id, eq.nombre as equipo_nombre,
+      `SELECT BIN_TO_UUID(e.jugador_id) as jugador_id, j.nombre_invocador, j.rol_juego,
+              BIN_TO_UUID(e.equipo_id) as equipo_id, eq.nombre as equipo_nombre, eq.logo_url as equipo_logo,
               SUM(e.kills) as total_kills, SUM(e.deaths) as total_deaths, SUM(e.assists) as total_assists,
               ROUND((SUM(e.kills) + SUM(e.assists)) / NULLIF(SUM(e.deaths), 0), 2) as kda,
+              ROUND(AVG(e.cs_min), 1) as avg_cs, ROUND(AVG(e.dmg_min), 0) as avg_dmg,
               COUNT(e.partida_id) as partidas_jugadas, SUM(CASE WHEN e.win THEN 1 ELSE 0 END) as partidas_ganadas
        FROM estadisticas e
        INNER JOIN jugadores j ON e.jugador_id = j.id
        INNER JOIN equipos eq ON e.equipo_id = eq.id
        INNER JOIN partidas p ON e.partida_id = p.id
        WHERE p.torneo_id = UUID_TO_BIN(?)
-       GROUP BY e.jugador_id, j.nombre_invocador, e.equipo_id, eq.nombre
+       GROUP BY e.jugador_id, j.nombre_invocador, j.rol_juego, e.equipo_id, eq.nombre, eq.logo_url
        ORDER BY kda DESC, total_kills DESC, partidas_ganadas DESC
        LIMIT 20`,
       [torneoId]

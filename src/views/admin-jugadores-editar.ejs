@@ -1,0 +1,72 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<main class="max-w-2xl mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="mb-8">
+    <a href="/admin/jugadores" class="text-gold hover:text-yellow-300 mb-4 inline-flex items-center gap-2">
+      <i class="fas fa-arrow-left"></i> Volver a Jugadores
+    </a>
+    <h1 class="text-4xl font-bold mb-2">
+      <i class="fas fa-edit text-gold mr-3"></i> Editar Jugador
+    </h1>
+    <p class="text-slate-400">Actualiza los datos del jugador</p>
+  </div>
+
+  <div class="card">
+    <form action="/admin/jugadores/<%= jugador.id %>/update" method="POST" class="space-y-6">
+      <!-- Nombre Invocador -->
+      <div>
+        <label for="nombre_invocador" class="form-label">Nombre Invocador</label>
+        <input 
+          type="text" 
+          id="nombre_invocador" 
+          name="nombre_invocador" 
+          placeholder="Ej: Faker"
+          class="form-input"
+          value="<%= jugador.nombre_invocador %>"
+          required
+        >
+        <p class="text-xs text-slate-400 mt-1">Nombre del personaje en League of Legends</p>
+      </div>
+
+      <!-- Rol -->
+      <div>
+        <label for="rol_juego" class="form-label">Rol</label>
+        <select id="rol_juego" name="rol_juego" class="form-input" required>
+          <option value="">-- Selecciona un rol --</option>
+          <option value="TOP" <%= jugador.rol_juego === 'TOP' ? 'selected' : '' %>>⬆️ TOP</option>
+          <option value="JUNGLE" <%= jugador.rol_juego === 'JUNGLE' ? 'selected' : '' %>>🌳 JUNGLE</option>
+          <option value="MID" <%= jugador.rol_juego === 'MID' ? 'selected' : '' %>>↔️ MID</option>
+          <option value="ADC" <%= jugador.rol_juego === 'ADC' ? 'selected' : '' %>>➡️ ADC</option>
+          <option value="SUPPORT" <%= jugador.rol_juego === 'SUPPORT' ? 'selected' : '' %>>🛡️ SUPPORT</option>
+        </select>
+      </div>
+
+      <!-- Equipo -->
+      <div>
+        <label for="equipo_id" class="form-label">Equipo</label>
+        <select id="equipo_id" name="equipo_id" class="form-input" required>
+          <option value="">-- Selecciona un equipo --</option>
+          <% if (typeof equipos !== 'undefined' && equipos.length > 0) { %>
+            <% equipos.forEach(eq => { %>
+              <option value="<%= eq.id %>" <%= jugador.equipo_id === eq.id ? 'selected' : '' %>><%= eq.nombre %></option>
+            <% }) %>
+          <% } %>
+        </select>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex gap-4 pt-6 border-t border-slate-700">
+        <a href="/admin/jugadores" class="btn-secondary flex-1">
+          <i class="fas fa-times mr-2"></i> Cancelar
+        </a>
+        <button type="submit" class="btn-primary flex-1">
+          <i class="fas fa-save mr-2"></i> Guardar Cambios
+        </button>
+      </div>
+    </form>
+  </div>
+</main>
+
+<%- include('partials/footer') %>

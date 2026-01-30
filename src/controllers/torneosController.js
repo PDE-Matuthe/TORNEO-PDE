@@ -26,6 +26,55 @@ export async function getTorneos (req, res) {
 }
 
 /**
+ * GET /admin/torneos/crear - Mostrar formulario para crear torneo
+ */
+export async function getCreateTorneo (req, res) {
+  try {
+    const equipos = await equiposModel.getAllEquipos()
+    
+    res.render('admin-torneos-crear', {
+      equipos
+    })
+  } catch (error) {
+    console.error('Error en getCreateTorneo:', error.message)
+    res.status(500).render('error', {
+      codigo: 500,
+      mensaje: 'Error al cargar formulario de torneos'
+    })
+  }
+}
+
+/**
+ * GET /admin/torneos/:id/editar - Mostrar formulario para editar torneo
+ */
+export async function getEditTorneo (req, res) {
+  try {
+    const { id } = req.params
+    const torneo = await torneosModel.getTorneoById(id)
+    
+    if (!torneo) {
+      return res.status(404).render('error', {
+        codigo: 404,
+        mensaje: 'Torneo no encontrado'
+      })
+    }
+    
+    const equipos = await equiposModel.getAllEquipos()
+    
+    res.render('admin-torneos-editar', {
+      torneo,
+      equipos
+    })
+  } catch (error) {
+    console.error('Error en getEditTorneo:', error.message)
+    res.status(500).render('error', {
+      codigo: 500,
+      mensaje: 'Error al cargar formulario de edición'
+    })
+  }
+}
+
+/**
  * POST /admin/torneos - Crear nuevo torneo
  */
 export async function postCreateTorneo (req, res) {

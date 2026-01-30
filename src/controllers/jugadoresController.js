@@ -26,6 +26,55 @@ export async function getJugadores (req, res) {
 }
 
 /**
+ * GET /admin/jugadores/crear - Mostrar formulario para crear jugador
+ */
+export async function getCreateJugador (req, res) {
+  try {
+    const equipos = await equiposModel.getAllEquipos()
+    
+    res.render('admin-jugadores-crear', {
+      equipos
+    })
+  } catch (error) {
+    console.error('Error en getCreateJugador:', error.message)
+    res.status(500).render('error', {
+      codigo: 500,
+      mensaje: 'Error al cargar formulario de jugadores'
+    })
+  }
+}
+
+/**
+ * GET /admin/jugadores/:id/editar - Mostrar formulario para editar jugador
+ */
+export async function getEditJugador (req, res) {
+  try {
+    const { id } = req.params
+    const jugador = await jugadoresModel.getJugadorById(id)
+    
+    if (!jugador) {
+      return res.status(404).render('error', {
+        codigo: 404,
+        mensaje: 'Jugador no encontrado'
+      })
+    }
+    
+    const equipos = await equiposModel.getAllEquipos()
+    
+    res.render('admin-jugadores-editar', {
+      jugador,
+      equipos
+    })
+  } catch (error) {
+    console.error('Error en getEditJugador:', error.message)
+    res.status(500).render('error', {
+      codigo: 500,
+      mensaje: 'Error al cargar formulario de edición'
+    })
+  }
+}
+
+/**
  * POST /admin/jugadores - Crear nuevo jugador
  */
 export async function postCreateJugador (req, res) {

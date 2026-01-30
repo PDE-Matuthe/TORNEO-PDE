@@ -1,0 +1,98 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<main class="max-w-2xl mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="mb-8">
+    <a href="/admin/equipos" class="text-gold hover:text-yellow-300 mb-4 inline-flex items-center gap-2">
+      <i class="fas fa-arrow-left"></i> Volver a Equipos
+    </a>
+    <h1 class="text-4xl font-bold mb-2">
+      <i class="fas fa-edit text-gold mr-3"></i> Editar Equipo
+    </h1>
+    <p class="text-slate-400">Actualiza los detalles del equipo</p>
+  </div>
+
+  <div class="card">
+    <form action="/admin/equipos/<%= equipo.id %>/update" method="POST" class="space-y-6">
+      <!-- Nombre -->
+      <div>
+        <label for="nombre" class="form-label">Nombre del Equipo</label>
+        <input 
+          type="text" 
+          id="nombre" 
+          name="nombre" 
+          placeholder="Ej: Team SoloMid"
+          class="form-input"
+          value="<%= equipo.nombre %>"
+          required
+        >
+      </div>
+
+      <!-- Siglas -->
+      <div>
+        <label for="siglas" class="form-label">Siglas</label>
+        <input 
+          type="text" 
+          id="siglas" 
+          name="siglas" 
+          placeholder="Ej: TSM"
+          class="form-input"
+          maxlength="4"
+          value="<%= equipo.siglas %>"
+          required
+        >
+      </div>
+
+      <!-- Logo URL -->
+      <div>
+        <label for="logo_url" class="form-label">URL del Logo</label>
+        <input 
+          type="url" 
+          id="logo_url" 
+          name="logo_url" 
+          placeholder="https://..."
+          class="form-input"
+          value="<%= equipo.logo_url || '' %>"
+        >
+        <p class="text-xs text-slate-400 mt-2">Enlace a la imagen del logo del equipo</p>
+      </div>
+
+      <!-- Logo Preview -->
+      <% if (equipo.logo_url) { %>
+        <div id="logoPreview">
+          <p class="text-sm text-slate-300 mb-2">Logo Actual:</p>
+          <img id="logoImg" src="<%= equipo.logo_url %>" alt="<%= equipo.nombre %>" class="h-16 w-16 rounded object-cover border-2 border-gold">
+        </div>
+      <% } else { %>
+        <div id="logoPreview" style="display: none;">
+          <p class="text-sm text-slate-300 mb-2">Vista previa:</p>
+          <img id="logoImg" src="" alt="Logo Preview" class="h-16 w-16 rounded object-cover border-2 border-gold">
+        </div>
+      <% } %>
+
+      <!-- Buttons -->
+      <div class="flex gap-4 pt-6 border-t border-slate-700">
+        <a href="/admin/equipos" class="btn-secondary flex-1">
+          <i class="fas fa-times mr-2"></i> Cancelar
+        </a>
+        <button type="submit" class="btn-primary flex-1">
+          <i class="fas fa-save mr-2"></i> Guardar Cambios
+        </button>
+      </div>
+    </form>
+  </div>
+</main>
+
+<script>
+  document.getElementById('logo_url').addEventListener('change', function() {
+    if (this.value) {
+      document.getElementById('logoImg').src = this.value;
+      document.getElementById('logoPreview').style.display = 'block';
+    } else {
+      document.getElementById('logoPreview').style.display = 'none';
+    }
+  });
+</script>
+
+<%- include('partials/footer') %>

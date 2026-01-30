@@ -1,0 +1,93 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<main class="max-w-2xl mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="mb-8">
+    <a href="/admin/partidas" class="text-gold hover:text-yellow-300 mb-4 inline-flex items-center gap-2">
+      <i class="fas fa-arrow-left"></i> Volver a Partidas
+    </a>
+    <h1 class="text-4xl font-bold mb-2">
+      <i class="fas fa-gamepad text-gold mr-3"></i> Crear Nueva Partida
+    </h1>
+    <p class="text-slate-400">Registra una nueva partida en el torneo</p>
+  </div>
+
+  <div class="card">
+    <form action="/admin/partidas" method="POST" class="space-y-6">
+      <!-- Torneo -->
+      <div>
+        <label for="torneo_id" class="form-label">Torneo</label>
+        <select id="torneo_id" name="torneo_id" class="form-input" required>
+          <option value="">-- Selecciona un torneo --</option>
+          <% if (typeof torneos !== 'undefined' && torneos.length > 0) { %>
+            <% torneos.forEach(t => { %>
+              <option value="<%= t.id %>"><%= t.nombre %></option>
+            <% }) %>
+          <% } %>
+        </select>
+      </div>
+
+      <!-- Equipo Azul -->
+      <div>
+        <label for="equipo_azul_id" class="form-label">Equipo Azul (Lado Izquierdo)</label>
+        <select id="equipo_azul_id" name="equipo_azul_id" class="form-input" required>
+          <option value="">-- Selecciona equipo --</option>
+          <% if (typeof equipos !== 'undefined' && equipos.length > 0) { %>
+            <% equipos.forEach(eq => { %>
+              <option value="<%= eq.id %>"><%= eq.nombre %></option>
+            <% }) %>
+          <% } %>
+        </select>
+      </div>
+
+      <!-- Equipo Rojo -->
+      <div>
+        <label for="equipo_rojo_id" class="form-label">Equipo Rojo (Lado Derecho)</label>
+        <select id="equipo_rojo_id" name="equipo_rojo_id" class="form-input" required>
+          <option value="">-- Selecciona equipo --</option>
+          <% if (typeof equipos !== 'undefined' && equipos.length > 0) { %>
+            <% equipos.forEach(eq => { %>
+              <option value="<%= eq.id %>"><%= eq.nombre %></option>
+            <% }) %>
+          <% } %>
+        </select>
+      </div>
+
+      <!-- Fecha y Hora -->
+      <div>
+        <label for="fecha_partida" class="form-label">Fecha y Hora</label>
+        <input 
+          type="datetime-local" 
+          id="fecha_partida" 
+          name="fecha_partida"
+          class="form-input"
+          required
+        >
+      </div>
+
+      <!-- Fase del Torneo -->
+      <div>
+        <label for="fase_torneo" class="form-label">Fase del Torneo</label>
+        <select id="fase_torneo" name="fase_torneo" class="form-input">
+          <option value="Fase de Grupos">Fase de Grupos</option>
+          <option value="Cuartos de Final">Cuartos de Final</option>
+          <option value="Semifinal">Semifinal</option>
+          <option value="Gran Final">Gran Final</option>
+        </select>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex gap-4 pt-6 border-t border-slate-700">
+        <a href="/admin/partidas" class="btn-secondary flex-1">
+          <i class="fas fa-times mr-2"></i> Cancelar
+        </a>
+        <button type="submit" class="btn-success flex-1">
+          <i class="fas fa-plus mr-2"></i> Crear Partida
+        </button>
+      </div>
+    </form>
+  </div>
+</main>
+
+<%- include('partials/footer') %>

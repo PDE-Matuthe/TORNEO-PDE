@@ -24,6 +24,48 @@ export async function getEquipos (req, res) {
 }
 
 /**
+ * GET /admin/equipos/crear - Mostrar formulario para crear equipo
+ */
+export async function getCreateEquipo (req, res) {
+  try {
+    res.render('admin-equipos-crear')
+  } catch (error) {
+    console.error('Error en getCreateEquipo:', error.message)
+    res.status(500).render('error', {
+      codigo: 500,
+      mensaje: 'Error al cargar formulario de equipos'
+    })
+  }
+}
+
+/**
+ * GET /admin/equipos/:id/editar - Mostrar formulario para editar equipo
+ */
+export async function getEditEquipo (req, res) {
+  try {
+    const { id } = req.params
+    const equipo = await equiposModel.getEquipoById(id)
+    
+    if (!equipo) {
+      return res.status(404).render('error', {
+        codigo: 404,
+        mensaje: 'Equipo no encontrado'
+      })
+    }
+    
+    res.render('admin-equipos-editar', {
+      equipo
+    })
+  } catch (error) {
+    console.error('Error en getEditEquipo:', error.message)
+    res.status(500).render('error', {
+      codigo: 500,
+      mensaje: 'Error al cargar formulario de edición'
+    })
+  }
+}
+
+/**
  * POST /admin/equipos - Crear nuevo equipo
  */
 export async function postCreateEquipo (req, res) {

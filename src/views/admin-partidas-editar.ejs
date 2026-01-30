@@ -1,0 +1,111 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<main class="max-w-2xl mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="mb-8">
+    <a href="/admin/partidas" class="text-gold hover:text-yellow-300 mb-4 inline-flex items-center gap-2">
+      <i class="fas fa-arrow-left"></i> Volver a Partidas
+    </a>
+    <h1 class="text-4xl font-bold mb-2">
+      <i class="fas fa-edit text-gold mr-3"></i> Editar Partida
+    </h1>
+    <p class="text-slate-400">Actualiza los datos de la partida</p>
+  </div>
+
+  <div class="card">
+    <form action="/admin/partidas/<%= partida.id %>/update" method="POST" class="space-y-6">
+      <!-- Torneo -->
+      <div>
+        <label for="torneo_id" class="form-label">Torneo</label>
+        <select id="torneo_id" name="torneo_id" class="form-input" required>
+          <option value="">-- Selecciona un torneo --</option>
+          <% if (typeof torneos !== 'undefined' && torneos.length > 0) { %>
+            <% torneos.forEach(t => { %>
+              <option value="<%= t.id %>" <%= partida.torneo_id === t.id ? 'selected' : '' %>><%= t.nombre %></option>
+            <% }) %>
+          <% } %>
+        </select>
+      </div>
+
+      <!-- Equipo Azul -->
+      <div>
+        <label for="equipo_azul_id" class="form-label">Equipo Azul (Lado Izquierdo)</label>
+        <select id="equipo_azul_id" name="equipo_azul_id" class="form-input" required>
+          <option value="">-- Selecciona equipo --</option>
+          <% if (typeof equipos !== 'undefined' && equipos.length > 0) { %>
+            <% equipos.forEach(eq => { %>
+              <option value="<%= eq.id %>" <%= partida.equipo_azul_id === eq.id ? 'selected' : '' %>><%= eq.nombre %></option>
+            <% }) %>
+          <% } %>
+        </select>
+      </div>
+
+      <!-- Equipo Rojo -->
+      <div>
+        <label for="equipo_rojo_id" class="form-label">Equipo Rojo (Lado Derecho)</label>
+        <select id="equipo_rojo_id" name="equipo_rojo_id" class="form-input" required>
+          <option value="">-- Selecciona equipo --</option>
+          <% if (typeof equipos !== 'undefined' && equipos.length > 0) { %>
+            <% equipos.forEach(eq => { %>
+              <option value="<%= eq.id %>" <%= partida.equipo_rojo_id === eq.id ? 'selected' : '' %>><%= eq.nombre %></option>
+            <% }) %>
+          <% } %>
+        </select>
+      </div>
+
+      <!-- Fecha y Hora -->
+      <div>
+        <label for="fecha_partida" class="form-label">Fecha y Hora</label>
+        <input 
+          type="datetime-local" 
+          id="fecha_partida" 
+          name="fecha_partida"
+          class="form-input"
+          value="<%= new Date(partida.fecha_partida).toISOString().slice(0, 16) %>"
+          required
+        >
+      </div>
+
+      <!-- Fase del Torneo -->
+      <div>
+        <label for="fase_torneo" class="form-label">Fase del Torneo</label>
+        <select id="fase_torneo" name="fase_torneo" class="form-input">
+          <option value="Fase de Grupos" <%= partida.fase_torneo === 'Fase de Grupos' ? 'selected' : '' %>>Fase de Grupos</option>
+          <option value="Cuartos de Final" <%= partida.fase_torneo === 'Cuartos de Final' ? 'selected' : '' %>>Cuartos de Final</option>
+          <option value="Semifinal" <%= partida.fase_torneo === 'Semifinal' ? 'selected' : '' %>>Semifinal</option>
+          <option value="Gran Final" <%= partida.fase_torneo === 'Gran Final' ? 'selected' : '' %>>Gran Final</option>
+        </select>
+      </div>
+
+      <!-- Info de Ganador (Si aplica) -->
+      <% if (partida.ganador_color) { %>
+        <div class="p-4 bg-slate-700 rounded">
+          <p class="text-sm text-slate-300">Resultado actual:</p>
+          <p class="font-bold text-gold">
+            <% if (partida.ganador_color === 'azul') { %>
+              Ganador: Equipo Azul
+            <% } else { %>
+              Ganador: Equipo Rojo
+            <% } %>
+          </p>
+          <p class="text-sm text-slate-400">
+            Puntuación: <%= partida.puntos_equipo1 %> - <%= partida.puntos_equipo2 %>
+          </p>
+        </div>
+      <% } %>
+
+      <!-- Buttons -->
+      <div class="flex gap-4 pt-6 border-t border-slate-700">
+        <a href="/admin/partidas" class="btn-secondary flex-1">
+          <i class="fas fa-times mr-2"></i> Cancelar
+        </a>
+        <button type="submit" class="btn-primary flex-1">
+          <i class="fas fa-save mr-2"></i> Guardar Cambios
+        </button>
+      </div>
+    </form>
+  </div>
+</main>
+
+<%- include('partials/footer') %>

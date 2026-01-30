@@ -30,6 +30,59 @@ export async function getPartidas (req, res) {
 }
 
 /**
+ * GET /admin/partidas/crear - Mostrar formulario para crear partida
+ */
+export async function getCreatePartida (req, res) {
+  try {
+    const torneos = await torneosModel.getAllTorneos()
+    const equipos = await equiposModel.getAllEquipos()
+    
+    res.render('admin-partidas-crear', {
+      torneos,
+      equipos
+    })
+  } catch (error) {
+    console.error('Error en getCreatePartida:', error.message)
+    res.status(500).render('error', {
+      codigo: 500,
+      mensaje: 'Error al cargar formulario de partidas'
+    })
+  }
+}
+
+/**
+ * GET /admin/partidas/:id/editar - Mostrar formulario para editar partida
+ */
+export async function getEditPartida (req, res) {
+  try {
+    const { id } = req.params
+    const partida = await partidasModel.getPartidaById(id)
+    
+    if (!partida) {
+      return res.status(404).render('error', {
+        codigo: 404,
+        mensaje: 'Partida no encontrada'
+      })
+    }
+    
+    const torneos = await torneosModel.getAllTorneos()
+    const equipos = await equiposModel.getAllEquipos()
+    
+    res.render('admin-partidas-editar', {
+      partida,
+      torneos,
+      equipos
+    })
+  } catch (error) {
+    console.error('Error en getEditPartida:', error.message)
+    res.status(500).render('error', {
+      codigo: 500,
+      mensaje: 'Error al cargar formulario de edición'
+    })
+  }
+}
+
+/**
  * GET /admin/partidas/:id - Detalle de partida (para editar y cargar Riot stats)
  */
 export async function getPartidaDetalle (req, res) {

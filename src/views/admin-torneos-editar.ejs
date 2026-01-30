@@ -1,0 +1,114 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<main class="max-w-2xl mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="mb-8">
+    <a href="/admin/torneos" class="text-gold hover:text-yellow-300 mb-4 inline-flex items-center gap-2">
+      <i class="fas fa-arrow-left"></i> Volver a Torneos
+    </a>
+    <h1 class="text-4xl font-bold mb-2">
+      <i class="fas fa-edit text-gold mr-3"></i> Editar Torneo
+    </h1>
+    <p class="text-slate-400">Actualiza los detalles del torneo</p>
+  </div>
+
+  <div class="card">
+    <form action="/admin/torneos/<%= torneo.id %>/update" method="POST" class="space-y-6">
+      <!-- Nombre -->
+      <div>
+        <label for="nombre" class="form-label">Nombre del Torneo</label>
+        <input 
+          type="text" 
+          id="nombre" 
+          name="nombre" 
+          placeholder="Ej: Liga Regional 2026"
+          class="form-input"
+          value="<%= torneo.nombre %>"
+          required
+        >
+      </div>
+
+      <!-- Descripción -->
+      <div>
+        <label for="descripcion" class="form-label">Descripción</label>
+        <textarea 
+          id="descripcion" 
+          name="descripcion" 
+          rows="3"
+          placeholder="Detalles sobre el torneo..."
+          class="form-input"
+        ><%= torneo.descripcion || '' %></textarea>
+      </div>
+
+      <!-- Fecha de Inicio -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label for="fecha_inicio" class="form-label">Fecha Inicio</label>
+          <input 
+            type="date" 
+            id="fecha_inicio" 
+            name="fecha_inicio"
+            class="form-input"
+            value="<%= new Date(torneo.fecha_inicio).toISOString().split('T')[0] %>"
+            required
+          >
+        </div>
+
+        <!-- Fecha de Fin -->
+        <div>
+          <label for="fecha_fin" class="form-label">Fecha Fin</label>
+          <input 
+            type="date" 
+            id="fecha_fin" 
+            name="fecha_fin"
+            class="form-input"
+            value="<%= new Date(torneo.fecha_fin).toISOString().split('T')[0] %>"
+            required
+          >
+        </div>
+      </div>
+
+      <!-- Estado -->
+      <div>
+        <label for="estado" class="form-label">Estado</label>
+        <select id="estado" name="estado" class="form-input">
+          <option value="planificación" <%= torneo.estado === 'planificación' ? 'selected' : '' %>>Planificación</option>
+          <option value="en_curso" <%= torneo.estado === 'en_curso' ? 'selected' : '' %>>En Curso</option>
+          <option value="finalizado" <%= torneo.estado === 'finalizado' ? 'selected' : '' %>>Finalizado</option>
+          <option value="cancelado" <%= torneo.estado === 'cancelado' ? 'selected' : '' %>>Cancelado</option>
+        </select>
+      </div>
+
+      <!-- Equipos (Info) -->
+      <% if (typeof equipos !== 'undefined' && equipos.length > 0) { %>
+        <div>
+          <label class="form-label">Equipos Participantes</label>
+          <p class="text-sm text-slate-400 mb-2">Los equipos se pueden gestionar desde la lista de torneos</p>
+          <div class="space-y-2 max-h-48 overflow-y-auto">
+            <% equipos.forEach(eq => { %>
+              <div class="flex items-center gap-2 p-2 bg-slate-700 rounded">
+                <% if (eq.logo_url) { %>
+                  <img src="<%= eq.logo_url %>" alt="<%= eq.nombre %>" class="h-6 w-6 rounded object-cover">
+                <% } %>
+                <span><%= eq.nombre %></span>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+      <% } %>
+
+      <!-- Buttons -->
+      <div class="flex gap-4 pt-6 border-t border-slate-700">
+        <a href="/admin/torneos" class="btn-secondary flex-1">
+          <i class="fas fa-times mr-2"></i> Cancelar
+        </a>
+        <button type="submit" class="btn-primary flex-1">
+          <i class="fas fa-save mr-2"></i> Guardar Cambios
+        </button>
+      </div>
+    </form>
+  </div>
+</main>
+
+<%- include('partials/footer') %>

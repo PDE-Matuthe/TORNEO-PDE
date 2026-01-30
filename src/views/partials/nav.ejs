@@ -12,17 +12,33 @@
     
     <!-- Navigation Links -->
     <div id="navMenu" class="hidden md:flex md:items-center md:space-x-6">
-      <!-- Public Links -->
-      <a href="/equipos" class="nav-link">
-        <i class="fas fa-users text-gold mr-1"></i> Equipos
+      <!-- Torneo Actual Dropdown -->
+      <div class="relative group">
+        <button class="nav-link flex items-center">
+          <i class="fas fa-trophy text-gold mr-1"></i> Torneo Actual
+          <i class="fas fa-chevron-down text-xs ml-1"></i>
+        </button>
+        <div class="hidden group-hover:block absolute left-0 mt-0 w-48 bg-slate-800 border border-slate-600 rounded shadow-lg">
+          <a href="/calendario" class="block px-4 py-2 text-sm hover:bg-slate-700 border-b border-slate-600">
+            <i class="fas fa-calendar mr-2 text-blue-400"></i> Calendario
+          </a>
+          <a href="/bracket" class="block px-4 py-2 text-sm hover:bg-slate-700 border-b border-slate-600">
+            <i class="fas fa-sitemap mr-2 text-purple-400"></i> Bracket
+          </a>
+          <a href="/equipos" class="block px-4 py-2 text-sm hover:bg-slate-700 border-b border-slate-600">
+            <i class="fas fa-users mr-2 text-pink-400"></i> Equipos
+          </a>
+          <a href="/mvp" class="block px-4 py-2 text-sm hover:bg-slate-700">
+            <i class="fas fa-star mr-2 text-yellow-400"></i> Ranking MVP
+          </a>
+        </div>
+      </div>
+
+      <!-- Torneos Anteriores -->
+      <a href="/torneos-anteriores" class="nav-link">
+        <i class="fas fa-history text-gold mr-1"></i> Torneos Anteriores
       </a>
-      <a href="/calendario" class="nav-link">
-        <i class="fas fa-calendar text-gold mr-1"></i> Calendario
-      </a>
-      <a href="/mvp" class="nav-link">
-        <i class="fas fa-star text-gold mr-1"></i> Ranking MVP
-      </a>
-      
+
       <% if (typeof usuario !== 'undefined' && usuario && usuario.isAdmin) { %>
         <!-- Admin Links -->
         <div class="border-l border-slate-600 pl-6 flex items-center space-x-4">
@@ -60,16 +76,35 @@
   <!-- Mobile Menu -->
   <div id="mobileMenuContent" class="hidden md:hidden border-t border-slate-600">
     <div class="px-4 py-3 space-y-2">
-      <a href="/equipos" class="block nav-link">Equipos</a>
-      <a href="/calendario" class="block nav-link">Calendario</a>
-      <a href="/mvp" class="block nav-link">Ranking MVP</a>
+      <!-- Mobile Torneo Actual -->
+      <button id="mobileMenuToggle" class="w-full text-left nav-link py-2 flex items-center justify-between">
+        <span><i class="fas fa-trophy text-gold mr-2"></i>Torneo Actual</span>
+        <i class="fas fa-chevron-down text-xs"></i>
+      </button>
+      <div id="mobileMenuToggleContent" class="hidden pl-4 space-y-2 border-l border-slate-600">
+        <a href="/calendario" class="block nav-link text-sm"><i class="fas fa-calendar mr-2"></i>Calendario</a>
+        <a href="/bracket" class="block nav-link text-sm"><i class="fas fa-sitemap mr-2"></i>Bracket</a>
+        <a href="/equipos" class="block nav-link text-sm"><i class="fas fa-users mr-2"></i>Equipos</a>
+        <a href="/mvp" class="block nav-link text-sm"><i class="fas fa-star mr-2"></i>Ranking MVP</a>
+      </div>
+      
+      <!-- Mobile Torneos Anteriores -->
+      <a href="/torneos-anteriores" class="block nav-link py-2"><i class="fas fa-history text-gold mr-1"></i>Torneos Anteriores</a>
+      
       <% if (typeof usuario !== 'undefined' && usuario && usuario.isAdmin) { %>
         <hr class="border-slate-600 my-2">
-        <a href="/admin" class="block nav-link">Admin Dashboard</a>
-        <a href="/admin/torneos" class="block nav-link">Gestionar Torneos</a>
-        <a href="/admin/equipos" class="block nav-link">Gestionar Equipos</a>
-        <a href="/admin/partidas" class="block nav-link">Gestionar Partidas</a>
-        <a href="/logout" class="block nav-link text-red-400">Cerrar Sesión</a>
+        <button id="mobileAdminToggle" class="w-full text-left nav-link py-2 flex items-center justify-between">
+          <span><i class="fas fa-cog text-gold mr-2"></i>Admin</span>
+          <i class="fas fa-chevron-down text-xs"></i>
+        </button>
+        <div id="mobileAdminToggleContent" class="hidden pl-4 space-y-2 border-l border-slate-600">
+          <a href="/admin" class="block nav-link text-sm"><i class="fas fa-chart-line mr-2"></i>Dashboard</a>
+          <a href="/admin/torneos" class="block nav-link text-sm"><i class="fas fa-trophy mr-2"></i>Torneos</a>
+          <a href="/admin/equipos" class="block nav-link text-sm"><i class="fas fa-users mr-2"></i>Equipos</a>
+          <a href="/admin/jugadores" class="block nav-link text-sm"><i class="fas fa-user mr-2"></i>Jugadores</a>
+          <a href="/admin/partidas" class="block nav-link text-sm"><i class="fas fa-gamepad mr-2"></i>Partidas</a>
+          <a href="/logout" class="block nav-link text-red-400 text-sm"><i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión</a>
+        </div>
       <% } %>
     </div>
   </div>
@@ -80,4 +115,24 @@ document.getElementById('mobileMenuBtn').addEventListener('click', function() {
   const menu = document.getElementById('mobileMenuContent');
   menu.classList.toggle('hidden');
 });
+
+// Mobile Torneo Actual Toggle
+const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+const mobileMenuToggleContent = document.getElementById('mobileMenuToggleContent');
+if (mobileMenuToggle) {
+  mobileMenuToggle.addEventListener('click', function() {
+    mobileMenuToggleContent.classList.toggle('hidden');
+    this.querySelector('i:last-child').classList.toggle('rotate-180');
+  });
+}
+
+// Mobile Admin Toggle
+const mobileAdminToggle = document.getElementById('mobileAdminToggle');
+const mobileAdminToggleContent = document.getElementById('mobileAdminToggleContent');
+if (mobileAdminToggle) {
+  mobileAdminToggle.addEventListener('click', function() {
+    mobileAdminToggleContent.classList.toggle('hidden');
+    this.querySelector('i:last-child').classList.toggle('rotate-180');
+  });
+}
 </script>

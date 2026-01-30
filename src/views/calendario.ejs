@@ -1,489 +1,174 @@
 <%- include('partials/head') %>
 <%- include('partials/nav') %>
 
-<main class="max-w-7xl mx-auto px-4 py-8">
-  <!-- Header -->
-  <div class="mb-8">
-    <h1 class="text-4xl font-bold mb-2">
-      <i class="fas fa-calendar text-gold mr-3"></i> Calendario de Partidas
-    </h1>
-    <p class="text-slate-400">Sigue el cronograma completo del torneo</p>
+<% 
+  const today = new Date();
+  const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const todayKey = todayLocal.toISOString().split('T')[0];
+
+  const groupedByDate = {};
+  
+  if (typeof partidas !== 'undefined' && Array.isArray(partidas)) {
+    partidas.forEach(match => {
+      const matchDate = new Date(match.fecha_partida);
+      const localDate = new Date(matchDate.getFullYear(), matchDate.getMonth(), matchDate.getDate());
+      const dateKey = localDate.toISOString().split('T')[0];
+      
+      if (!groupedByDate[dateKey]) groupedByDate[dateKey] = [];
+      groupedByDate[dateKey].push(match);
+    });
+  }
+  
+  const sortedDates = Object.keys(groupedByDate).sort();
+  const todayMatches = groupedByDate[todayKey] || [];
+  const futureDates = sortedDates.filter(d => d > todayKey);
+%>
+
+<main class="max-w-5xl mx-auto px-4 py-10">
+
+  <div class="text-center mb-10">
+    <% if (typeof isTorneoEspecifico !== 'undefined' && isTorneoEspecifico) { %>
+      <div class="mb-4 flex items-center justify-center gap-2">
+        <a href="/torneos-anteriores" class="text-gold hover:text-yellow-400 text-sm">Torneos Anteriores</a>
+        <span class="text-slate-500">/</span>
+        <span class="text-slate-400 text-sm"><%= torneo.nombre %></span>
+      </div>
+    <% } %>
+    <h1 class="text-4xl font-bold text-white mb-2">Calendario de Partidas<% if (typeof isTorneoEspecifico !== 'undefined' && isTorneoEspecifico) { %> - <%= torneo.nombre %><% } %></h1>
+    <p class="text-slate-400">Cronograma oficial del torneo</p>
   </div>
 
-  <% 
-    // Agrupar partidas por fecha
-    const today = new Date();
-    const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const groupedByDate = {};
-    
-    if (typeof partidas !== 'undefined' && Array.isArray(partidas)) {
-      partidas.forEach(match => {
-        const matchDate = new Date(match.fecha_partida);
-        const matchLocal = new Date(matchDate.getFullYear(), matchDate.getMonth(), matchDate.getDate());
-        const dateKey = matchLocal.toISOString().split('T')[0];
-        
-        if (!groupedByDate[dateKey]) {
-          groupedByDate[dateKey] = [];
-        }
-        groupedByDate[dateKey].push(match);
-      });
-    }
-    
-    const sortedDates = Object.keys(groupedByDate).sort();
-    const todayKey = todayLocal.toISOString().split('T')[0];
-  %>
-
-  <% if (sortedDates.length === 0) { %>
-    <div class="card text-center py-12">
-      <i class="fas fa-calendar-times text-6xl text-slate-600 mb-4"></i>
-      <h2 class="text-2xl font-bold text-slate-300">No hay partidas programadas</h2>
-      <p class="text-slate-400 mt-2">Pronto se publicarán las partidas del torneo</p>
+  <div class="mb-12" id="seccionHoy">
+    <div class="flex items-center gap-3 mb-6">
+      <div class="w-1 h-6 bg-red-500 rounded-full"></div>
+      <h2 class="text-2xl font-bold text-white">Hoy</h2>
+      <% if(todayMatches.length > 0) { %>
+        <span class="bg-red-500/10 text-red-500 text-xs font-bold px-2 py-1 rounded animate-pulse">EN VIVO</span>
+      <% } %>
     </div>
-  <% } else { %>
-    <!-- Partidas Futuras -->
-    <% const futureDates = sortedDates.filter(d => d >= todayKey); %>
-    <% if (futureDates.length > 0) { %>
-      <h2 class="text-2xl font-bold text-gold mb-6">
-        <i class="fas fa-arrow-right mr-2"></i> Próximos Encuentros
-      </h2>
-      
-      <div class="space-y-4 mb-12">
-        <% futureDates.forEach(dateKey => { %>
-          <% const dateObj = new Date(dateKey + 'T00:00:00'); %>
-          <% const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'long' }); %>
-          <% const dateFormatted = dateObj.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }); %>
-          
-          <div class="bg-slate-800 rounded-lg overflow-hidden">
-            <div class="bg-gradient-to-r from-slate-700 to-slate-800 px-4 py-3 border-l-4 border-gold">
-              <p class="font-bold text-white capitalize"><%= dayName %></p>
-              <p class="text-slate-400 text-sm"><%= dateFormatted %></p>
-            </div>
-            
-            <div class="divide-y divide-slate-700">
-              <% groupedByDate[dateKey].forEach(match => { %>
-                <div class="p-4 hover:bg-slate-700 transition">
-                  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <!-- Team Azul -->
-                    <div class="flex items-center gap-3 flex-1">
-                      <% if (match.equipo1 && match.equipo1.logoUrl) { %>
-                        <img src="<%= match.equipo1.logoUrl %>" alt="<%= match.equipo1.nombre %>" class="w-12 h-12 object-contain">
-                      <% } else { %>
-                        <div class="w-12 h-12 bg-slate-600 rounded flex items-center justify-center">
-                          <i class="fas fa-shield-alt text-slate-400"></i>
-                        </div>
-                      <% } %>
-                      <div>
-                        <p class="font-bold text-white"><%= match.equipo1 ? match.equipo1.nombre : 'TBD' %></p>
-                        <p class="text-xs text-slate-500">Equipo Azul</p>
-                      </div>
-                    </div>
-                    
-                    <!-- Score / Time -->
-                    <div class="flex flex-col items-center md:px-8 py-2 md:py-0">
-                      <% if (match.estado === 'completada') { %>
-                        <div class="text-center">
-                          <p class="text-2xl font-bold">
-                            <span class="<%= match.ganador_color === 'azul' ? 'text-blue-400' : 'text-slate-400' %>"><%= match.puntos_equipo1 %></span>
-                            -
-                            <span class="<%= match.ganador_color === 'rojo' ? 'text-red-400' : 'text-slate-400' %>"><%= match.puntos_equipo2 %></span>
-                          </p>
-                          <p class="text-xs text-green-500 font-bold">FINALIZADA</p>
-                        </div>
-                      <% } else { %>
-                        <p class="text-slate-400 text-sm">
-                          <i class="fas fa-clock mr-1"></i>
-                          <%= new Date(match.fecha_partida).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) %>
-                        </p>
-                        <p class="text-xs text-slate-500 font-bold mt-1">Próximamente</p>
-                      <% } %>
-                    </div>
-                    
-                    <!-- Team Rojo -->
-                    <div class="flex items-center gap-3 flex-1 md:flex-row-reverse">
-                      <% if (match.equipo2 && match.equipo2.logoUrl) { %>
-                        <img src="<%= match.equipo2.logoUrl %>" alt="<%= match.equipo2.nombre %>" class="w-12 h-12 object-contain">
-                      <% } else { %>
-                        <div class="w-12 h-12 bg-slate-600 rounded flex items-center justify-center">
-                          <i class="fas fa-shield-alt text-slate-400"></i>
-                        </div>
-                      <% } %>
-                      <div class="md:text-right">
-                        <p class="font-bold text-white"><%= match.equipo2 ? match.equipo2.nombre : 'TBD' %></p>
-                        <p class="text-xs text-slate-500">Equipo Rojo</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- Fase Info -->
-                  <div class="mt-3 pt-3 border-t border-slate-700">
-                    <p class="text-xs text-slate-400">
-                      <i class="fas fa-layer-group mr-1"></i> 
-                      <span class="text-gold"><%= match.fase_torneo || 'Fase General' %></span>
-                      <% if (match.nombre_torneo) { %>
-                        <span class="mx-2">|</span>
-                        <%= match.nombre_torneo %>
-                      <% } %>
-                    </p>
-                  </div>
-                </div>
-              <% }); %>
-            </div>
-          </div>
-        <% }); %>
-      </div>
-    <% } %>
 
-    <!-- Partidas Pasadas -->
-    <% const pastDates = sortedDates.filter(d => d < todayKey); %>
-    <% if (pastDates.length > 0) { %>
-      <h2 class="text-2xl font-bold text-slate-400 mb-6 mt-12">
-        <i class="fas fa-history mr-2"></i> Resultados Anteriores
-      </h2>
-      
-      <div class="space-y-4">
-        <% pastDates.reverse().slice(0, 10).forEach(dateKey => { %>
-          <% const dateObj = new Date(dateKey + 'T00:00:00'); %>
-          <% const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'long' }); %>
-          <% const dateFormatted = dateObj.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }); %>
-          
-          <div class="bg-slate-800 rounded-lg overflow-hidden opacity-75">
-            <div class="bg-gradient-to-r from-slate-700 to-slate-800 px-4 py-3 border-l-4 border-slate-600">
-              <p class="font-bold text-slate-300 capitalize"><%= dayName %></p>
-              <p class="text-slate-500 text-sm"><%= dateFormatted %></p>
-            </div>
-            
-            <div class="divide-y divide-slate-700">
-              <% groupedByDate[dateKey].forEach(match => { %>
-                <div class="p-4">
-                  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <!-- Team Azul -->
-                    <div class="flex items-center gap-3 flex-1">
-                      <% if (match.equipo1 && match.equipo1.logoUrl) { %>
-                        <img src="<%= match.equipo1.logoUrl %>" alt="<%= match.equipo1.nombre %>" class="w-12 h-12 object-contain">
-                      <% } %>
-                      <div>
-                        <p class="font-bold <%= match.ganador_color === 'azul' ? 'text-blue-400' : 'text-slate-400' %>">
-                          <%= match.equipo1 ? match.equipo1.nombre : 'TBD' %>
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <!-- Score -->
-                    <div class="text-center">
-                      <p class="text-xl font-bold">
-                        <span class="<%= match.ganador_color === 'azul' ? 'text-blue-400' : '' %>"><%= match.puntos_equipo1 %></span>
-                        -
-                        <span class="<%= match.ganador_color === 'rojo' ? 'text-red-400' : '' %>"><%= match.puntos_equipo2 %></span>
-                      </p>
-                    </div>
-                    
-                    <!-- Team Rojo -->
-                    <div class="flex items-center gap-3 flex-1 md:flex-row-reverse">
-                      <% if (match.equipo2 && match.equipo2.logoUrl) { %>
-                        <img src="<%= match.equipo2.logoUrl %>" alt="<%= match.equipo2.nombre %>" class="w-12 h-12 object-contain">
-                      <% } %>
-                      <div class="md:text-right">
-                        <p class="font-bold <%= match.ganador_color === 'rojo' ? 'text-red-400' : 'text-slate-400' %>">
-                          <%= match.equipo2 ? match.equipo2.nombre : 'TBD' %>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              <% }); %>
-            </div>
-          </div>
-        <% }); %>
-      </div>
-    <% } %>
-  <% } %>
-</main>
-
-<%- include('partials/footer') %>
-          <div class="card card-custom">
-            <% matchesForDate.forEach((match, index) => { %>
-              <div class="p-4" style="border-bottom: 1px solid rgba(117, 20, 21, 0.3); <%= index === matchesForDate.length - 1 ? 'border-bottom: none;' : '' %>">
-                <div class="row align-items-center">
-                  <!-- Hora -->
-                  <div class="col-md-1 text-center">
-                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-amarillo);">
-                      <%= new Date(match.fecha_partida).getHours().toString().padStart(2, '0') %>:<%= new Date(match.fecha_partida).getMinutes().toString().padStart(2, '0') %>
-                    </div>
-                  </div>
-
-                  <!-- Equipo Azul -->
-                  <div class="col-md-2 text-center">
-                    <img src="<%= match.azul_logo || 'https://via.placeholder.com/50' %>" 
-                         class="rounded-circle mb-2" 
-                         style="width: 50px; height: 50px; object-fit: cover; border: 2px solid <%= match.ganador_id === match.azul_id ? 'var(--color-amarillo)' : 'var(--color-rojo-oscuro)' %>;">
-                    <div style="color: var(--color-gris-claro); font-weight: 600; font-size: 0.9rem;">
-                      <%= match.azul_nombre %>
-                    </div>
-                  </div>
-
-                  <!-- VS / Estado -->
-                  <div class="col-md-2 text-center">
-                    <% if (match.ganador_id) { %>
-                      <span class="badge" style="background-color: #4caf50; color: white; padding: 0.5rem 0.75rem; font-size: 0.85rem;">✓ Finalizado</span>
-                    <% } else { %>
-                      <span style="color: var(--color-amarillo); font-weight: bold; font-size: 1rem;">VS</span>
-                    <% } %>
-                  </div>
-
-                  <!-- Equipo Rojo -->
-                  <div class="col-md-2 text-center">
-                    <img src="<%= match.rojo_logo || 'https://via.placeholder.com/50' %>" 
-                         class="rounded-circle mb-2" 
-                         style="width: 50px; height: 50px; object-fit: cover; border: 2px solid <%= match.ganador_id === match.rojo_id ? 'var(--color-amarillo)' : 'var(--color-rojo-oscuro)' %>;">
-                    <div style="color: var(--color-gris-claro); font-weight: 600; font-size: 0.9rem;">
-                      <%= match.rojo_nombre %>
-                    </div>
-                  </div>
-
-                  <!-- Fase -->
-                  <div class="col-md-2 text-center">
-                    <span class="badge" style="background-color: var(--color-rojo-oscuro); color: var(--color-amarillo);">
-                      <%= match.fase_torneo %>
-                    </span>
-                  </div>
-
-                  <!-- Admin Actions -->
-                  <% if (isAuthenticated) { %>
-                    <div class="col-md-3 text-center">
-                      <div class="d-flex gap-2 justify-content-center flex-wrap">
-                        <a href="/admin/partidas/<%= match.id %>/stats" class="btn btn-sm btn-custom" title="Cargar Stats">
-                          📊 Stats
-                        </a>
-                        <a href="/admin/partidas/delete/<%= match.id %>" class="btn btn-sm" style="background-color: #c72c3a; color: var(--color-amarillo);" onclick="return confirm('¿Borrar partido?')" title="Eliminar">
-                          🗑️
-                        </a>
-                      </div>
-                    </div>
-                  <% } %>
-                </div>
-              </div>
-            <% }) %>
-          </div>
-        </div>
-      <% }) %>
-    </div>
-  <% } %>
-
-  <!-- Sección HOY -->
-  <div class="mb-5" id="seccionHoy">
-    <h2 style="color: var(--color-amarillo); margin-bottom: 2rem;">🔴 Partidas de Hoy</h2>
     <% if (todayMatches.length > 0) { %>
-      <div class="card card-custom">
-        <% todayMatches.forEach((match, index) => { %>
-          <div class="p-4" style="border-bottom: 1px solid rgba(117, 20, 21, 0.3); <%= index === todayMatches.length - 1 ? 'border-bottom: none;' : '' %>">
-            <div class="row align-items-center">
-              <!-- Hora -->
-              <div class="col-md-1 text-center">
-                <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-amarillo);">
-                  <%= new Date(match.fecha_partida).getHours().toString().padStart(2, '0') %>:<%= new Date(match.fecha_partida).getMinutes().toString().padStart(2, '0') %>
-                </div>
+      <div class="space-y-3">
+        <% todayMatches.forEach(match => { %>
+          <div class="bg-slate-800 rounded-lg p-4 border-l-4 border-yellow-500 flex flex-col md:flex-row items-center justify-between gap-4 hover:bg-slate-750 transition shadow-lg">
+            
+            <div class="text-center md:text-left min-w-[80px]">
+              <span class="text-2xl font-bold text-white">
+                <%= new Date(match.fecha_partida).getHours().toString().padStart(2, '0') %>:<%= new Date(match.fecha_partida).getMinutes().toString().padStart(2, '0') %>
+              </span>
+            </div>
+
+            <div class="flex-1 flex items-center justify-center gap-6 w-full">
+              <div class="flex items-center gap-3 flex-1 justify-end">
+                <span class="text-white font-bold text-lg hidden sm:block"><%= match.azul_nombre %></span>
+                <img src="<%= match.azul_logo %>" class="w-10 h-10 object-contain drop-shadow">
               </div>
 
-              <!-- Equipo Azul -->
-              <div class="col-md-2 text-center">
-                <img src="<%= match.azul_logo || 'https://via.placeholder.com/50' %>" 
-                     class="rounded-circle mb-2" 
-                     style="width: 50px; height: 50px; object-fit: cover; border: 3px solid <%= match.ganador_id === match.azul_id ? 'var(--color-amarillo)' : 'var(--color-rojo-oscuro)' %>;">
-                <div style="color: var(--color-gris-claro); font-weight: 600; font-size: 0.9rem;">
-                  <%= match.azul_nombre %>
-                </div>
-              </div>
-
-              <!-- VS / Estado -->
-              <div class="col-md-2 text-center">
-                <% if (match.ganador_id) { %>
-                  <span class="badge" style="background-color: #4caf50; color: white; padding: 0.5rem 0.75rem;">✓ Finalizado</span>
+              <div class="px-4 py-1 bg-slate-900 rounded-md font-bold text-slate-400 min-w-[60px] text-center">
+                <% if(match.ganador_id) { %>
+                  <span class="text-green-500">FIN</span>
                 <% } else { %>
-                  <span style="color: var(--color-amarillo); font-weight: bold; font-size: 1rem;">VS</span>
+                  VS
                 <% } %>
               </div>
 
-              <!-- Equipo Rojo -->
-              <div class="col-md-2 text-center">
-                <img src="<%= match.rojo_logo || 'https://via.placeholder.com/50' %>" 
-                     class="rounded-circle mb-2" 
-                     style="width: 50px; height: 50px; object-fit: cover; border: 3px solid <%= match.ganador_id === match.rojo_id ? 'var(--color-amarillo)' : 'var(--color-rojo-oscuro)' %>;">
-                <div style="color: var(--color-gris-claro); font-weight: 600; font-size: 0.9rem;">
-                  <%= match.rojo_nombre %>
-                </div>
+              <div class="flex items-center gap-3 flex-1 justify-start">
+                <img src="<%= match.rojo_logo %>" class="w-10 h-10 object-contain drop-shadow">
+                <span class="text-white font-bold text-lg hidden sm:block"><%= match.rojo_nombre %></span>
               </div>
+            </div>
 
-              <!-- Fase -->
-              <div class="col-md-2 text-center">
-                <span class="badge" style="background-color: var(--color-rojo-oscuro); color: var(--color-amarillo);">
-                  <%= match.fase_torneo %>
-                </span>
-              </div>
-
-              <!-- Admin Actions -->
-              <% if (isAuthenticated) { %>
-                <div class="col-md-3 text-center">
-                  <div class="d-flex gap-2 justify-content-center flex-wrap">
-                    <a href="/admin/partidas/<%= match.id %>/stats" class="btn btn-sm btn-custom">
-                      📊 Stats
-                    </a>
-                    
-                    <% if (!match.ganador_id) { %>
-                      <form action="/admin/partidas/ganador" method="POST" class="d-inline">
-                        <input type="hidden" name="partidaId" value="<%= match.id %>">
-                        <button type="submit" name="ganadorId" value="<%= match.azul_id %>" class="btn btn-sm" style="background-color: #3498db; color: white;">
-                          🟦 <%= match.azul_nombre %>
-                        </button>
-                      </form>
-                      <form action="/admin/partidas/ganador" method="POST" class="d-inline">
-                        <input type="hidden" name="partidaId" value="<%= match.id %>">
-                        <button type="submit" name="ganadorId" value="<%= match.rojo_id %>" class="btn btn-sm" style="background-color: #e74c3c; color: white;">
-                          🟥 <%= match.rojo_nombre %>
-                        </button>
-                      </form>
-                    <% } else { %>
-                      <button type="button" class="btn btn-sm" style="background-color: #4caf50; color: white;" disabled>Cerrado</button>
-                    <% } %>
-                    
-                    <a href="/admin/partidas/delete/<%= match.id %>" class="btn btn-sm" style="background-color: #c72c3a; color: var(--color-amarillo);" onclick="return confirm('¿Borrar partido?')">
-                      🗑️
-                    </a>
-                  </div>
+            <div class="flex flex-col items-center md:items-end gap-2 min-w-[100px]">
+              <span class="text-xs text-slate-500 uppercase font-bold tracking-wider"><%= match.fase_torneo %></span>
+              
+              <% if (locals.isLoggedIn) { %>
+                <div class="flex gap-2">
+                  <a href="/admin/partidas/<%= match.id %>/stats" class="text-xs bg-yellow-600 hover:bg-yellow-500 text-white px-2 py-1 rounded">Stats</a>
+                  <a href="/admin/partidas/delete/<%= match.id %>" onclick="return confirm('¿Eliminar?')" class="text-xs bg-red-900 text-red-200 hover:text-white px-2 py-1 rounded">Borrar</a>
                 </div>
               <% } %>
             </div>
+
           </div>
         <% }) %>
       </div>
     <% } else { %>
-      <div class="card card-custom">
-        <div class="card-body text-center p-5">
-          <p style="color: var(--color-gris-claro); font-size: 1.1rem;">No hay partidas programadas para hoy</p>
-          <small style="color: rgba(221, 221, 221, 0.7);">¡Vuelve a consultar pronto!</small>
-        </div>
+      <div class="p-8 border border-slate-700 border-dashed rounded-lg text-center">
+        <p class="text-slate-500">No hay partidas programadas para el día de hoy.</p>
       </div>
     <% } %>
   </div>
 
-  <!-- Próximos días -->
-  <% 
-    const futureDates = sortedDates.filter(dateKey => dateKey !== todayKey && dateKey > todayKey);
-    if (futureDates.length > 0) { 
-  %>
-    <div class="mb-5">
-      <h2 style="color: var(--color-amarillo); margin-bottom: 2rem;">⏰ Próximas Partidas</h2>
-      <% futureDates.forEach(dateKey => { %>
-        <% 
-          const matchesForDate = groupedByDate[dateKey];
-          const dateObj = new Date(dateKey + 'T00:00:00');
-          const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'long' });
-          const dateFormatted = dateObj.toLocaleDateString('es-ES');
-        %>
-        <div class="mb-4">
-          <h4 style="color: var(--color-amarillo); margin-bottom: 1.5rem; font-weight: 600; border-bottom: 2px solid var(--color-rojo-oscuro); padding-bottom: 0.5rem;">
-            <%= dayName.charAt(0).toUpperCase() + dayName.slice(1) %> - <%= dateFormatted %>
-          </h4>
-          <div class="card card-custom">
-            <% matchesForDate.forEach((match, index) => { %>
-              <div class="p-4" style="border-bottom: 1px solid rgba(117, 20, 21, 0.3); <%= index === matchesForDate.length - 1 ? 'border-bottom: none;' : '' %>">
-                <div class="row align-items-center">
-                  <!-- Hora -->
-                  <div class="col-md-1 text-center">
-                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-amarillo);">
-                      <%= new Date(match.fecha_partida).getHours().toString().padStart(2, '0') %>:<%= new Date(match.fecha_partida).getMinutes().toString().padStart(2, '0') %>
-                    </div>
+  <% if (futureDates.length > 0) { %>
+    <div class="mb-12">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-1 h-6 bg-yellow-500 rounded-full"></div>
+        <h2 class="text-2xl font-bold text-white">Próximamente</h2>
+      </div>
+
+      <div class="space-y-8">
+        <% futureDates.forEach(dateKey => { %>
+          <% 
+            const dateObj = new Date(dateKey + 'T00:00:00');
+            const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'long' });
+            const dateFormatted = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+          %>
+          
+          <div>
+            <h3 class="text-yellow-500 font-bold capitalize mb-3 ml-2 text-lg">
+              <%= dayName %> <span class="text-slate-500 text-sm font-normal normal-case ml-2"><%= dateFormatted %></span>
+            </h3>
+
+            <div class="space-y-2">
+              <% groupedByDate[dateKey].forEach(match => { %>
+                <div class="bg-slate-800/50 hover:bg-slate-800 rounded px-4 py-3 flex items-center justify-between gap-4 transition border border-slate-700/50">
+                  
+                  <div class="text-slate-300 font-mono font-bold">
+                    <%= new Date(match.fecha_partida).getHours().toString().padStart(2, '0') %>:<%= new Date(match.fecha_partida).getMinutes().toString().padStart(2, '0') %>
                   </div>
 
-                  <!-- Equipo Azul -->
-                  <div class="col-md-2 text-center">
-                    <img src="<%= match.azul_logo || 'https://via.placeholder.com/50' %>" 
-                         class="rounded-circle mb-2" 
-                         style="width: 50px; height: 50px; object-fit: cover; border: 2px solid var(--color-rojo-oscuro);">
-                    <div style="color: var(--color-gris-claro); font-weight: 600; font-size: 0.9rem;">
-                      <%= match.azul_nombre %>
-                    </div>
+                  <div class="flex items-center gap-3">
+                    <img src="<%= match.azul_logo %>" class="w-6 h-6 object-contain opacity-80">
+                    <span class="text-slate-400 text-sm font-bold">VS</span>
+                    <img src="<%= match.rojo_logo %>" class="w-6 h-6 object-contain opacity-80">
                   </div>
 
-                  <!-- VS -->
-                  <div class="col-md-2 text-center">
-                    <span style="color: var(--color-amarillo); font-weight: bold; font-size: 1rem;">VS</span>
+                  <div class="hidden md:flex items-center gap-2 text-sm text-slate-400">
+                    <span><%= match.azul_nombre %></span>
+                    <span>vs</span>
+                    <span><%= match.rojo_nombre %></span>
                   </div>
 
-                  <!-- Equipo Rojo -->
-                  <div class="col-md-2 text-center">
-                    <img src="<%= match.rojo_logo || 'https://via.placeholder.com/50' %>" 
-                         class="rounded-circle mb-2" 
-                         style="width: 50px; height: 50px; object-fit: cover; border: 2px solid var(--color-rojo-oscuro);">
-                    <div style="color: var(--color-gris-claro); font-weight: 600; font-size: 0.9rem;">
-                      <%= match.rojo_nombre %>
-                    </div>
+                  <div class="text-xs text-slate-600 bg-slate-900 px-2 py-1 rounded border border-slate-800">
+                    <%= match.fase_torneo %>
                   </div>
-
-                  <!-- Fase -->
-                  <div class="col-md-2 text-center">
-                    <span class="badge" style="background-color: var(--color-rojo-oscuro); color: var(--color-amarillo);">
-                      <%= match.fase_torneo %>
-                    </span>
-                  </div>
-
-                  <!-- Admin Actions -->
-                  <% if (isAuthenticated) { %>
-                    <div class="col-md-3 text-center">
-                      <div class="d-flex gap-2 justify-content-center flex-wrap">
-                        <a href="/admin/partidas/<%= match.id %>/stats" class="btn btn-sm btn-custom">
-                          📊 Stats
-                        </a>
-                        
-                        <% if (!match.ganador_id) { %>
-                          <form action="/admin/partidas/ganador" method="POST" class="d-inline">
-                            <input type="hidden" name="partidaId" value="<%= match.id %>">
-                            <button type="submit" name="ganadorId" value="<%= match.azul_id %>" class="btn btn-sm" style="background-color: #3498db; color: white;">
-                              🟦 Gana
-                            </button>
-                          </form>
-                          <form action="/admin/partidas/ganador" method="POST" class="d-inline">
-                            <input type="hidden" name="partidaId" value="<%= match.id %>">
-                            <button type="submit" name="ganadorId" value="<%= match.rojo_id %>" class="btn btn-sm" style="background-color: #e74c3c; color: white;">
-                              🟥 Gana
-                            </button>
-                          </form>
-                        <% } else { %>
-                          <button type="button" class="btn btn-sm" style="background-color: #4caf50; color: white;" disabled>Cerrado</button>
-                        <% } %>
-                        
-                        <a href="/admin/partidas/delete/<%= match.id %>" class="btn btn-sm" style="background-color: #c72c3a; color: var(--color-amarillo);" onclick="return confirm('¿Borrar partido?')">
-                          🗑️
-                        </a>
-                      </div>
-                    </div>
+                  
+                  <% if (locals.isLoggedIn) { %>
+                     <a href="/admin/partidas/<%= match.id %>/stats" class="text-xs text-yellow-500 hover:text-white hover:underline">Editar</a>
                   <% } %>
-                </div>
-              </div>
-            <% }) %>
-          </div>
-        </div>
-      <% }) %>
-    </div>
-  <% } %>
 
-  <!-- Sin partidas -->
-  <% if (partidas.length === 0) { %>
-    <div class="card card-custom">
-      <div class="card-body text-center p-5">
-        <h3 style="color: var(--color-amarillo); margin-bottom: 1rem;">Aún no hay partidas programadas</h3>
-        <p style="color: var(--color-gris-claro);">¡Vuelve pronto para ver los enfrentamientos del torneo!</p>
+                </div>
+              <% }) %>
+            </div>
+          </div>
+        <% }) %>
       </div>
     </div>
   <% } %>
-</div>
+
+  <% if (partidas.length === 0) { %>
+    <div class="text-center py-20 opacity-50">
+      <i class="fas fa-calendar text-6xl text-slate-600 mb-4"></i>
+      <p class="text-slate-400 text-xl">Aún no se ha publicado el calendario.</p>
+    </div>
+  <% } %>
+
+</main>
 
 <script>
-  // Hacer scroll a la sección "Hoy" cuando la página carga
   window.addEventListener('load', function() {
-    const seccionHoy = document.getElementById('seccionHoy');
-    if (seccionHoy) {
-      seccionHoy.scrollIntoView({ behavior: 'smooth' });
-    }
+    const el = document.getElementById('seccionHoy');
+    if(el && <%= todayMatches.length > 0 %>) el.scrollIntoView({ behavior: 'smooth' });
   });
 </script>
 

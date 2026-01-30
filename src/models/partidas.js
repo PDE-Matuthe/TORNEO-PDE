@@ -34,15 +34,19 @@ export async function getPartidaById (partidaId) {
   try {
     const [rows] = await pool.query(
       `SELECT BIN_TO_UUID(p.id) as id, BIN_TO_UUID(p.torneo_id) as torneo_id, t.nombre as torneo_nombre,
-              BIN_TO_UUID(p.equipo_azul_id) as equipo_azul_id, ea.nombre as equipo_azul,
-              BIN_TO_UUID(p.equipo_rojo_id) as equipo_rojo_id, er.nombre as equipo_rojo,
+              BIN_TO_UUID(p.equipo_azul_id) as azul_id, ea.nombre as azul_nombre, ea.logo_url as azul_logo,
+              BIN_TO_UUID(p.equipo_rojo_id) as rojo_id, er.nombre as rojo_nombre, er.logo_url as rojo_logo,
+              SUM(CASE WHEN ent.equipo_id = p.equipo_azul_id THEN ent.kills ELSE 0 END) as azul_kills,
+              SUM(CASE WHEN ent.equipo_id = p.equipo_rojo_id THEN ent.kills ELSE 0 END) as rojo_kills,
               p.fecha_partida, p.fase_torneo, BIN_TO_UUID(p.ganador_id) as ganador_id,
               p.riot_match_id, p.duracion_segundos
        FROM partidas p
        INNER JOIN torneos t ON p.torneo_id = t.id
        INNER JOIN equipos ea ON p.equipo_azul_id = ea.id
        INNER JOIN equipos er ON p.equipo_rojo_id = er.id
-       WHERE p.id = UUID_TO_BIN(?)`,
+       LEFT JOIN estadisticas ent ON p.id = ent.partida_id
+       WHERE p.id = UUID_TO_BIN(?)
+       GROUP BY p.id`,
       [partidaId]
     )
     return rows.length > 0 ? rows[0] : null
@@ -59,21 +63,50 @@ export async function getPartidasByTorneo (torneoId) {
   try {
     const [rows] = await pool.query(
       `SELECT BIN_TO_UUID(p.id) as id, BIN_TO_UUID(p.torneo_id) as torneo_id,
-              BIN_TO_UUID(p.equipo_azul_id) as equipo_azul_id, ea.nombre as equipo_azul, ea.logo_url as logo_azul,
-              BIN_TO_UUID(p.equipo_rojo_id) as equipo_rojo_id, er.nombre as equipo_rojo, er.logo_url as logo_rojo,
+              BIN_TO_UUID(p.equipo_azul_id) as azul_id, ea.nombre as azul_nombre, ea.logo_url as azul_logo,
+              BIN_TO_UUID(p.equipo_rojo_id) as rojo_id, er.nombre as rojo_nombre, er.logo_url as rojo_logo,
+              SUM(CASE WHEN ent.equipo_id = p.equipo_azul_id THEN ent.kills ELSE 0 END) as azul_kills,
+              SUM(CASE WHEN ent.equipo_id = p.equipo_rojo_id THEN ent.kills ELSE 0 END) as rojo_kills,
               p.fecha_partida, p.fase_torneo, BIN_TO_UUID(p.ganador_id) as ganador_id,
-              CASE WHEN p.ganador_id = ea.id THEN 'Azul' WHEN p.ganador_id = er.id THEN 'Rojo' ELSE NULL END as ganador_color,
               p.riot_match_id, p.duracion_segundos
        FROM partidas p
        INNER JOIN equipos ea ON p.equipo_azul_id = ea.id
        INNER JOIN equipos er ON p.equipo_rojo_id = er.id
+       LEFT JOIN estadisticas ent ON p.id = ent.partida_id
        WHERE p.torneo_id = UUID_TO_BIN(?)
+       GROUP BY p.id
        ORDER BY p.fecha_partida ASC`,
       [torneoId]
     )
     return rows
   } catch (error) {
     console.error('Error en getPartidasByTorneo:', error.message)
+    throw error
+  }
+}
+
+/**
+ * Obtener partidas de un equipo
+ */
+export async function getPartidasByEquipo (equipoId) {
+  try {
+    const [rows] = await pool.query(
+      `SELECT BIN_TO_UUID(p.id) as id, BIN_TO_UUID(p.torneo_id) as torneo_id,
+              BIN_TO_UUID(p.equipo_azul_id) as equipo_azul_id, ea.nombre as azul_nombre, ea.logo_url as azul_logo,
+              BIN_TO_UUID(p.equipo_rojo_id) as equipo_rojo_id, er.nombre as rojo_nombre, er.logo_url as rojo_logo,
+              p.fecha_partida, p.fase_torneo, BIN_TO_UUID(p.ganador_id) as ganador_id,
+              p.riot_match_id, p.duracion_segundos
+       FROM partidas p
+       INNER JOIN equipos ea ON p.equipo_azul_id = ea.id
+       INNER JOIN equipos er ON p.equipo_rojo_id = er.id
+       WHERE p.equipo_azul_id = UUID_TO_BIN(?) OR p.equipo_rojo_id = UUID_TO_BIN(?)
+       ORDER BY p.fecha_partida DESC
+       LIMIT 50`,
+      [equipoId, equipoId]
+    )
+    return rows
+  } catch (error) {
+    console.error('Error en getPartidasByEquipo:', error.message)
     throw error
   }
 }

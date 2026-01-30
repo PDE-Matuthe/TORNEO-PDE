@@ -1,0 +1,187 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<main class="max-w-7xl mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-4xl font-bold mb-2">
+      <i class="fas fa-user text-gold mr-3"></i>Perfil del Jugador
+    </h1>
+    <p class="text-slate-400">Estadísticas y historial del jugador</p>
+  </div>
+
+  <% if (typeof jugador !== 'undefined' && jugador) { %>
+    <!-- Jugador Header -->
+    <div class="bg-slate-800 rounded-lg p-6 border border-slate-700 mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Avatar -->
+        <div class="text-center">
+          <div class="h-32 w-32 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center mx-auto mb-3">
+            <i class="fas fa-user text-4xl text-white"></i>
+          </div>
+        </div>
+
+        <!-- Info -->
+        <div class="md:col-span-2">
+          <h2 class="text-3xl font-bold text-white mb-2"><%= jugador.nombre_invocador %></h2>
+          
+          <div class="space-y-2 text-slate-300 mb-4">
+            <div class="flex items-center gap-2">
+              <i class="fas fa-gamepad text-gold"></i>
+              <span>Rol: <strong><%= jugador.rol_juego %></strong></span>
+            </div>
+            
+            <% if (jugador.equipo_nombre) { %>
+              <div class="flex items-center gap-2">
+                <i class="fas fa-shield-alt text-gold"></i>
+                <span>Equipo: 
+                  <strong>
+                    <a href="/equipo/<%= jugador.equipo_id %>" class="text-blue-400 hover:text-blue-300">
+                      <%= jugador.equipo_nombre %>
+                    </a>
+                  </strong>
+                </span>
+              </div>
+            <% } %>
+          </div>
+
+          <!-- Quick Stats -->
+          <% if (typeof resumen !== 'undefined' && resumen) { %>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-slate-600">
+              <div class="text-center">
+                <p class="text-slate-400 text-xs uppercase">Partidas</p>
+                <p class="font-bold text-white text-xl"><%= resumen.partidas_jugadas || 0 %></p>
+              </div>
+              <div class="text-center">
+                <p class="text-slate-400 text-xs uppercase">Ganancias</p>
+                <p class="font-bold text-green-400 text-xl"><%= resumen.partidas_ganadas || 0 %></p>
+              </div>
+              <div class="text-center">
+                <p class="text-slate-400 text-xs uppercase">K Total</p>
+                <p class="font-bold text-yellow-400 text-xl"><%= resumen.kills_total || 0 %></p>
+              </div>
+              <div class="text-center">
+                <p class="text-slate-400 text-xs uppercase">W/L</p>
+                <% const wl = (resumen.partidas_jugadas > 0) ? ((resumen.partidas_ganadas / resumen.partidas_jugadas) * 100).toFixed(1) : 0; %>
+                <p class="font-bold text-blue-400 text-xl"><%= wl %>%</p>
+              </div>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resumen General -->
+    <% if (typeof resumen !== 'undefined' && resumen) { %>
+      <div class="bg-slate-800 rounded-lg p-6 border border-slate-700 mb-8">
+        <h3 class="text-2xl font-bold text-white mb-4 border-b border-slate-600 pb-2">
+          <i class="fas fa-chart-bar text-gold mr-2"></i>Resumen General
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-slate-700/50 rounded p-4 text-center">
+            <p class="text-slate-400 text-sm mb-1">Kills Totales</p>
+            <p class="text-3xl font-bold text-green-400"><%= resumen.kills_total %></p>
+          </div>
+          <div class="bg-slate-700/50 rounded p-4 text-center">
+            <p class="text-slate-400 text-sm mb-1">Muertes Totales</p>
+            <p class="text-3xl font-bold text-red-400"><%= resumen.deaths_total %></p>
+          </div>
+          <div class="bg-slate-700/50 rounded p-4 text-center">
+            <p class="text-slate-400 text-sm mb-1">Asistencias Totales</p>
+            <p class="text-3xl font-bold text-yellow-400"><%= resumen.assists_total %></p>
+          </div>
+          <div class="bg-slate-700/50 rounded p-4 text-center">
+            <p class="text-slate-400 text-sm mb-1">KDA Global</p>
+            <% const kdaGlobal = (resumen.deaths_total > 0) ? ((resumen.kills_total + resumen.assists_total) / resumen.deaths_total).toFixed(2) : (resumen.kills_total + resumen.assists_total); %>
+            <p class="text-3xl font-bold text-gold"><%= kdaGlobal %></p>
+          </div>
+        </div>
+
+        <% if (resumen.campeones) { %>
+          <div class="mt-4 pt-4 border-t border-slate-600">
+            <p class="text-slate-400 text-sm mb-2">Campeones Jugados:</p>
+            <p class="text-slate-300"><%= resumen.campeones %></p>
+          </div>
+        <% } %>
+      </div>
+    <% } %>
+
+    <!-- Historial de Partidas -->
+    <div>
+      <h3 class="text-2xl font-bold text-white mb-4 border-b border-slate-600 pb-2">
+        <i class="fas fa-history text-gold mr-2"></i>Historial de Partidas
+      </h3>
+
+      <% if (typeof estadisticas !== 'undefined' && estadisticas && estadisticas.length > 0) { %>
+        <div class="space-y-3">
+          <% estadisticas.forEach(stats => { %>
+            <div class="bg-slate-800 rounded-lg p-4 border border-slate-700 hover:border-gold transition">
+              <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <!-- Match Info -->
+                <div class="flex-1">
+                  <div class="flex items-center gap-3 mb-2">
+                    <span class="px-3 py-1 rounded text-xs font-bold <%= stats.win ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400' %>">
+                      <%= stats.win ? 'Victoria' : 'Derrota' %>
+                    </span>
+                    <span class="text-slate-400 text-sm"><%= new Date(stats.fecha_partida).toLocaleDateString('es-ES') %></span>
+                  </div>
+                  
+                  <div class="text-slate-300 text-sm">
+                    <p class="mb-2"><strong>Champion:</strong> <%= stats.champion_name %></p>
+                    <p><strong>Equipo:</strong> <%= stats.equipo_nombre %></p>
+                  </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="grid grid-cols-4 gap-3 text-center min-w-max">
+                  <div class="bg-slate-700/50 rounded p-2">
+                    <p class="text-xs text-slate-400">K</p>
+                    <p class="font-bold text-green-400"><%= stats.kills %></p>
+                  </div>
+                  <div class="bg-slate-700/50 rounded p-2">
+                    <p class="text-xs text-slate-400">D</p>
+                    <p class="font-bold text-red-400"><%= stats.deaths %></p>
+                  </div>
+                  <div class="bg-slate-700/50 rounded p-2">
+                    <p class="text-xs text-slate-400">A</p>
+                    <p class="font-bold text-yellow-400"><%= stats.assists %></p>
+                  </div>
+                  <div class="bg-slate-700/50 rounded p-2">
+                    <p class="text-xs text-slate-400">KDA</p>
+                    <% const kda = (stats.deaths > 0) ? ((stats.kills + stats.assists) / stats.deaths).toFixed(2) : (stats.kills + stats.assists); %>
+                    <p class="font-bold text-blue-400"><%= kda %></p>
+                  </div>
+                </div>
+
+                <!-- View Button -->
+                <a href="/partida/<%= stats.partida_id %>" class="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm transition">
+                  Ver Partida
+                </a>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      <% } else { %>
+        <div class="bg-slate-800 rounded-lg p-8 text-center border border-slate-700">
+          <p class="text-slate-400">No hay partidas registradas para este jugador</p>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- Back Button -->
+    <div class="mt-8">
+      <a href="/equipos" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded transition">
+        <i class="fas fa-arrow-left"></i> Volver a Equipos
+      </a>
+    </div>
+
+  <% } else { %>
+    <div class="bg-slate-800 rounded-lg p-8 text-center border border-slate-700">
+      <i class="fas fa-exclamation-circle text-red-400 text-4xl mb-3"></i>
+      <p class="text-red-400">Jugador no encontrado</p>
+    </div>
+  <% } %>
+</main>
+
+<%- include('partials/footer') %>
