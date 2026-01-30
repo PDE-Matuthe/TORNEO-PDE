@@ -1,113 +1,135 @@
 <%- include('partials/head') %>
 <%- include('partials/nav') %>
 
-<main class="max-w-2xl mx-auto px-4 py-8">
-  <!-- Header -->
-  <div class="mb-8">
-    <a href="/admin/torneos" class="text-gold hover:text-yellow-300 mb-4 inline-flex items-center gap-2">
-      <i class="fas fa-arrow-left"></i> Volver a Torneos
+<main class="max-w-7xl mx-auto px-4 py-8">
+  
+  <div class="flex items-center gap-4 mb-8">
+    <a href="/admin/torneos" class="bg-slate-800 hover:bg-slate-700 text-slate-300 w-10 h-10 flex items-center justify-center rounded-full transition">
+      <i class="fas fa-arrow-left"></i>
     </a>
-    <h1 class="text-4xl font-bold mb-2">
-      <i class="fas fa-edit text-gold mr-3"></i> Editar Torneo
-    </h1>
-    <p class="text-slate-400">Actualiza los detalles del torneo</p>
+    <div>
+      <h1 class="text-3xl font-bold text-white">Editar Torneo</h1>
+      <p class="text-slate-400 text-sm">Configuración y participantes</p>
+    </div>
   </div>
 
-  <div class="card">
-    <form action="/admin/torneos/<%= torneo.id %>/update" method="POST" class="space-y-6">
-      <!-- Nombre -->
-      <div>
-        <label for="nombre" class="form-label">Nombre del Torneo</label>
-        <input 
-          type="text" 
-          id="nombre" 
-          name="nombre" 
-          placeholder="Ej: Liga Regional 2026"
-          class="form-input"
-          value="<%= torneo.nombre %>"
-          required
-        >
-      </div>
-
-      <!-- Descripción -->
-      <div>
-        <label for="descripcion" class="form-label">Descripción</label>
-        <textarea 
-          id="descripcion" 
-          name="descripcion" 
-          rows="3"
-          placeholder="Detalles sobre el torneo..."
-          class="form-input"
-        ><%= torneo.descripcion || '' %></textarea>
-      </div>
-
-      <!-- Fecha de Inicio -->
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label for="fecha_inicio" class="form-label">Fecha Inicio</label>
-          <input 
-            type="date" 
-            id="fecha_inicio" 
-            name="fecha_inicio"
-            class="form-input"
-            value="<%= new Date(torneo.fecha_inicio).toISOString().split('T')[0] %>"
-            required
-          >
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    
+    <div class="lg:col-span-1">
+      <div class="bg-slate-800 rounded-xl shadow-lg border border-slate-700 overflow-hidden sticky top-24">
+        <div class="bg-slate-900 px-6 py-4 border-b border-slate-700 flex items-center gap-3">
+          <i class="fas fa-cog text-yellow-500"></i>
+          <h2 class="font-bold text-white">Configuración</h2>
         </div>
 
-        <!-- Fecha de Fin -->
-        <div>
-          <label for="fecha_fin" class="form-label">Fecha Fin</label>
-          <input 
-            type="date" 
-            id="fecha_fin" 
-            name="fecha_fin"
-            class="form-input"
-            value="<%= new Date(torneo.fecha_fin).toISOString().split('T')[0] %>"
-            required
-          >
-        </div>
+        <form action="/admin/torneos/<%= torneo.id %>/update" method="POST" class="p-6 space-y-5">
+          
+          <div>
+            <label class="block text-slate-400 text-xs font-bold uppercase mb-2">Nombre</label>
+            <input type="text" name="nombre" value="<%= torneo.nombre %>" class="w-full bg-slate-900 border border-slate-600 rounded p-3 text-white focus:border-yellow-500 focus:outline-none transition">
+          </div>
+
+          <div>
+            <label class="block text-slate-400 text-xs font-bold uppercase mb-2">Descripción</label>
+            <textarea name="descripcion" rows="3" class="w-full bg-slate-900 border border-slate-600 rounded p-3 text-white focus:border-yellow-500 focus:outline-none transition"><%= torneo.descripcion %></textarea>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-slate-400 text-xs font-bold uppercase mb-2">Inicio</label>
+              <% const fechaInicio = new Date(torneo.fecha_inicio).toISOString().split('T')[0]; %>
+              <input type="date" name="fecha_inicio" value="<%= fechaInicio %>" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white focus:border-yellow-500 transition text-sm">
+            </div>
+            <div>
+              <label class="block text-slate-400 text-xs font-bold uppercase mb-2">Estado</label>
+              <select name="estado" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white focus:border-yellow-500 transition text-sm">
+                <option value="Proximo" <%= torneo.estado === 'Proximo' ? 'selected' : '' %>>Próximo</option>
+                <option value="En Curso" <%= torneo.estado === 'En Curso' ? 'selected' : '' %>>En Curso</option>
+                <option value="Finalizado" <%= torneo.estado === 'Finalizado' ? 'selected' : '' %>>Finalizado</option>
+              </select>
+            </div>
+          </div>
+
+          <button type="submit" class="w-full bg-yellow-600 hover:bg-yellow-500 text-black font-bold py-3 rounded transition shadow-lg mt-4">
+            <i class="fas fa-save mr-2"></i> Guardar Cambios
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="lg:col-span-2 space-y-6">
+      
+      <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+          <i class="fas fa-users text-blue-500"></i> Gestión de Participantes
+        </h2>
+        <span class="text-slate-400 text-sm">
+          Total: <span class="text-white font-bold"><%= locals.equiposInscritos ? equiposInscritos.length : 0 %></span>
+        </span>
       </div>
 
-      <!-- Estado -->
-      <div>
-        <label for="estado" class="form-label">Estado</label>
-        <select id="estado" name="estado" class="form-input">
-          <option value="planificación" <%= torneo.estado === 'planificación' ? 'selected' : '' %>>Planificación</option>
-          <option value="en_curso" <%= torneo.estado === 'en_curso' ? 'selected' : '' %>>En Curso</option>
-          <option value="finalizado" <%= torneo.estado === 'finalizado' ? 'selected' : '' %>>Finalizado</option>
-          <option value="cancelado" <%= torneo.estado === 'cancelado' ? 'selected' : '' %>>Cancelado</option>
-        </select>
-      </div>
-
-      <!-- Equipos (Info) -->
-      <% if (typeof equipos !== 'undefined' && equipos.length > 0) { %>
-        <div>
-          <label class="form-label">Equipos Participantes</label>
-          <p class="text-sm text-slate-400 mb-2">Los equipos se pueden gestionar desde la lista de torneos</p>
-          <div class="space-y-2 max-h-48 overflow-y-auto">
-            <% equipos.forEach(eq => { %>
-              <div class="flex items-center gap-2 p-2 bg-slate-700 rounded">
-                <% if (eq.logo_url) { %>
-                  <img src="<%= eq.logo_url %>" alt="<%= eq.nombre %>" class="h-6 w-6 rounded object-cover">
-                <% } %>
-                <span><%= eq.nombre %></span>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <div class="bg-slate-800/50 rounded-xl border border-slate-700/50 overflow-hidden flex flex-col h-[600px]">
+          <div class="bg-slate-900/80 px-4 py-3 border-b border-slate-700 flex justify-between items-center">
+            <span class="text-slate-300 font-bold text-sm">Disponibles</span>
+            <span class="bg-slate-800 text-slate-500 text-xs px-2 py-1 rounded"><%= equiposDisponibles.length %></span>
+          </div>
+          
+          <div class="p-4 overflow-y-auto flex-grow space-y-2 custom-scrollbar">
+            <% if (equiposDisponibles.length > 0) { %>
+              <% equiposDisponibles.forEach(eq => { %>
+                <form action="/admin/torneos/<%= torneo.id %>/add-equipo" method="POST">
+                  <input type="hidden" name="equipoId" value="<%= eq.id %>">
+                  <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-blue-500/50 p-3 rounded-lg flex items-center justify-between group transition text-left">
+                    <div class="flex items-center gap-3">
+                      <img src="<%= eq.logo_url %>" class="w-8 h-8 object-contain opacity-70 group-hover:opacity-100 transition">
+                      <span class="text-slate-300 group-hover:text-white font-medium text-sm"><%= eq.nombre %></span>
+                    </div>
+                    <i class="fas fa-plus text-slate-600 group-hover:text-blue-500 transition"></i>
+                  </button>
+                </form>
+              <% }) %>
+            <% } else { %>
+              <div class="text-center py-10 opacity-50">
+                <p class="text-slate-500 text-sm">No hay más equipos.</p>
               </div>
-            <% }) %>
+            <% } %>
           </div>
         </div>
-      <% } %>
 
-      <!-- Buttons -->
-      <div class="flex gap-4 pt-6 border-t border-slate-700">
-        <a href="/admin/torneos" class="btn-secondary flex-1">
-          <i class="fas fa-times mr-2"></i> Cancelar
-        </a>
-        <button type="submit" class="btn-primary flex-1">
-          <i class="fas fa-save mr-2"></i> Guardar Cambios
-        </button>
+        <div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden flex flex-col h-[600px]">
+          <div class="bg-slate-900 px-4 py-3 border-b border-slate-700 flex justify-between items-center">
+            <span class="text-green-400 font-bold text-sm">Inscritos (En el Torneo)</span>
+            <span class="bg-green-900/30 text-green-400 text-xs px-2 py-1 rounded"><%= equiposInscritos.length %></span>
+          </div>
+          
+          <div class="p-4 overflow-y-auto flex-grow space-y-2 custom-scrollbar">
+            <% if (equiposInscritos.length > 0) { %>
+              <% equiposInscritos.forEach(eq => { %>
+                <form action="/admin/torneos/<%= torneo.id %>/remove-equipo" method="POST">
+                  <input type="hidden" name="equipoId" value="<%= eq.id %>">
+                  <button type="submit" class="w-full bg-slate-700/50 hover:bg-red-900/20 border border-slate-600 hover:border-red-500/50 p-3 rounded-lg flex items-center justify-between group transition text-left" onclick="return confirm('¿Quitar a <%= eq.nombre %>?')">
+                    <div class="flex items-center gap-3">
+                      <img src="<%= eq.logo_url %>" class="w-8 h-8 object-contain">
+                      <span class="text-white font-bold text-sm"><%= eq.nombre %></span>
+                    </div>
+                    <i class="fas fa-times text-slate-500 group-hover:text-red-500 transition"></i>
+                  </button>
+                </form>
+              <% }) %>
+            <% } else { %>
+              <div class="text-center py-10 opacity-50">
+                <i class="fas fa-arrow-left text-2xl text-slate-600 mb-2"></i>
+                <p class="text-slate-500 text-sm">Agrega equipos desde la izquierda.</p>
+              </div>
+            <% } %>
+          </div>
+        </div>
+
       </div>
-    </form>
+    </div>
+
   </div>
 </main>
 

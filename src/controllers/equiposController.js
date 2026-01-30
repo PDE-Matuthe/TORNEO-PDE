@@ -39,33 +39,6 @@ export async function getCreateEquipo (req, res) {
 }
 
 /**
- * GET /admin/equipos/:id/editar - Mostrar formulario para editar equipo
- */
-export async function getEditEquipo (req, res) {
-  try {
-    const { id } = req.params
-    const equipo = await equiposModel.getEquipoById(id)
-    
-    if (!equipo) {
-      return res.status(404).render('error', {
-        codigo: 404,
-        mensaje: 'Equipo no encontrado'
-      })
-    }
-    
-    res.render('admin-equipos-editar', {
-      equipo
-    })
-  } catch (error) {
-    console.error('Error en getEditEquipo:', error.message)
-    res.status(500).render('error', {
-      codigo: 500,
-      mensaje: 'Error al cargar formulario de edición'
-    })
-  }
-}
-
-/**
  * POST /admin/equipos - Crear nuevo equipo
  */
 export async function postCreateEquipo (req, res) {
@@ -134,5 +107,62 @@ export async function postDeleteEquipo (req, res) {
       codigo: 500,
       mensaje: 'Error al eliminar equipo'
     })
+  }
+}
+
+// GET EDITAR (Actualizado con Roster)
+export async function getEditEquipo (req, res) {
+  try {
+    const { id } = req.params
+    // Capturamos mensajes de la URL (ej: ?success=Jugador liberado)
+    const { success, error } = req.query 
+
+    const equipo = await equiposModel.getEquipoById(id)
+    
+    if (!equipo) {
+      return res.status(404).render('error', { codigo: 404, mensaje: 'Equipo no encontrado' })
+    }
+
+    const roster = await jugadoresModel.getJugadoresByEquipo(id)
+    const freeAgents = await jugadoresModel.getFreeAgents()
+    
+    res.render('admin-equipos-editar', {
+      equipo,
+      roster,
+      freeAgents,
+      messages: { success, error } // <--- ¡ESTO FALTABA!
+    })
+  } catch (err) {
+    console.error('Error en getEditEquipo:', err.message)
+    res.status(500).render('error', { codigo: 500, mensaje: 'Error al cargar edición' })
+  }
+}
+// POST: AGREGAR JUGADOR AL ROSTER
+export async function postAddPlayerToTeam (req, res) {
+  try {
+    const { id } = req.params // ID del Equipo
+    const { jugadorId } = req.body
+
+    await jugadoresModel.asignarEquipo(jugadorId, id)
+    
+    res.redirect(`/admin/equipos/${id}/editar?success=Jugador fichado`)
+  } catch (error) {
+    console.error('Error:', error)
+    res.redirect(`/admin/equipos/${req.params.id}/editar?error=Error al fichar`)
+  }
+}
+
+// POST: QUITAR JUGADOR (Liberar)
+export async function postRemovePlayerFromTeam (req, res) {
+  try {
+    const { id } = req.params // ID del Equipo (solo para redirect)
+    const { jugadorId } = req.body
+
+    await jugadoresModel.liberarJugador(jugadorId)
+    
+    res.redirect(`/admin/equipos/${id}/editar?success=Jugador liberado`)
+  } catch (error) {
+    console.error('Error:', error)
+    res.redirect(`/admin/equipos/${req.params.id}/editar?error=Error al liberar`)
   }
 }

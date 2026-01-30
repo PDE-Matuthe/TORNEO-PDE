@@ -1,16 +1,24 @@
-// ==========================================
-// MODELO: Torneos
-// ==========================================
+// src/models/torneos.js
 import pool from '../config/db.js'
 
 /**
- * Obtener todos los torneos
+ * Obtener todos los torneos (CON CONTEO DE EQUIPOS)
  */
 export async function getAllTorneos () {
   try {
-    const [rows] = await pool.query(
-      'SELECT BIN_TO_UUID(id) as id, nombre, descripcion, fecha_inicio, fecha_fin, estado, activo FROM torneos ORDER BY fecha_inicio DESC'
-    )
+    const [rows] = await pool.query(`
+      SELECT 
+        BIN_TO_UUID(t.id) as id, 
+        t.nombre, 
+        t.descripcion, 
+        t.fecha_inicio, 
+        t.fecha_fin, 
+        t.estado, 
+        t.activo,
+        (SELECT COUNT(*) FROM torneo_equipos te WHERE te.torneo_id = t.id) as equipo_count
+      FROM torneos t 
+      ORDER BY t.fecha_inicio DESC
+    `)
     return rows
   } catch (error) {
     console.error('Error en getAllTorneos:', error.message)
@@ -18,9 +26,10 @@ export async function getAllTorneos () {
   }
 }
 
-/**
- * Obtener torneo por ID
- */
+// ... (El resto de funciones getTorneoById, getTorneoActivo, createTorneo, etc. se mantienen igual) ...
+// Copia el resto del archivo original aquí abajo o mantenlo si no lo borraste.
+// Solo necesitabas cambiar getAllTorneos.
+
 export async function getTorneoById (torneoId) {
   try {
     const [rows] = await pool.query(
@@ -34,9 +43,6 @@ export async function getTorneoById (torneoId) {
   }
 }
 
-/**
- * Obtener torneo activo
- */
 export async function getTorneoActivo () {
   try {
     const [rows] = await pool.query(
@@ -49,9 +55,6 @@ export async function getTorneoActivo () {
   }
 }
 
-/**
- * Crear nuevo torneo
- */
 export async function createTorneo (nombre, descripcion, fechaInicio, fechaFin, estado = 'Proximo') {
   try {
     const [result] = await pool.query(
@@ -73,9 +76,6 @@ export async function createTorneo (nombre, descripcion, fechaInicio, fechaFin, 
   }
 }
 
-/**
- * Actualizar torneo
- */
 export async function updateTorneo (torneoId, updates) {
   try {
     const fields = []
@@ -117,23 +117,15 @@ export async function updateTorneo (torneoId, updates) {
   }
 }
 
-/**
- * Activar torneo (desactiva los demás)
- */
 export async function activarTorneo (torneoId) {
   const connection = await pool.getConnection()
   try {
     await connection.beginTransaction()
-
-    // Desactivar todos los torneos
     await connection.query('UPDATE torneos SET activo = 0')
-
-    // Activar el seleccionado
     const [result] = await connection.query(
       'UPDATE torneos SET activo = 1 WHERE id = UUID_TO_BIN(?)',
       [torneoId]
     )
-
     await connection.commit()
     return result.affectedRows > 0
   } catch (error) {
@@ -145,9 +137,6 @@ export async function activarTorneo (torneoId) {
   }
 }
 
-/**
- * Eliminar torneo
- */
 export async function deleteTorneo (torneoId) {
   try {
     const [result] = await pool.query(

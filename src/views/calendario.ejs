@@ -2,174 +2,262 @@
 <%- include('partials/nav') %>
 
 <% 
-  const today = new Date();
-  const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const todayKey = todayLocal.toISOString().split('T')[0];
+  const now = new Date();
+  const todayString = now.toISOString().split('T')[0];
 
-  const groupedByDate = {};
-  
+  let matchesToday = [];
+  let matchesFuture = [];
+  let matchesPast = [];
+
   if (typeof partidas !== 'undefined' && Array.isArray(partidas)) {
     partidas.forEach(match => {
       const matchDate = new Date(match.fecha_partida);
-      const localDate = new Date(matchDate.getFullYear(), matchDate.getMonth(), matchDate.getDate());
-      const dateKey = localDate.toISOString().split('T')[0];
+      const matchDateString = matchDate.toISOString().split('T')[0];
       
-      if (!groupedByDate[dateKey]) groupedByDate[dateKey] = [];
-      groupedByDate[dateKey].push(match);
+      // Lógica "EN VIVO": Fecha pasada o igual a hoy + Sin Ganador
+      // (Un partido de ayer sin ganador no debería salir como "En Vivo" rojo, sino como pendiente o TBD, 
+      // pero asumiremos que el admin carga rápido. Aquí activamos rojo si es "Hoy y sin ganador" o "Pasado reciente y sin ganador")
+      match.isLive = (matchDate <= now) && !match.ganador_id;
+      
+      if (matchDateString === todayString) {
+        matchesToday.push(match);
+      } else if (matchDate > now) {
+        matchesFuture.push(match);
+      } else {
+        matchesPast.push(match);
+      }
     });
   }
-  
-  const sortedDates = Object.keys(groupedByDate).sort();
-  const todayMatches = groupedByDate[todayKey] || [];
-  const futureDates = sortedDates.filter(d => d > todayKey);
+
+  // Ordenar
+  matchesFuture.sort((a, b) => new Date(a.fecha_partida) - new Date(b.fecha_partida));
+  matchesPast.sort((a, b) => new Date(b.fecha_partida) - new Date(a.fecha_partida));
+
+  // Helper para agrupar por fecha visual
+  function formatDateHeader(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
 %>
 
-<main class="max-w-5xl mx-auto px-4 py-10">
+<style>
+  .calendar-header {
+    background: linear-gradient(to bottom, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 1)), 
+                url('https://images.contentstack.io/v3/assets/blt731acb42bb3d1659/bltE59B2E310672691C/5db05fa86e8b0c6d52188435/RiotX_ChampionList_ahri.jpg?quality=90&width=1215');
+    background-size: cover;
+    background-position: center 20%;
+  }
 
-  <div class="text-center mb-10">
-    <% if (typeof isTorneoEspecifico !== 'undefined' && isTorneoEspecifico) { %>
-      <div class="mb-4 flex items-center justify-center gap-2">
-        <a href="/torneos-anteriores" class="text-gold hover:text-yellow-400 text-sm">Torneos Anteriores</a>
-        <span class="text-slate-500">/</span>
-        <span class="text-slate-400 text-sm"><%= torneo.nombre %></span>
-      </div>
-    <% } %>
-    <h1 class="text-4xl font-bold text-white mb-2">Calendario de Partidas<% if (typeof isTorneoEspecifico !== 'undefined' && isTorneoEspecifico) { %> - <%= torneo.nombre %><% } %></h1>
-    <p class="text-slate-400">Cronograma oficial del torneo</p>
-  </div>
+  /* LÓGICA ANTI-SPOILER CSS */
+  .spoiler-mode .result-score { display: none; }
+  .spoiler-mode .result-overlay { display: flex; }
+  
+  /* Cuando está en modo spoiler, los equipos se ven neutrales (sin opacidad de perdedor) */
+  .spoiler-mode .team-container { opacity: 1 !important; filter: none !important; }
+  .spoiler-mode .team-name { color: white !important; }
+  
+  /* Modo Revelado */
+  .revealed .result-score { display: flex; }
+  .revealed .result-overlay { display: none; }
+</style>
 
-  <div class="mb-12" id="seccionHoy">
-    <div class="flex items-center gap-3 mb-6">
-      <div class="w-1 h-6 bg-red-500 rounded-full"></div>
-      <h2 class="text-2xl font-bold text-white">Hoy</h2>
-      <% if(todayMatches.length > 0) { %>
-        <span class="bg-red-500/10 text-red-500 text-xs font-bold px-2 py-1 rounded animate-pulse">EN VIVO</span>
-      <% } %>
+<body class="bg-slate-900 text-slate-200 font-sans antialiased">
+
+  <header class="calendar-header py-16 text-center shadow-2xl border-b border-slate-700">
+    <div class="animate-fade-in-up">
+      <h1 class="text-5xl font-black text-white drop-shadow-lg mb-2 uppercase tracking-tight">
+        Calendario <span class="text-yellow-500">Oficial</span>
+      </h1>
+      <p class="text-slate-300 tracking-widest uppercase text-sm font-bold">Temporada 2026</p>
     </div>
+  </header>
 
-    <% if (todayMatches.length > 0) { %>
-      <div class="space-y-3">
-        <% todayMatches.forEach(match => { %>
-          <div class="bg-slate-800 rounded-lg p-4 border-l-4 border-yellow-500 flex flex-col md:flex-row items-center justify-between gap-4 hover:bg-slate-750 transition shadow-lg">
-            
-            <div class="text-center md:text-left min-w-[80px]">
-              <span class="text-2xl font-bold text-white">
-                <%= new Date(match.fecha_partida).getHours().toString().padStart(2, '0') %>:<%= new Date(match.fecha_partida).getMinutes().toString().padStart(2, '0') %>
-              </span>
+  <main class="max-w-5xl mx-auto px-4 py-12 space-y-16">
+
+    <section>
+      <div class="flex items-center gap-3 mb-6">
+        <div class="h-8 w-1 bg-yellow-500 rounded-full shadow-[0_0_15px_orange]"></div>
+        <h2 class="text-3xl font-bold text-white uppercase italic">Hoy</h2>
+      </div>
+
+      <% if (matchesToday.length > 0) { %>
+        <div class="grid gap-6">
+          <% matchesToday.forEach(match => { %>
+            <div class="relative bg-slate-800 rounded-xl overflow-hidden border-l-4 <%= match.isLive ? 'border-red-600 shadow-[0_0_20px_rgba(220,38,38,0.2)]' : 'border-yellow-500' %> shadow-xl">
+              
+              <% if (match.isLive) { %>
+                <div class="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg animate-pulse z-20">
+                  ● EN VIVO
+                </div>
+              <% } %>
+
+              <div class="p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="text-center md:text-left min-w-[100px]">
+                  <span class="block text-4xl font-black text-white font-mono">
+                    <%= new Date(match.fecha_partida).getHours().toString().padStart(2, '0') %>:<%= new Date(match.fecha_partida).getMinutes().toString().padStart(2, '0') %>
+                  </span>
+                  <span class="text-xs text-slate-500 font-bold uppercase tracking-widest">Hora Local</span>
+                </div>
+
+                <div class="flex-1 flex items-center justify-center gap-4 md:gap-8 w-full">
+                  <div class="flex flex-col items-center gap-2 flex-1 text-right">
+                    <img src="<%= match.azul_logo %>" class="w-16 h-16 object-contain drop-shadow-lg">
+                    <span class="text-xl font-bold text-white uppercase"><%= match.azul_nombre %></span>
+                  </div>
+
+                  <div class="text-4xl font-black text-slate-700 italic">VS</div>
+
+                  <div class="flex flex-col items-center gap-2 flex-1 text-left">
+                    <img src="<%= match.rojo_logo %>" class="w-16 h-16 object-contain drop-shadow-lg">
+                    <span class="text-xl font-bold text-white uppercase"><%= match.rojo_nombre %></span>
+                  </div>
+                </div>
+
+                <% if (locals.isLoggedIn) { %>
+                   <a href="/admin/partidas/<%= match.id %>/stats" class="text-xs bg-slate-700 hover:bg-yellow-600 text-white px-3 py-1 rounded transition">Admin</a>
+                <% } %>
+              </div>
             </div>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <div class="p-8 border border-slate-700 border-dashed rounded-lg text-center opacity-60">
+          <p class="text-slate-400">No hay partidas para hoy.</p>
+        </div>
+      <% } %>
+    </section>
 
-            <div class="flex-1 flex items-center justify-center gap-6 w-full">
-              <div class="flex items-center gap-3 flex-1 justify-end">
-                <span class="text-white font-bold text-lg hidden sm:block"><%= match.azul_nombre %></span>
-                <img src="<%= match.azul_logo %>" class="w-10 h-10 object-contain drop-shadow">
+    <% if (matchesFuture.length > 0) { %>
+      <section>
+        <div class="flex items-center gap-3 mb-6">
+          <h2 class="text-2xl font-bold text-slate-300 uppercase">Próximamente</h2>
+          <div class="h-px bg-slate-700 flex-1"></div>
+        </div>
+
+        <div class="space-y-8">
+          <% 
+            let lastDateFuture = '';
+            matchesFuture.forEach(match => { 
+              const thisDate = formatDateHeader(match.fecha_partida);
+              if (thisDate !== lastDateFuture) {
+                lastDateFuture = thisDate;
+          %>
+            <h3 class="text-yellow-500 font-bold text-lg border-b border-slate-800 pb-2 mt-8 capitalize">
+              <%= thisDate %>
+            </h3>
+          <% } %>
+
+            <div class="bg-slate-800/50 hover:bg-slate-800 rounded-lg p-4 flex flex-col md:flex-row items-center justify-between gap-4 border border-slate-700/50 transition">
+              <div class="text-yellow-500 font-mono font-bold text-xl min-w-[80px]">
+                <%= new Date(match.fecha_partida).getHours().toString().padStart(2, '0') %>:<%= new Date(match.fecha_partida).getMinutes().toString().padStart(2, '0') %>
               </div>
 
-              <div class="px-4 py-1 bg-slate-900 rounded-md font-bold text-slate-400 min-w-[60px] text-center">
-                <% if(match.ganador_id) { %>
-                  <span class="text-green-500">FIN</span>
-                <% } else { %>
-                  VS
+              <div class="flex items-center gap-3 flex-1 justify-center md:justify-start">
+                <img src="<%= match.azul_logo %>" class="w-8 h-8 opacity-80">
+                <span class="text-slate-300 font-bold text-sm"><%= match.azul_nombre %></span>
+                <span class="text-slate-600 text-xs font-black px-2">VS</span>
+                <span class="text-slate-300 font-bold text-sm"><%= match.rojo_nombre %></span>
+                <img src="<%= match.rojo_logo %>" class="w-8 h-8 opacity-80">
+              </div>
+
+              <span class="text-xs bg-slate-900 text-slate-500 px-2 py-1 rounded border border-slate-800 uppercase font-bold">
+                <%= match.fase_torneo %>
+              </span>
+            </div>
+          <% }) %>
+        </div>
+      </section>
+    <% } %>
+
+    <% if (matchesPast.length > 0) { %>
+      <section>
+        <div class="flex items-center gap-3 mb-6">
+          <h2 class="text-2xl font-bold text-slate-500 uppercase">Resultados</h2>
+          <div class="h-px bg-slate-700 flex-1"></div>
+        </div>
+
+        <div class="space-y-6">
+          <% 
+            let lastDatePast = '';
+            matchesPast.forEach(match => { 
+              const thisDate = formatDateHeader(match.fecha_partida);
+              if (thisDate !== lastDatePast) {
+                lastDatePast = thisDate;
+          %>
+            <h3 class="text-slate-600 font-bold text-md border-b border-slate-800 pb-1 mt-8 capitalize">
+              <%= thisDate %>
+            </h3>
+          <% } %>
+
+            <div id="match-<%= match.id %>" class="spoiler-mode bg-slate-800 rounded-lg p-5 flex flex-col md:flex-row items-center gap-6 border border-slate-700 relative overflow-hidden group">
+              
+              <div class="flex-1 flex items-center justify-center gap-6 w-full">
+                
+                <div class="team-container flex items-center gap-3 justify-end flex-1 transition-all duration-500 <%= match.ganador_id === match.azul_id ? 'opacity-100' : 'opacity-40 grayscale' %>">
+                  <span class="team-name text-lg font-bold transition-colors duration-500 <%= match.ganador_id === match.azul_id ? 'text-green-400' : 'text-slate-400' %>">
+                    <%= match.azul_nombre %>
+                  </span>
+                  <img src="<%= match.azul_logo %>" class="w-10 h-10 object-contain">
+                </div>
+
+                <div class="min-w-[120px] text-center relative">
+                  
+                  <div class="result-overlay flex flex-col items-center gap-2">
+                    <button onclick="revealMatch('<%= match.id %>')" class="bg-slate-700 hover:bg-yellow-600 hover:text-black text-slate-300 px-4 py-1 rounded-full text-xs font-bold flex items-center gap-2 transition shadow-lg border border-slate-600">
+                      <i class="fas fa-eye"></i> Ver Resultado
+                    </button>
+                    <span class="text-slate-600 text-xs font-mono">Finalizado</span>
+                  </div>
+
+                  <div class="result-score flex-col items-center animate-fade-in-up">
+                    <div class="text-2xl font-black text-white tracking-widest bg-slate-900 px-4 py-1 rounded border border-slate-700">
+                      <% 
+                        // Calculamos score simple si no tienes goles en DB, usando lógica de Ganador
+                        // Ojo: Si tienes campo 'score' úsalo. Si no, mostramos WIN/LOSS
+                        const azulWin = match.ganador_id === match.azul_id;
+                      %>
+                      <span class="<%= azulWin ? 'text-green-500' : 'text-red-500' %>"><%= azulWin ? 'W' : 'L' %></span>
+                      <span class="text-slate-600 mx-1">-</span>
+                      <span class="<%= !azulWin ? 'text-green-500' : 'text-red-500' %>"><%= !azulWin ? 'W' : 'L' %></span>
+                    </div>
+                  </div>
+
+                </div>
+
+                <div class="team-container flex items-center gap-3 justify-start flex-1 transition-all duration-500 <%= match.ganador_id === match.rojo_id ? 'opacity-100' : 'opacity-40 grayscale' %>">
+                  <img src="<%= match.rojo_logo %>" class="w-10 h-10 object-contain">
+                  <span class="team-name text-lg font-bold transition-colors duration-500 <%= match.ganador_id === match.rojo_id ? 'text-green-400' : 'text-slate-400' %>">
+                    <%= match.rojo_nombre %>
+                  </span>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2 justify-end min-w-[50px]">
+                <% if (match.vod_url) { %>
+                  <a href="<%= match.vod_url %>" target="_blank" class="text-red-500 hover:text-white hover:bg-red-600 p-2 rounded-full transition" title="Ver en YouTube">
+                    <i class="fab fa-youtube text-xl"></i>
+                  </a>
                 <% } %>
               </div>
 
-              <div class="flex items-center gap-3 flex-1 justify-start">
-                <img src="<%= match.rojo_logo %>" class="w-10 h-10 object-contain drop-shadow">
-                <span class="text-white font-bold text-lg hidden sm:block"><%= match.rojo_nombre %></span>
-              </div>
             </div>
-
-            <div class="flex flex-col items-center md:items-end gap-2 min-w-[100px]">
-              <span class="text-xs text-slate-500 uppercase font-bold tracking-wider"><%= match.fase_torneo %></span>
-              
-              <% if (locals.isLoggedIn) { %>
-                <div class="flex gap-2">
-                  <a href="/admin/partidas/<%= match.id %>/stats" class="text-xs bg-yellow-600 hover:bg-yellow-500 text-white px-2 py-1 rounded">Stats</a>
-                  <a href="/admin/partidas/delete/<%= match.id %>" onclick="return confirm('¿Eliminar?')" class="text-xs bg-red-900 text-red-200 hover:text-white px-2 py-1 rounded">Borrar</a>
-                </div>
-              <% } %>
-            </div>
-
-          </div>
-        <% }) %>
-      </div>
-    <% } else { %>
-      <div class="p-8 border border-slate-700 border-dashed rounded-lg text-center">
-        <p class="text-slate-500">No hay partidas programadas para el día de hoy.</p>
-      </div>
+          <% }) %>
+        </div>
+      </section>
     <% } %>
-  </div>
 
-  <% if (futureDates.length > 0) { %>
-    <div class="mb-12">
-      <div class="flex items-center gap-3 mb-6">
-        <div class="w-1 h-6 bg-yellow-500 rounded-full"></div>
-        <h2 class="text-2xl font-bold text-white">Próximamente</h2>
-      </div>
+  </main>
 
-      <div class="space-y-8">
-        <% futureDates.forEach(dateKey => { %>
-          <% 
-            const dateObj = new Date(dateKey + 'T00:00:00');
-            const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'long' });
-            const dateFormatted = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
-          %>
-          
-          <div>
-            <h3 class="text-yellow-500 font-bold capitalize mb-3 ml-2 text-lg">
-              <%= dayName %> <span class="text-slate-500 text-sm font-normal normal-case ml-2"><%= dateFormatted %></span>
-            </h3>
+  <script>
+    function revealMatch(id) {
+      const card = document.getElementById('match-' + id);
+      if(card) {
+        card.classList.remove('spoiler-mode');
+        card.classList.add('revealed');
+      }
+    }
+  </script>
 
-            <div class="space-y-2">
-              <% groupedByDate[dateKey].forEach(match => { %>
-                <div class="bg-slate-800/50 hover:bg-slate-800 rounded px-4 py-3 flex items-center justify-between gap-4 transition border border-slate-700/50">
-                  
-                  <div class="text-slate-300 font-mono font-bold">
-                    <%= new Date(match.fecha_partida).getHours().toString().padStart(2, '0') %>:<%= new Date(match.fecha_partida).getMinutes().toString().padStart(2, '0') %>
-                  </div>
-
-                  <div class="flex items-center gap-3">
-                    <img src="<%= match.azul_logo %>" class="w-6 h-6 object-contain opacity-80">
-                    <span class="text-slate-400 text-sm font-bold">VS</span>
-                    <img src="<%= match.rojo_logo %>" class="w-6 h-6 object-contain opacity-80">
-                  </div>
-
-                  <div class="hidden md:flex items-center gap-2 text-sm text-slate-400">
-                    <span><%= match.azul_nombre %></span>
-                    <span>vs</span>
-                    <span><%= match.rojo_nombre %></span>
-                  </div>
-
-                  <div class="text-xs text-slate-600 bg-slate-900 px-2 py-1 rounded border border-slate-800">
-                    <%= match.fase_torneo %>
-                  </div>
-                  
-                  <% if (locals.isLoggedIn) { %>
-                     <a href="/admin/partidas/<%= match.id %>/stats" class="text-xs text-yellow-500 hover:text-white hover:underline">Editar</a>
-                  <% } %>
-
-                </div>
-              <% }) %>
-            </div>
-          </div>
-        <% }) %>
-      </div>
-    </div>
-  <% } %>
-
-  <% if (partidas.length === 0) { %>
-    <div class="text-center py-20 opacity-50">
-      <i class="fas fa-calendar text-6xl text-slate-600 mb-4"></i>
-      <p class="text-slate-400 text-xl">Aún no se ha publicado el calendario.</p>
-    </div>
-  <% } %>
-
-</main>
-
-<script>
-  window.addEventListener('load', function() {
-    const el = document.getElementById('seccionHoy');
-    if(el && <%= todayMatches.length > 0 %>) el.scrollIntoView({ behavior: 'smooth' });
-  });
-</script>
-
-<%- include('partials/footer') %>
+  <%- include('partials/footer') %>
+</body>
+</html>

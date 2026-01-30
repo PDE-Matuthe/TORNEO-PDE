@@ -94,6 +94,10 @@ router.post('/admin/equipos', isAuthenticated, isAdmin, equiposController.postCr
 router.post('/admin/equipos/:id/update', isAuthenticated, isAdmin, equiposController.postUpdateEquipo)
 router.post('/admin/equipos/:id/delete', isAuthenticated, isAdmin, equiposController.postDeleteEquipo)
 
+// NUEVAS RUTAS PARA ROSTER (GESTIÓN JUGADORES EN EQUIPO)
+router.post('/admin/equipos/:id/add-player', isAuthenticated, isAdmin, equiposController.postAddPlayerToTeam)
+router.post('/admin/equipos/:id/remove-player', isAuthenticated, isAdmin, equiposController.postRemovePlayerFromTeam)
+
 // ------- JUGADORES -------
 router.get('/admin/jugadores', isAuthenticated, isAdmin, jugadoresController.getJugadores)
 router.get('/admin/jugadores/crear', isAuthenticated, isAdmin, jugadoresController.getCreateJugador)

@@ -1,111 +1,49 @@
 <%- include('partials/head') %>
 <%- include('partials/nav') %>
 
-<main class="max-w-2xl mx-auto px-4 py-8">
-  <!-- Header -->
-  <div class="mb-8">
-    <a href="/admin/torneos" class="text-gold hover:text-yellow-300 mb-4 inline-flex items-center gap-2">
-      <i class="fas fa-arrow-left"></i> Volver a Torneos
-    </a>
-    <h1 class="text-4xl font-bold mb-2">
-      <i class="fas fa-trophy text-gold mr-3"></i> Crear Nuevo Torneo
-    </h1>
-    <p class="text-slate-400">Completa los detalles del torneo</p>
-  </div>
-
-  <div class="card">
-    <form action="/admin/torneos" method="POST" class="space-y-6">
-      <!-- Nombre -->
+<main class="max-w-4xl mx-auto px-4 py-12">
+  
+  <div class="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 overflow-hidden">
+    <div class="bg-slate-900 px-8 py-6 border-b border-slate-700 flex items-center gap-4">
+      <div class="w-12 h-12 bg-green-600/20 rounded-full flex items-center justify-center border border-green-500/30 text-green-500">
+        <i class="fas fa-trophy text-xl"></i>
+      </div>
       <div>
-        <label for="nombre" class="form-label">Nombre del Torneo</label>
-        <input 
-          type="text" 
-          id="nombre" 
-          name="nombre" 
-          placeholder="Ej: Liga Regional 2026"
-          class="form-input"
-          required
-        >
+        <h1 class="text-2xl font-bold text-white">Nuevo Torneo</h1>
+        <p class="text-slate-400 text-sm">Configura la competición básica</p>
+      </div>
+    </div>
+
+    <form action="/admin/torneos" method="POST" class="p-8">
+      
+      <div class="mb-6">
+        <label class="block text-slate-300 text-sm font-bold mb-2 uppercase tracking-wide">Nombre del Torneo</label>
+        <input type="text" name="nombre" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-4 text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition placeholder-slate-600" placeholder="Ej: Copa Apertura 2026" required>
       </div>
 
-      <!-- Descripción -->
-      <div>
-        <label for="descripcion" class="form-label">Descripción</label>
-        <textarea 
-          id="descripcion" 
-          name="descripcion" 
-          rows="3"
-          placeholder="Detalles sobre el torneo..."
-          class="form-input"
-        ></textarea>
+      <div class="mb-6">
+        <label class="block text-slate-300 text-sm font-bold mb-2 uppercase tracking-wide">Descripción Corta</label>
+        <textarea name="descripcion" rows="3" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-4 text-white focus:outline-none focus:border-green-500 transition placeholder-slate-600" placeholder="Ej: Torneo oficial de pretemporada..."></textarea>
       </div>
 
-      <!-- Fecha de Inicio -->
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div>
-          <label for="fecha_inicio" class="form-label">Fecha Inicio</label>
-          <input 
-            type="date" 
-            id="fecha_inicio" 
-            name="fecha_inicio"
-            class="form-input"
-            required
-          >
+          <label class="block text-slate-300 text-sm font-bold mb-2 uppercase tracking-wide">Fecha Inicio</label>
+          <input type="date" name="fecha_inicio" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:outline-none focus:border-green-500 transition" required>
         </div>
-
-        <!-- Fecha de Fin -->
         <div>
-          <label for="fecha_fin" class="form-label">Fecha Fin</label>
-          <input 
-            type="date" 
-            id="fecha_fin" 
-            name="fecha_fin"
-            class="form-input"
-            required
-          >
+          <label class="block text-slate-300 text-sm font-bold mb-2 uppercase tracking-wide">Fecha Fin (Estimada)</label>
+          <input type="date" name="fecha_fin" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:outline-none focus:border-green-500 transition">
         </div>
       </div>
 
-      <!-- Estado -->
-      <div>
-        <label for="estado" class="form-label">Estado</label>
-        <select id="estado" name="estado" class="form-input">
-          <option value="planificación">Planificación</option>
-          <option value="en_curso">En Curso</option>
-          <option value="finalizado">Finalizado</option>
-          <option value="cancelado">Cancelado</option>
-        </select>
-      </div>
-
-      <!-- Equipos (Opcional) -->
-      <div>
-        <label for="equipos_ids" class="form-label">Equipos Participantes (Opcional)</label>
-        <select 
-          id="equipos_ids" 
-          name="equipos_ids" 
-          multiple 
-          class="form-input"
-          style="height: auto; min-height: 100px;"
-        >
-          <option disabled>Selecciona equipos (usa Ctrl+Click para múltiples)</option>
-          <% if (typeof equipos !== 'undefined' && equipos.length > 0) { %>
-            <% equipos.forEach(eq => { %>
-              <option value="<%= eq.id %>"><%= eq.nombre %></option>
-            <% }) %>
-          <% } %>
-        </select>
-        <p class="text-xs text-slate-400 mt-2">Puedes agregar equipos después también</p>
-      </div>
-
-      <!-- Buttons -->
-      <div class="flex gap-4 pt-6 border-t border-slate-700">
-        <a href="/admin/torneos" class="btn-secondary flex-1">
-          <i class="fas fa-times mr-2"></i> Cancelar
-        </a>
-        <button type="submit" class="btn-success flex-1">
-          <i class="fas fa-plus mr-2"></i> Crear Torneo
+      <div class="flex items-center justify-end gap-4 pt-6 border-t border-slate-700">
+        <a href="/admin/torneos" class="text-slate-400 hover:text-white font-bold px-4 transition">Cancelar</a>
+        <button type="submit" class="bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg shadow-green-900/20 transition transform hover:-translate-y-0.5">
+          <i class="fas fa-save mr-2"></i> Guardar Torneo
         </button>
       </div>
+
     </form>
   </div>
 </main>

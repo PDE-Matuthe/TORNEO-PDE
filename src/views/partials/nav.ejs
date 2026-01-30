@@ -1,138 +1,78 @@
-<nav class="navbar sticky-top z-40">
-  <div class="max-w-7xl mx-auto px-4 py-4 w-full flex justify-between items-center">
-    <!-- Logo / Brand -->
-    <a href="/" class="navbar-brand text-2xl font-bold">
-      <i class="fas fa-crown text-yellow-500 mr-2"></i> <span class="gradient-gold">Torneo PDE</span>
-    </a>
-    
-    <!-- Mobile Toggle -->
-    <button id="mobileMenuBtn" class="md:hidden text-gold hover:text-white transition">
-      <i class="fas fa-bars text-2xl"></i>
-    </button>
-    
-    <!-- Navigation Links -->
-    <div id="navMenu" class="hidden md:flex md:items-center md:space-x-6">
-      <!-- Torneo Actual Dropdown -->
-      <div class="relative group">
-        <button class="nav-link flex items-center">
-          <i class="fas fa-trophy text-gold mr-1"></i> Torneo Actual
-          <i class="fas fa-chevron-down text-xs ml-1"></i>
-        </button>
-        <div class="hidden group-hover:block absolute left-0 mt-0 w-48 bg-slate-800 border border-slate-600 rounded shadow-lg">
-          <a href="/calendario" class="block px-4 py-2 text-sm hover:bg-slate-700 border-b border-slate-600">
-            <i class="fas fa-calendar mr-2 text-blue-400"></i> Calendario
-          </a>
-          <a href="/bracket" class="block px-4 py-2 text-sm hover:bg-slate-700 border-b border-slate-600">
-            <i class="fas fa-sitemap mr-2 text-purple-400"></i> Bracket
-          </a>
-          <a href="/equipos" class="block px-4 py-2 text-sm hover:bg-slate-700 border-b border-slate-600">
-            <i class="fas fa-users mr-2 text-pink-400"></i> Equipos
-          </a>
-          <a href="/mvp" class="block px-4 py-2 text-sm hover:bg-slate-700">
-            <i class="fas fa-star mr-2 text-yellow-400"></i> Ranking MVP
-          </a>
+<nav class="bg-slate-900 border-b border-yellow-600/30 shadow-lg relative z-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-20">
+      
+      <div class="flex-shrink-0 flex items-center gap-3 cursor-pointer" onclick="window.location.href='/'">
+        <div class="h-10 w-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-[0_0_15px_orange]">
+          <i class="fas fa-dragon text-slate-900 text-xl"></i>
+        </div>
+        <span class="text-white font-black text-xl tracking-wider uppercase hidden md:block">
+          Punilla <span class="text-yellow-500">Deers</span>
+        </span>
+      </div>
+
+      <div class="hidden md:block">
+        <div class="ml-10 flex items-baseline space-x-6">
+          <a href="/" class="text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-md text-sm font-bold transition">Inicio</a>
+          <a href="/calendario" class="text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-md text-sm font-bold transition">Calendario</a>
+          <a href="/equipos" class="text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-md text-sm font-bold transition">Equipos</a>
+          <a href="/bracket" class="text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-md text-sm font-bold transition">Bracket</a>
+          <a href="/mvp" class="text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-md text-sm font-bold transition">MVP</a>
         </div>
       </div>
 
-      <!-- Torneos Anteriores -->
-      <a href="/torneos-anteriores" class="nav-link">
-        <i class="fas fa-history text-gold mr-1"></i> Torneos Anteriores
-      </a>
-
-      <% if (typeof usuario !== 'undefined' && usuario && usuario.isAdmin) { %>
-        <!-- Admin Links -->
-        <div class="border-l border-slate-600 pl-6 flex items-center space-x-4">
-          <div class="relative group">
-            <button class="nav-link flex items-center">
-              <i class="fas fa-cog text-gold mr-1"></i> Admin
-              <i class="fas fa-chevron-down text-xs ml-1"></i>
-            </button>
-            <div class="hidden group-hover:block absolute right-0 mt-0 w-48 bg-slate-800 border border-slate-600 rounded shadow-lg">
-              <a href="/admin" class="block px-4 py-2 text-sm hover:bg-slate-700 border-b border-slate-600">
-                <i class="fas fa-chart-line mr-2"></i> Dashboard
-              </a>
-              <a href="/admin/torneos" class="block px-4 py-2 text-sm hover:bg-slate-700 border-b border-slate-600">
-                <i class="fas fa-trophy mr-2"></i> Torneos
-              </a>
-              <a href="/admin/equipos" class="block px-4 py-2 text-sm hover:bg-slate-700 border-b border-slate-600">
-                <i class="fas fa-users mr-2"></i> Equipos
-              </a>
-              <a href="/admin/jugadores" class="block px-4 py-2 text-sm hover:bg-slate-700 border-b border-slate-600">
-                <i class="fas fa-user mr-2"></i> Jugadores
-              </a>
-              <a href="/admin/partidas" class="block px-4 py-2 text-sm hover:bg-slate-700 border-b border-slate-600">
-                <i class="fas fa-gamepad mr-2"></i> Partidas
-              </a>
-              <a href="/logout" class="block px-4 py-2 text-sm hover:bg-red-900 text-red-400">
-                <i class="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión
-              </a>
-            </div>
-          </div>
-        </div>
-      <% } %>
-    </div>
-  </div>
-  
-  <!-- Mobile Menu -->
-  <div id="mobileMenuContent" class="hidden md:hidden border-t border-slate-600">
-    <div class="px-4 py-3 space-y-2">
-      <!-- Mobile Torneo Actual -->
-      <button id="mobileMenuToggle" class="w-full text-left nav-link py-2 flex items-center justify-between">
-        <span><i class="fas fa-trophy text-gold mr-2"></i>Torneo Actual</span>
-        <i class="fas fa-chevron-down text-xs"></i>
-      </button>
-      <div id="mobileMenuToggleContent" class="hidden pl-4 space-y-2 border-l border-slate-600">
-        <a href="/calendario" class="block nav-link text-sm"><i class="fas fa-calendar mr-2"></i>Calendario</a>
-        <a href="/bracket" class="block nav-link text-sm"><i class="fas fa-sitemap mr-2"></i>Bracket</a>
-        <a href="/equipos" class="block nav-link text-sm"><i class="fas fa-users mr-2"></i>Equipos</a>
-        <a href="/mvp" class="block nav-link text-sm"><i class="fas fa-star mr-2"></i>Ranking MVP</a>
+      <div class="hidden md:flex items-center gap-4">
+        <% if (locals.isLoggedIn) { %>
+          <a href="/admin" class="bg-yellow-600 hover:bg-yellow-500 text-black px-4 py-2 rounded font-bold text-sm shadow-lg hover:shadow-yellow-500/20 transition flex items-center gap-2">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+          </a>
+          <a href="/logout" class="text-slate-400 hover:text-red-400 font-bold text-sm transition" title="Cerrar Sesión">
+            <i class="fas fa-sign-out-alt text-lg"></i>
+          </a>
+        <% } else { %>
+          <a href="/login" class="text-yellow-500 hover:text-white border border-yellow-600 hover:bg-yellow-600 px-4 py-2 rounded font-bold text-sm transition">
+            <i class="fas fa-user-circle mr-2"></i> Acceso Admin
+          </a>
+        <% } %>
       </div>
-      
-      <!-- Mobile Torneos Anteriores -->
-      <a href="/torneos-anteriores" class="block nav-link py-2"><i class="fas fa-history text-gold mr-1"></i>Torneos Anteriores</a>
-      
-      <% if (typeof usuario !== 'undefined' && usuario && usuario.isAdmin) { %>
-        <hr class="border-slate-600 my-2">
-        <button id="mobileAdminToggle" class="w-full text-left nav-link py-2 flex items-center justify-between">
-          <span><i class="fas fa-cog text-gold mr-2"></i>Admin</span>
-          <i class="fas fa-chevron-down text-xs"></i>
+
+      <div class="-mr-2 flex md:hidden">
+        <button onclick="toggleMenu()" type="button" class="bg-slate-800 inline-flex items-center justify-center p-2 rounded-md text-slate-400 hover:text-white hover:bg-slate-700 focus:outline-none">
+          <span class="sr-only">Abrir menú</span>
+          <i class="fas fa-bars text-xl"></i>
         </button>
-        <div id="mobileAdminToggleContent" class="hidden pl-4 space-y-2 border-l border-slate-600">
-          <a href="/admin" class="block nav-link text-sm"><i class="fas fa-chart-line mr-2"></i>Dashboard</a>
-          <a href="/admin/torneos" class="block nav-link text-sm"><i class="fas fa-trophy mr-2"></i>Torneos</a>
-          <a href="/admin/equipos" class="block nav-link text-sm"><i class="fas fa-users mr-2"></i>Equipos</a>
-          <a href="/admin/jugadores" class="block nav-link text-sm"><i class="fas fa-user mr-2"></i>Jugadores</a>
-          <a href="/admin/partidas" class="block nav-link text-sm"><i class="fas fa-gamepad mr-2"></i>Partidas</a>
-          <a href="/logout" class="block nav-link text-red-400 text-sm"><i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión</a>
-        </div>
-      <% } %>
+      </div>
     </div>
   </div>
+
+  <div class="hidden md:hidden bg-slate-800 border-t border-slate-700" id="mobile-menu">
+    <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+      <a href="/" class="text-slate-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Inicio</a>
+      <a href="/calendario" class="text-slate-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Calendario</a>
+      <a href="/equipos" class="text-slate-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Equipos</a>
+      <a href="/bracket" class="text-slate-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Bracket</a>
+      
+      <div class="border-t border-slate-700 mt-4 pt-4">
+        <% if (locals.isLoggedIn) { %>
+          <a href="/admin" class="text-yellow-500 hover:text-white block px-3 py-2 rounded-md text-base font-bold">
+            <i class="fas fa-tachometer-alt mr-2"></i> Ir al Dashboard
+          </a>
+          <a href="/logout" class="text-red-400 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
+            <i class="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión
+          </a>
+        <% } else { %>
+          <a href="/login" class="text-slate-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
+            <i class="fas fa-key mr-2"></i> Login Admin
+          </a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleMenu() {
+      const menu = document.getElementById('mobile-menu');
+      menu.classList.toggle('hidden');
+    }
+  </script>
 </nav>
-
-<script>
-document.getElementById('mobileMenuBtn').addEventListener('click', function() {
-  const menu = document.getElementById('mobileMenuContent');
-  menu.classList.toggle('hidden');
-});
-
-// Mobile Torneo Actual Toggle
-const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-const mobileMenuToggleContent = document.getElementById('mobileMenuToggleContent');
-if (mobileMenuToggle) {
-  mobileMenuToggle.addEventListener('click', function() {
-    mobileMenuToggleContent.classList.toggle('hidden');
-    this.querySelector('i:last-child').classList.toggle('rotate-180');
-  });
-}
-
-// Mobile Admin Toggle
-const mobileAdminToggle = document.getElementById('mobileAdminToggle');
-const mobileAdminToggleContent = document.getElementById('mobileAdminToggleContent');
-if (mobileAdminToggle) {
-  mobileAdminToggle.addEventListener('click', function() {
-    mobileAdminToggleContent.classList.toggle('hidden');
-    this.querySelector('i:last-child').classList.toggle('rotate-180');
-  });
-}
-</script>

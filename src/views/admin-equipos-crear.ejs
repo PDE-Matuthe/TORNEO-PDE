@@ -1,86 +1,72 @@
 <%- include('partials/head') %>
 <%- include('partials/nav') %>
 
-<main class="max-w-2xl mx-auto px-4 py-8">
-  <!-- Header -->
-  <div class="mb-8">
-    <a href="/admin/equipos" class="text-gold hover:text-yellow-300 mb-4 inline-flex items-center gap-2">
-      <i class="fas fa-arrow-left"></i> Volver a Equipos
-    </a>
-    <h1 class="text-4xl font-bold mb-2">
-      <i class="fas fa-users text-gold mr-3"></i> Crear Nuevo Equipo
-    </h1>
-    <p class="text-slate-400">Agrega un nuevo equipo al sistema</p>
-  </div>
-
-  <div class="card">
-    <form action="/admin/equipos" method="POST" class="space-y-6">
-      <!-- Nombre -->
+<main class="max-w-3xl mx-auto px-4 py-12">
+  
+  <div class="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 overflow-hidden">
+    <div class="bg-slate-900 px-8 py-6 border-b border-slate-700 flex items-center gap-4">
+      <div class="w-12 h-12 bg-blue-600/20 rounded-full flex items-center justify-center border border-blue-500/30 text-blue-500">
+        <i class="fas fa-shield-alt text-xl"></i>
+      </div>
       <div>
-        <label for="nombre" class="form-label">Nombre del Equipo</label>
-        <input 
-          type="text" 
-          id="nombre" 
-          name="nombre" 
-          placeholder="Ej: Team SoloMid"
-          class="form-input"
-          required
-        >
+        <h1 class="text-2xl font-bold text-white">Registrar Equipo</h1>
+        <p class="text-slate-400 text-sm">Añadir nueva organización a la base de datos</p>
+      </div>
+    </div>
+
+    <form action="/admin/equipos" method="POST" class="p-8">
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="md:col-span-2">
+          <label class="block text-slate-300 text-sm font-bold mb-2 uppercase tracking-wide">Nombre del Equipo</label>
+          <input type="text" name="nombre" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-4 text-white focus:outline-none focus:border-blue-500 transition placeholder-slate-600" placeholder="Ej: SK Telecom T1" required>
+        </div>
+        <div>
+          <label class="block text-slate-300 text-sm font-bold mb-2 uppercase tracking-wide">Siglas (TAG)</label>
+          <input type="text" name="siglas" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-4 text-white focus:outline-none focus:border-blue-500 transition placeholder-slate-600 uppercase" placeholder="Ej: T1" maxlength="5" required>
+        </div>
       </div>
 
-      <!-- Siglas -->
-      <div>
-        <label for="siglas" class="form-label">Siglas</label>
-        <input 
-          type="text" 
-          id="siglas" 
-          name="siglas" 
-          placeholder="Ej: TSM"
-          class="form-input"
-          maxlength="4"
-          required
-        >
+      <div class="mb-8">
+        <label class="block text-slate-300 text-sm font-bold mb-2 uppercase tracking-wide">
+          URL del Logo <span class="text-slate-500 normal-case font-normal">(Enlace directo a imagen PNG/JPG)</span>
+        </label>
+        <div class="flex gap-4">
+          <div class="flex-grow relative">
+            <span class="absolute left-4 top-4 text-slate-500"><i class="fas fa-link"></i></span>
+            <input type="url" name="logo_url" id="logoInput" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-4 pl-10 text-white focus:outline-none focus:border-blue-500 transition placeholder-slate-600" placeholder="https://...">
+          </div>
+          <div class="w-14 h-14 bg-slate-900 border border-slate-600 rounded flex items-center justify-center overflow-hidden">
+            <img id="logoPreview" src="" class="w-full h-full object-contain hidden">
+            <i id="logoIcon" class="fas fa-image text-slate-600"></i>
+          </div>
+        </div>
       </div>
 
-      <!-- Logo URL -->
-      <div>
-        <label for="logo_url" class="form-label">URL del Logo</label>
-        <input 
-          type="url" 
-          id="logo_url" 
-          name="logo_url" 
-          placeholder="https://..."
-          class="form-input"
-        >
-        <p class="text-xs text-slate-400 mt-2">Enlace a la imagen del logo del equipo</p>
-      </div>
-
-      <!-- Logo Preview -->
-      <div id="logoPreview" style="display: none;">
-        <p class="text-sm text-slate-300 mb-2">Vista previa:</p>
-        <img id="logoImg" src="" alt="Logo Preview" class="h-16 w-16 rounded object-cover border-2 border-gold">
-      </div>
-
-      <!-- Buttons -->
-      <div class="flex gap-4 pt-6 border-t border-slate-700">
-        <a href="/admin/equipos" class="btn-secondary flex-1">
-          <i class="fas fa-times mr-2"></i> Cancelar
-        </a>
-        <button type="submit" class="btn-success flex-1">
-          <i class="fas fa-plus mr-2"></i> Crear Equipo
+      <div class="flex items-center justify-end gap-4 pt-6 border-t border-slate-700">
+        <a href="/admin/equipos" class="text-slate-400 hover:text-white font-bold px-4 transition">Cancelar</a>
+        <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg shadow-blue-900/20 transition transform hover:-translate-y-0.5">
+          <i class="fas fa-save mr-2"></i> Crear Equipo
         </button>
       </div>
+
     </form>
   </div>
 </main>
 
 <script>
-  document.getElementById('logo_url').addEventListener('change', function() {
-    if (this.value) {
-      document.getElementById('logoImg').src = this.value;
-      document.getElementById('logoPreview').style.display = 'block';
+  const input = document.getElementById('logoInput');
+  const img = document.getElementById('logoPreview');
+  const icon = document.getElementById('logoIcon');
+
+  input.addEventListener('input', () => {
+    if(input.value) {
+      img.src = input.value;
+      img.classList.remove('hidden');
+      icon.classList.add('hidden');
     } else {
-      document.getElementById('logoPreview').style.display = 'none';
+      img.classList.add('hidden');
+      icon.classList.remove('hidden');
     }
   });
 </script>

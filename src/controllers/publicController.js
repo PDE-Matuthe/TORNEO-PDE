@@ -8,26 +8,53 @@ import * as jugadoresModel from '../models/jugadores.js'
 import * as estadisticasModel from '../models/estadisticas.js'
 
 /**
- * GET / - Home (Vista Pública)
+ * GET / - Home (Vista Pública Renovada)
  */
 export async function getHome (req, res) {
   try {
     const torneoActivo = await torneosModel.getTorneoActivo()
+    
+    // 1. Obtener datos globales para el Contador
+    const allTorneos = await torneosModel.getAllTorneos();
+    const allEquipos = await equiposModel.getAllEquipos();
+    const allJugadores = await jugadoresModel.getAllJugadores();
+    const allPartidas = await partidasModel.getAllPartidas();
 
+    // 2. Si no hay torneo activo, mandamos null pero con estadísticas
     if (!torneoActivo) {
       return res.render('home', {
         error: 'No hay torneo activo en este momento',
-        torneo: null
+        torneo: null,
+        stats: {
+          torneos: allTorneos.length,
+          equipos: allEquipos.length,
+          jugadores: allJugadores.length,
+          partidas: allPartidas.length
+        },
+        partidasHoy: []
       })
     }
 
-    const equipos = await equiposModel.getEquiposByTorneo(torneoActivo.id)
-    const partidas = await partidasModel.getPartidasByTorneo(torneoActivo.id)
+    // 3. Obtener partidas de HOY para el mini-calendario
+    const partidasTorneo = await partidasModel.getPartidasByTorneo(torneoActivo.id)
+    
+    const hoy = new Date();
+    const hoyString = hoy.toISOString().split('T')[0]; // "2026-01-30"
+
+    const partidasHoy = partidasTorneo.filter(p => {
+      const fechaP = new Date(p.fecha_partida).toISOString().split('T')[0];
+      return fechaP === hoyString;
+    });
 
     res.render('home', {
       torneo: torneoActivo,
-      equipos,
-      partidas
+      stats: {
+        torneos: allTorneos.length,
+        equipos: allEquipos.length,
+        jugadores: allJugadores.length,
+        partidas: allPartidas.length
+      },
+      partidasHoy
     })
   } catch (error) {
     console.error('Error en getHome:', error.message)

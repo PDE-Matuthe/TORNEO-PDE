@@ -3,18 +3,20 @@
 // ==========================================
 import pool from '../config/db.js'
 
+// --- CONSULTAS DE LECTURA ---
+
 /**
  * Obtener todos los jugadores
  */
 export async function getAllJugadores () {
   try {
-    const [rows] = await pool.query(
-      `SELECT BIN_TO_UUID(j.id) as id, j.nombre_invocador, j.rol_juego, 
-              BIN_TO_UUID(j.equipo_id) as equipo_id, e.nombre as equipo_nombre
-       FROM jugadores j
-       LEFT JOIN equipos e ON j.equipo_id = e.id
-       ORDER BY e.nombre, j.nombre_invocador`
-    )
+    const [rows] = await pool.query(`
+      SELECT BIN_TO_UUID(j.id) as id, j.nombre_invocador, j.rol_juego, 
+             BIN_TO_UUID(j.equipo_id) as equipo_id, e.nombre as equipo_nombre
+      FROM jugadores j
+      LEFT JOIN equipos e ON j.equipo_id = e.id
+      ORDER BY e.nombre, j.nombre_invocador
+    `)
     return rows
   } catch (error) {
     console.error('Error en getAllJugadores:', error.message)
@@ -43,7 +45,28 @@ export async function getJugadorById (jugadorId) {
 }
 
 /**
- * Obtener jugadores por equipo
+ * Buscar jugador por nombre invocador
+ */
+export async function getJugadorByNombreInvocador (nombreInvocador) {
+  try {
+    const [rows] = await pool.query(
+      `SELECT BIN_TO_UUID(j.id) as id, j.nombre_invocador, j.rol_juego, 
+              BIN_TO_UUID(j.equipo_id) as equipo_id
+       FROM jugadores j
+       WHERE LOWER(j.nombre_invocador) = LOWER(?)`,
+      [nombreInvocador]
+    )
+    return rows.length > 0 ? rows[0] : null
+  } catch (error) {
+    console.error('Error en getJugadorByNombreInvocador:', error.message)
+    throw error
+  }
+}
+
+// --- GESTIÓN DE ROSTER (¡LAS FUNCIONES QUE FALTABAN!) ---
+
+/**
+ * Obtener jugadores de un equipo
  */
 export async function getJugadoresByEquipo (equipoId) {
   try {
@@ -62,38 +85,68 @@ export async function getJugadoresByEquipo (equipoId) {
 }
 
 /**
- * Buscar jugador por nombre invocador (para Riot API)
+ * Obtener Agentes Libres (Jugadores sin equipo)
  */
-export async function getJugadorByNombreInvocador (nombreInvocador) {
+export async function getFreeAgents () {
   try {
     const [rows] = await pool.query(
-      `SELECT BIN_TO_UUID(j.id) as id, j.nombre_invocador, j.rol_juego, 
-              BIN_TO_UUID(j.equipo_id) as equipo_id
-       FROM jugadores j
-       WHERE LOWER(j.nombre_invocador) = LOWER(?)`,
-      [nombreInvocador]
+      `SELECT BIN_TO_UUID(id) as id, nombre_invocador, rol_juego 
+       FROM jugadores 
+       WHERE equipo_id IS NULL 
+       ORDER BY nombre_invocador`
     )
-    return rows.length > 0 ? rows[0] : null
+    return rows
   } catch (error) {
-    console.error('Error en getJugadorByNombreInvocador:', error.message)
+    console.error('Error en getFreeAgents:', error.message)
     throw error
   }
 }
+
+/**
+ * Fichar Jugador (Asignar a equipo)
+ */
+export async function asignarEquipo (jugadorId, equipoId) {
+  try {
+    await pool.query(
+      'UPDATE jugadores SET equipo_id = UUID_TO_BIN(?) WHERE id = UUID_TO_BIN(?)', 
+      [equipoId, jugadorId]
+    )
+  } catch (error) {
+    console.error('Error en asignarEquipo:', error.message)
+    throw error
+  }
+}
+
+/**
+ * Liberar Jugador (Poner equipo en NULL)
+ */
+export async function liberarJugador (jugadorId) {
+  try {
+    // Usamos NULL explícitamente para quitarle el equipo
+    await pool.query(
+      'UPDATE jugadores SET equipo_id = NULL WHERE id = UUID_TO_BIN(?)', 
+      [jugadorId]
+    )
+  } catch (error) {
+    console.error('Error en liberarJugador:', error.message)
+    throw error
+  }
+}
+
+// --- CREACIÓN, EDICIÓN Y BORRADO ---
 
 /**
  * Crear nuevo jugador
  */
 export async function createJugador (nombreInvocador, rol, equipoId) {
   try {
+    const eqId = equipoId ? equipoId : null;
     const [result] = await pool.query(
       'INSERT INTO jugadores (id, nombre_invocador, rol_juego, equipo_id) VALUES (UUID_TO_BIN(UUID()), ?, ?, UUID_TO_BIN(?))',
-      [nombreInvocador, rol, equipoId]
+      [nombreInvocador, rol, eqId]
     )
     return {
-      id: result.insertId,
-      nombre_invocador: nombreInvocador,
-      rol_juego: rol,
-      equipo_id: equipoId
+      id: result.insertId
     }
   } catch (error) {
     console.error('Error en createJugador:', error.message)
@@ -117,7 +170,8 @@ export async function updateJugador (jugadorId, updates) {
       fields.push('rol_juego = ?')
       values.push(updates.rol_juego)
     }
-    if (updates.equipo_id) {
+    // CORRECCIÓN IMPORTANTE: Permitir NULL para quitar equipo desde edición manual
+    if (updates.equipo_id !== undefined) {
       fields.push('equipo_id = UUID_TO_BIN(?)')
       values.push(updates.equipo_id)
     }
@@ -138,7 +192,7 @@ export async function updateJugador (jugadorId, updates) {
 }
 
 /**
- * Eliminar jugador
+ * Eliminar jugador permanentemente
  */
 export async function deleteJugador (jugadorId) {
   try {
