@@ -79,15 +79,27 @@ export async function getEditJugador (req, res) {
  */
 export async function postCreateJugador (req, res) {
   try {
-    const { nombre_invocador, rol_juego, equipo_id } = req.body
+    let { nombre_invocador, rol_juego, tipo_rol, equipo_id } = req.body
 
-    if (!nombre_invocador || !rol_juego || !equipo_id) {
-      return res.status(400).render('admin-jugadores', {
-        error: 'Todos los campos son requeridos'
-      })
+    // LÓGICA COACH: Si es Coach o Staff, el rol de juego (posición) es NULL
+    if (tipo_rol === 'COACH' || tipo_rol === 'STAFF') {
+        rol_juego = null;
     }
 
-    await jugadoresModel.createJugador(nombre_invocador, rol_juego, equipo_id)
+    // VALIDACIÓN:
+    // 1. Nombre y Tipo siempre obligatorios.
+    // 2. Rol de juego (posición) obligatorio SOLO si es TITULAR o SUPLENTE.
+    const necesitaPosicion = (tipo_rol === 'TITULAR' || tipo_rol === 'SUPLENTE');
+    
+    if (!nombre_invocador || !tipo_rol || (necesitaPosicion && !rol_juego)) {
+        const equipos = await equiposModel.getAllEquipos()
+        return res.status(400).render('admin-jugadores-crear', {
+            error: 'Faltan datos obligatorios (Nombre, Estado o Posición).',
+            equipos
+        })
+    }
+
+    await jugadoresModel.createJugador(nombre_invocador, rol_juego, tipo_rol, equipo_id)
 
     console.log(`✅ Jugador creado: ${nombre_invocador}`)
     res.redirect('/admin/jugadores?success=Jugador creado exitosamente')
@@ -106,12 +118,22 @@ export async function postCreateJugador (req, res) {
 export async function postUpdateJugador (req, res) {
   try {
     const { id } = req.params
-    const { nombre_invocador, rol_juego, equipo_id } = req.body
+    let { nombre_invocador, rol_juego, tipo_rol, equipo_id } = req.body
+
+    // LÓGICA COACH: Forzar null si es staff
+    if (tipo_rol === 'COACH' || tipo_rol === 'STAFF') {
+        rol_juego = null;
+    }
 
     const updates = {}
     if (nombre_invocador) updates.nombre_invocador = nombre_invocador
-    if (rol_juego) updates.rol_juego = rol_juego
-    if (equipo_id) updates.equipo_id = equipo_id
+    
+    // Si rol_juego es null (porque es coach), lo mandamos como null explícitamente
+    // Si tiene valor, lo mandamos.
+    if (rol_juego !== undefined) updates.rol_juego = rol_juego
+    
+    if (tipo_rol) updates.tipo_rol = tipo_rol
+    if (equipo_id !== undefined) updates.equipo_id = equipo_id
 
     await jugadoresModel.updateJugador(id, updates)
 

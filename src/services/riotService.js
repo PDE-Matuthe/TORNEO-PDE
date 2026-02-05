@@ -1,39 +1,56 @@
 // ==========================================
-// SERVICIO: Riot Games API
+// SERVICIO: Riot Games API (Actualizado Riot ID)
 // ==========================================
 import axios from 'axios'
 
 const RIOT_API_KEY = process.env.RIOT_API_KEY
 const RIOT_REGION = process.env.RIOT_REGION || 'LA2'
-const RIOT_PLATFORM_ID = process.env.RIOT_PLATFORM_ID || 'LA2'
+// Para Account-V1 necesitamos la región "AMERICAS", "EUROPE", "ASIA"
+// LA1, LA2, NA1, BR1 -> americas
+const RIOT_CLUSTER = 'americas' 
 
 const riotClient = axios.create({
-  baseURL: `https://${RIOT_REGION}.api.riotgames.com`,
+  baseURL: `https://${RIOT_CLUSTER}.api.riotgames.com`, // Cambiamos base a cluster (americas)
   headers: {
     'X-Riot-Token': RIOT_API_KEY
   }
 })
 
+const matchClient = axios.create({
+  baseURL: `https://${RIOT_CLUSTER}.api.riotgames.com`,
+  headers: { 'X-Riot-Token': RIOT_API_KEY }
+})
+
 /**
- * Buscar Match ID de Riot a través del Summoner Name
- * @param {string} summonerName - Nombre del invocador
+ * Buscar Match ID de Riot usando Riot ID (Nombre#TAG)
+ * @param {string} fullRiotId - Ejemplo: "Matuthe#LAS"
  * @returns {Promise<string>} - Match ID
  */
-export async function getMatchIdBySummonerName (summonerName) {
+export async function getMatchIdByRiotId (fullRiotId) {
   try {
-    // 1. Obtener Summoner Name normalizado
-    const summonerResponse = await riotClient.get(
-      `/lol/summoner/v4/summoners/by-name/${encodeURIComponent(summonerName)}`
-    )
-    const puuid = summonerResponse.data.puuid
+    // 1. Separar Nombre y Tag
+    // Si el usuario no pone #TAG, asumimos #LAS por defecto (opcional)
+    let [gameName, tagLine] = fullRiotId.split('#')
+    
+    if (!tagLine) {
+       tagLine = 'LAS' // Tag por defecto si se olvida
+       console.warn(`⚠️ No se detectó #TAG, usando #${tagLine} por defecto.`)
+    }
 
-    // 2. Obtener lista de matches recientes del PUUID
-    const matchesResponse = await riotClient.get(
+    // 2. Obtener PUUID desde Account-V1 (Endpoint correcto para Riot ID)
+    const accountResponse = await riotClient.get(
+      `/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`
+    )
+    const puuid = accountResponse.data.puuid
+
+    // 3. Obtener lista de matches recientes del PUUID
+    // Nota: Matches usa el cluster (americas), no la región específica (la2)
+    const matchesResponse = await matchClient.get(
       `/lol/match/v5/matches/by-puuid/${puuid}/ids`,
       {
         params: {
           start: 0,
-          count: 20
+          count: 5 // Traemos 5 por si la última fue un remake o arena
         }
       }
     )
@@ -41,25 +58,24 @@ export async function getMatchIdBySummonerName (summonerName) {
     return matchesResponse.data[0] || null
   } catch (error) {
     if (error.response?.status === 404) {
-      console.warn(`⚠️ Summoner no encontrado: ${summonerName}`)
+      console.warn(`⚠️ Riot ID no encontrado: ${fullRiotId}`)
       return null
     }
     if (error.response?.status === 403) {
       console.error('❌ API Key inválida o expirada')
     }
-    console.error('Error en getMatchIdBySummonerName:', error.message)
+    console.error('Error en getMatchIdByRiotId:', error.message)
     throw error
   }
 }
 
 /**
  * Obtener detalles completos de una partida
- * @param {string} matchId - ID de la partida
- * @returns {Promise<Object>} - Detalles de la partida
  */
 export async function getMatchDetails (matchId) {
   try {
-    const response = await riotClient.get(`/lol/match/v5/matches/${matchId}`)
+    // Match V5 usa región 'americas' (cluster)
+    const response = await matchClient.get(`/lol/match/v5/matches/${matchId}`)
     return response.data
   } catch (error) {
     if (error.response?.status === 404) {
@@ -73,34 +89,35 @@ export async function getMatchDetails (matchId) {
 
 /**
  * Extraer estadísticas de un jugador en una partida
- * @param {Object} matchData - Datos de la partida
- * @param {string} summonerName - Nombre del invocador a buscar
- * @returns {Promise<Object|null>} - Stats del jugador
+ * Busca por Riot ID (gameName + tagLine) o solo gameName si es único en la partida
  */
-export async function extractPlayerStats (matchData, summonerName) {
+export async function extractPlayerStats (matchData, fullRiotId) {
   try {
-    if (!matchData || !matchData.info) {
-      console.error('❌ Datos de partida inválidos')
-      return null
-    }
+    if (!matchData || !matchData.info) return null
+
+    const [targetName] = fullRiotId.split('#') // Tomamos la parte del nombre para buscar
 
     // Buscar al jugador en los participantes
-    const participant = matchData.info.participants.find(
-      p => p.summonerName.toLowerCase() === summonerName.toLowerCase()
+    // Riot API v5 devuelve 'riotIdGameName' y 'riotIdTagLine'
+    const participant = matchData.info.participants.find(p => 
+      p.riotIdGameName.toLowerCase() === targetName.toLowerCase() || 
+      p.summonerName.toLowerCase() === targetName.toLowerCase()
     )
 
     if (!participant) {
-      console.warn(`⚠️ Jugador ${summonerName} no encontrado en la partida`)
+      console.warn(`⚠️ Jugador ${fullRiotId} no encontrado en la partida`)
       return null
     }
 
-    // Extraer estadísticas relevantes
+    // Calcular CS/min y Dmg/min
+    const durationMin = matchData.info.gameDuration / 60
+    
     return {
       kills: participant.kills,
       deaths: participant.deaths,
       assists: participant.assists,
-      cs_min: (participant.totalMinionsKilled + participant.neutralMinionsKilled) / (matchData.info.gameDuration / 60),
-      dmg_min: participant.totalDamageDealtToChampions / (matchData.info.gameDuration / 60),
+      cs_min: (participant.totalMinionsKilled + participant.neutralMinionsKilled) / durationMin,
+      dmg_min: participant.totalDamageDealtToChampions / durationMin,
       champion_name: participant.championName,
       win: participant.win,
       duration_segundos: matchData.info.gameDuration
@@ -112,10 +129,7 @@ export async function extractPlayerStats (matchData, summonerName) {
 }
 
 /**
- * Importar estadísticas completas de una partida de Riot
- * Retorna las estadísticas para todos los 10 jugadores
- * @param {string} riotMatchId - ID de la partida de Riot
- * @returns {Promise<Array>} - Array con stats de todos los jugadores
+ * Importar estadísticas completas de una partida
  */
 export async function importMatchStats (riotMatchId) {
   try {
@@ -124,15 +138,19 @@ export async function importMatchStats (riotMatchId) {
 
     const stats = []
 
-    // Extraer stats de los 10 jugadores
     for (const participant of matchData.info.participants) {
+      const durationMin = matchData.info.gameDuration / 60
+      
+      // Construimos el nombre completo para guardar en DB
+      const fullName = `${participant.riotIdGameName}#${participant.riotIdTagLine}`
+
       stats.push({
-        summoner_name: participant.summonerName,
+        summoner_name: fullName, // Guardamos Nombre#Tag
         kills: participant.kills,
         deaths: participant.deaths,
         assists: participant.assists,
-        cs_min: (participant.totalMinionsKilled + participant.neutralMinionsKilled) / (matchData.info.gameDuration / 60),
-        dmg_min: participant.totalDamageDealtToChampions / (matchData.info.gameDuration / 60),
+        cs_min: (participant.totalMinionsKilled + participant.neutralMinionsKilled) / durationMin,
+        dmg_min: participant.totalDamageDealtToChampions / durationMin,
         champion_name: participant.championName,
         win: participant.win,
         team: participant.teamId === 100 ? 'azul' : 'rojo'
@@ -152,20 +170,6 @@ export async function importMatchStats (riotMatchId) {
   }
 }
 
-/**
- * Validar si el API Key está configurado
- */
 export function isApiKeyConfigured () {
   return !!RIOT_API_KEY && RIOT_API_KEY !== 'RGAPI-xxxxxxxxxxxx-xxxxxxxxxxxx'
-}
-
-/**
- * Obtener información del cliente
- */
-export function getClientInfo () {
-  return {
-    api_key_configured: isApiKeyConfigured(),
-    region: RIOT_REGION,
-    platform_id: RIOT_PLATFORM_ID
-  }
 }

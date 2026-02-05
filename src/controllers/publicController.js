@@ -353,21 +353,30 @@ export async function getMVPTorneo (req, res) {
  */
 export async function getAdminDashboard (req, res) {
   try {
-    const torneoActivo = await torneosModel.getTorneoActivo()
-    const equipos = await equiposModel.getAllEquipos()
-    const partidas = await partidasModel.getAllPartidas()
+    // Cargar datos en paralelo para que sea rápido
+    const [equipos, jugadores, partidas, torneoActivo] = await Promise.all([
+      equiposModel.getAllEquipos(),
+      jugadoresModel.getAllJugadores(),
+      partidasModel.getAllPartidas(),
+      torneosModel.getTorneoActivo()
+    ])
+
+    // Calcular estadísticas básicas
+    const stats = {
+      totalEquipos: equipos.length,
+      totalJugadores: jugadores.length,
+      totalPartidas: partidas.length,
+      partidasPendientes: partidas.filter(p => !p.ganador_id).length,
+      torneoActual: torneoActivo ? torneoActivo.nombre : 'Ninguno activo'
+    }
 
     res.render('admin-dashboard', {
-      torneoActivo,
-      equipos_count: equipos.length,
-      partidas_count: partidas.length
+      user: req.user,
+      stats
     })
   } catch (error) {
     console.error('Error en getAdminDashboard:', error.message)
-    res.status(500).render('error', {
-      codigo: 500,
-      mensaje: 'Error al cargar dashboard'
-    })
+    res.status(500).render('error', { codigo: 500, mensaje: 'Error al cargar el panel' })
   }
 }
 
@@ -404,34 +413,40 @@ export async function getPartidaDetalle (req, res) {
 /**
  * GET /jugador/:id - Perfil del jugador (Vista Pública)
  */
+// src/controllers/publicController.js
+// ... (imports anteriores) ...
+import * as statsModel from '../models/stats.js' // <--- Asegúrate de importar esto
+
+// ... (otras funciones getHome, getEquipos, etc se mantienen igual) ...
+
+/**
+ * GET /jugador/:id - Perfil de jugador
+ */
 export async function getPerfilJugador (req, res) {
   try {
     const { id } = req.params
-
     const jugador = await jugadoresModel.getJugadorById(id)
+
     if (!jugador) {
-      return res.status(404).render('error', {
-        codigo: 404,
-        mensaje: 'Jugador no encontrado'
-      })
+      return res.status(404).render('error', { codigo: 404, mensaje: 'Jugador no encontrado' })
     }
 
-    const estadisticas = await estadisticasModel.getEstadisticasByJugador(id)
-    const resumen = await estadisticasModel.getResumenJugador(id)
+    // Cargar estadísticas
+    const stats = await statsModel.getPlayerAggregatedStats(id)
+    const topChampions = await statsModel.getPlayerTopChampions(id)
 
-    res.render('perfil-jugador', {
+    res.render('perfil-jugador', { 
       jugador,
-      estadisticas,
-      resumen
+      stats: stats || {}, // Objeto vacío si no hay stats aún
+      topChampions: topChampions || []
     })
   } catch (error) {
-    console.error('Error en getPerfilJugador:', error.message)
-    res.status(500).render('error', {
-      codigo: 500,
-      mensaje: 'Error al cargar perfil del jugador'
-    })
+    console.error('Error:', error)
+    res.status(500).render('error', { codigo: 500, mensaje: 'Error al cargar perfil' })
   }
 }
+
+// ... (resto del archivo) ...
 
 /**
  * GET /equipo/:id - Detalles de equipo (Vista Pública)
@@ -441,26 +456,26 @@ export async function getDetallesEquipo (req, res) {
     const { id } = req.params
 
     const equipo = await equiposModel.getEquipoById(id)
+    
     if (!equipo) {
       return res.status(404).render('error', {
         codigo: 404,
-        mensaje: 'Equipo no encontrado'
+        mensaje: 'El equipo que buscas no existe.'
       })
     }
 
+    // Obtener jugadores con la nueva estructura (tipo_rol)
     const jugadores = await jugadoresModel.getJugadoresByEquipo(id)
-    const partidas = await partidasModel.getPartidasByEquipo(id)
 
     res.render('equipo-detalle', {
       equipo,
-      jugadores,
-      partidas
+      jugadores
     })
   } catch (error) {
     console.error('Error en getDetallesEquipo:', error.message)
     res.status(500).render('error', {
       codigo: 500,
-      mensaje: 'Error al cargar detalles del equipo'
+      mensaje: 'Error al cargar el equipo'
     })
   }
 }

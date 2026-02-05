@@ -1,111 +1,155 @@
 <%- include('partials/head') %>
 <%- include('partials/nav') %>
 
-<main class="max-w-2xl mx-auto px-4 py-8">
-  <!-- Header -->
-  <div class="mb-8">
-    <a href="/admin/partidas" class="text-gold hover:text-yellow-300 mb-4 inline-flex items-center gap-2">
-      <i class="fas fa-arrow-left"></i> Volver a Partidas
-    </a>
-    <h1 class="text-4xl font-bold mb-2">
-      <i class="fas fa-edit text-gold mr-3"></i> Editar Partida
-    </h1>
-    <p class="text-slate-400">Actualiza los datos de la partida</p>
-  </div>
-
-  <div class="card">
-    <form action="/admin/partidas/<%= partida.id %>/update" method="POST" class="space-y-6">
-      <!-- Torneo -->
-      <div>
-        <label for="torneo_id" class="form-label">Torneo</label>
-        <select id="torneo_id" name="torneo_id" class="form-input" required>
-          <option value="">-- Selecciona un torneo --</option>
-          <% if (typeof torneos !== 'undefined' && torneos.length > 0) { %>
-            <% torneos.forEach(t => { %>
-              <option value="<%= t.id %>" <%= partida.torneo_id === t.id ? 'selected' : '' %>><%= t.nombre %></option>
-            <% }) %>
-          <% } %>
-        </select>
+<main class="max-w-3xl mx-auto px-4 py-16">
+  
+  <div class="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 overflow-hidden">
+    
+    <div class="bg-slate-900 px-8 py-6 border-b border-slate-700 flex items-center gap-4">
+      <div class="w-12 h-12 bg-blue-600/20 rounded-full flex items-center justify-center border border-blue-500/30 text-blue-500">
+        <i class="fas fa-sliders-h text-xl"></i>
       </div>
-
-      <!-- Equipo Azul -->
       <div>
-        <label for="equipo_azul_id" class="form-label">Equipo Azul (Lado Izquierdo)</label>
-        <select id="equipo_azul_id" name="equipo_azul_id" class="form-input" required>
-          <option value="">-- Selecciona equipo --</option>
-          <% if (typeof equipos !== 'undefined' && equipos.length > 0) { %>
-            <% equipos.forEach(eq => { %>
-              <option value="<%= eq.id %>" <%= partida.equipo_azul_id === eq.id ? 'selected' : '' %>><%= eq.nombre %></option>
-            <% }) %>
-          <% } %>
-        </select>
+        <h1 class="text-2xl font-bold text-white">Modificar Partida</h1>
+        <p class="text-slate-400 text-sm">Ajustar horarios, lados o estado</p>
       </div>
+    </div>
 
-      <!-- Equipo Rojo -->
-      <div>
-        <label for="equipo_rojo_id" class="form-label">Equipo Rojo (Lado Derecho)</label>
-        <select id="equipo_rojo_id" name="equipo_rojo_id" class="form-input" required>
-          <option value="">-- Selecciona equipo --</option>
-          <% if (typeof equipos !== 'undefined' && equipos.length > 0) { %>
-            <% equipos.forEach(eq => { %>
-              <option value="<%= eq.id %>" <%= partida.equipo_rojo_id === eq.id ? 'selected' : '' %>><%= eq.nombre %></option>
-            <% }) %>
-          <% } %>
-        </select>
-      </div>
+    <form action="/admin/partidas/<%= partida.id %>/update" method="POST" class="p-8 space-y-8">
+      
+      <div class="bg-slate-900/50 p-6 rounded-xl border border-slate-700 relative">
+        <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4 text-center">Configuración de Lados</h3>
+        
+        <div class="flex items-center justify-between gap-4">
+          
+          <div class="flex-1 text-center group" id="sideBlue">
+            <div class="text-blue-500 font-bold mb-2 uppercase text-xs tracking-wider">Lado Azul</div>
+            <img src="<%= partida.azul_logo %>" onerror="this.src='https://via.placeholder.com/60'" class="w-16 h-16 mx-auto object-contain mb-2">
+            <div class="text-white font-bold"><%= partida.azul_nombre %></div>
+          </div>
 
-      <!-- Fecha y Hora -->
-      <div>
-        <label for="fecha_partida" class="form-label">Fecha y Hora</label>
-        <input 
-          type="datetime-local" 
-          id="fecha_partida" 
-          name="fecha_partida"
-          class="form-input"
-          value="<%= new Date(partida.fecha_partida).toISOString().slice(0, 16) %>"
-          required
-        >
-      </div>
+          <div class="flex flex-col items-center">
+            <label class="cursor-pointer group relative">
+              <input type="checkbox" name="swap_sides" id="swapCheck" class="peer sr-only">
+              <div class="w-12 h-12 bg-slate-800 border border-slate-600 rounded-full flex items-center justify-center text-slate-400 peer-checked:bg-yellow-600 peer-checked:text-black peer-checked:border-yellow-500 transition-all duration-300 shadow-lg group-hover:scale-110">
+                <i class="fas fa-exchange-alt transition-transform duration-500 peer-checked:rotate-180"></i>
+              </div>
+              <span class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-slate-500 uppercase font-bold w-20 text-center opacity-0 group-hover:opacity-100 transition">Invertir</span>
+            </label>
+          </div>
 
-      <!-- Fase del Torneo -->
-      <div>
-        <label for="fase_torneo" class="form-label">Fase del Torneo</label>
-        <select id="fase_torneo" name="fase_torneo" class="form-input">
-          <option value="Fase de Grupos" <%= partida.fase_torneo === 'Fase de Grupos' ? 'selected' : '' %>>Fase de Grupos</option>
-          <option value="Cuartos de Final" <%= partida.fase_torneo === 'Cuartos de Final' ? 'selected' : '' %>>Cuartos de Final</option>
-          <option value="Semifinal" <%= partida.fase_torneo === 'Semifinal' ? 'selected' : '' %>>Semifinal</option>
-          <option value="Gran Final" <%= partida.fase_torneo === 'Gran Final' ? 'selected' : '' %>>Gran Final</option>
-        </select>
-      </div>
+          <div class="flex-1 text-center group" id="sideRed">
+            <div class="text-red-500 font-bold mb-2 uppercase text-xs tracking-wider">Lado Rojo</div>
+            <img src="<%= partida.rojo_logo %>" onerror="this.src='https://via.placeholder.com/60'" class="w-16 h-16 mx-auto object-contain mb-2">
+            <div class="text-white font-bold"><%= partida.rojo_nombre %></div>
+          </div>
 
-      <!-- Info de Ganador (Si aplica) -->
-      <% if (partida.ganador_color) { %>
-        <div class="p-4 bg-slate-700 rounded">
-          <p class="text-sm text-slate-300">Resultado actual:</p>
-          <p class="font-bold text-gold">
-            <% if (partida.ganador_color === 'azul') { %>
-              Ganador: Equipo Azul
-            <% } else { %>
-              Ganador: Equipo Rojo
-            <% } %>
-          </p>
-          <p class="text-sm text-slate-400">
-            Puntuación: <%= partida.puntos_equipo1 %> - <%= partida.puntos_equipo2 %>
-          </p>
         </div>
-      <% } %>
+        <p class="text-center text-xs text-slate-600 mt-4 italic">Marca el botón del centro para intercambiar los equipos de lado.</p>
+      </div>
 
-      <!-- Buttons -->
-      <div class="flex gap-4 pt-6 border-t border-slate-700">
-        <a href="/admin/partidas" class="btn-secondary flex-1">
-          <i class="fas fa-times mr-2"></i> Cancelar
-        </a>
-        <button type="submit" class="btn-primary flex-1">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-slate-300 text-xs font-bold mb-2 uppercase tracking-wide">Fecha y Hora</label>
+          <% 
+             const date = new Date(partida.fecha_partida);
+             date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+             const defaultDate = date.toISOString().slice(0, 16);
+          %>
+          <input type="datetime-local" name="fecha_partida" value="<%= defaultDate %>" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500 transition">
+        </div>
+
+        <div>
+          <label class="block text-slate-300 text-xs font-bold mb-2 uppercase tracking-wide">Instancia</label>
+          <select name="fase_torneo" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500 transition">
+            <% const fases = ['Dieciseisavos', 'Octavos', 'Cuartos', 'Semifinal', 'Final', 'Tercer Puesto', 'Amistoso']; %>
+            <% fases.forEach(f => { %>
+              <option value="<%= f %>" <%= partida.fase_torneo.includes(f) ? 'selected' : '' %>><%= f %></option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/30 p-6 rounded-xl border border-slate-700">
+        <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4">Estado del Encuentro</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          
+          <div>
+            <label class="block text-slate-300 text-xs font-bold mb-2 uppercase tracking-wide">Estado Actual</label>
+            <select name="estado" id="estadoSelect" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500 transition font-bold">
+              <option value="ACTIVO" <%= partida.estado === 'ACTIVO' ? 'selected' : '' %>>📅 Activo (Programado)</option>
+              <option value="EN_VIVO" <%= partida.estado === 'EN_VIVO' ? 'selected' : '' %> class="text-red-400">🔴 En Vivo (Live)</option>
+              <option value="FINALIZADO" <%= partida.estado === 'FINALIZADO' ? 'selected' : '' %> class="text-green-400">🏁 Finalizado</option>
+              <option value="CANCELADO" <%= partida.estado === 'CANCELADO' ? 'selected' : '' %> class="text-slate-500">❌ Cancelado</option>
+            </select>
+          </div>
+
+          <div id="streamInputContainer" class="<%= partida.estado === 'EN_VIVO' ? '' : 'opacity-50 pointer-events-none' %> transition-all duration-300">
+            <label class="block text-slate-300 text-xs font-bold mb-2 uppercase tracking-wide flex justify-between">
+              <span>Link del Directo</span>
+              <span class="text-red-400 text-[10px] hidden" id="reqTag">* Requerido</span>
+            </label>
+            <div class="relative">
+              <input type="url" name="stream_url" id="streamUrl" value="<%= partida.stream_url %>" placeholder="https://twitch.tv/..." class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 pl-10 text-white focus:outline-none focus:border-red-500 transition placeholder-slate-600">
+              <i class="fab fa-twitch absolute left-3 top-3.5 text-purple-500"></i>
+            </div>
+            <p class="text-[10px] text-slate-500 mt-1">Solo una partida puede estar "En Vivo" a la vez.</p>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-4 pt-6 border-t border-slate-700">
+        <a href="/admin/partidas" class="text-slate-400 hover:text-white font-bold px-4 transition text-sm">Cancelar</a>
+        <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg shadow-blue-900/20 transition transform hover:-translate-y-0.5">
           <i class="fas fa-save mr-2"></i> Guardar Cambios
         </button>
       </div>
+
     </form>
   </div>
 </main>
+
+<script>
+  // Script para manejar la visibilidad del input de Stream
+  const estadoSelect = document.getElementById('estadoSelect');
+  const streamContainer = document.getElementById('streamInputContainer');
+  const streamInput = document.getElementById('streamUrl');
+  const reqTag = document.getElementById('reqTag');
+  const swapCheck = document.getElementById('swapCheck');
+  const sideBlue = document.getElementById('sideBlue');
+  const sideRed = document.getElementById('sideRed');
+
+  // Lógica Estado En Vivo
+  function toggleStreamInput() {
+    if (estadoSelect.value === 'EN_VIVO') {
+      streamContainer.classList.remove('opacity-50', 'pointer-events-none');
+      streamInput.required = true;
+      reqTag.classList.remove('hidden');
+    } else {
+      streamContainer.classList.add('opacity-50', 'pointer-events-none');
+      streamInput.required = false;
+      reqTag.classList.add('hidden');
+    }
+  }
+
+  // Lógica Visual Swap (Intercambiar columnas visualmente)
+  swapCheck.addEventListener('change', () => {
+    if (swapCheck.checked) {
+      sideBlue.classList.add('order-last'); // Tailwind flex order
+      sideRed.classList.add('order-first');
+    } else {
+      sideBlue.classList.remove('order-last');
+      sideRed.classList.remove('order-first');
+    }
+  });
+
+  estadoSelect.addEventListener('change', toggleStreamInput);
+  
+  // Init
+  toggleStreamInput();
+
+</script>
 
 <%- include('partials/footer') %>

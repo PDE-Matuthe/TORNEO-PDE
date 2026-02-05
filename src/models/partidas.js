@@ -4,22 +4,50 @@
 import pool from '../config/db.js'
 
 /**
- * Obtener todas las partidas
+ * Función auxiliar: Apagar el estado 'EN_VIVO' de cualquier otra partida
+ */
+export async function resetOtrasPartidasEnVivo (partidaExcluidaId) {
+  try {
+    await pool.query(
+      `UPDATE partidas SET estado = 'ACTIVO' WHERE estado = 'EN_VIVO' AND id != UUID_TO_BIN(?)`,
+      [partidaExcluidaId]
+    )
+  } catch (error) {
+    console.error('Error en resetOtrasPartidasEnVivo:', error.message)
+    throw error
+  }
+}
+
+/**
+ * Obtener todas las partidas (Para el Admin)
+ * Incluye el nombre del torneo para la agrupación.
  */
 export async function getAllPartidas () {
   try {
-    const [rows] = await pool.query(
-      `SELECT BIN_TO_UUID(p.id) as id, BIN_TO_UUID(p.torneo_id) as torneo_id, t.nombre as torneo_nombre,
-              BIN_TO_UUID(p.equipo_azul_id) as equipo_azul_id, ea.nombre as equipo_azul,
-              BIN_TO_UUID(p.equipo_rojo_id) as equipo_rojo_id, er.nombre as equipo_rojo,
-              p.fecha_partida, p.fase_torneo, BIN_TO_UUID(p.ganador_id) as ganador_id,
-              p.riot_match_id, p.duracion_segundos
-       FROM partidas p
-       INNER JOIN torneos t ON p.torneo_id = t.id
-       INNER JOIN equipos ea ON p.equipo_azul_id = ea.id
-       INNER JOIN equipos er ON p.equipo_rojo_id = er.id
-       ORDER BY p.fecha_partida DESC`
-    )
+    const [rows] = await pool.query(`
+      SELECT 
+        BIN_TO_UUID(p.id) as id,
+        p.fecha_partida,
+        p.fase_torneo,
+        p.estado,
+        t.nombre as torneo_nombre,
+        BIN_TO_UUID(p.torneo_id) as torneo_id,
+        BIN_TO_UUID(p.ganador_id) as ganador_id,
+        p.riot_match_id, p.duracion_segundos,
+        BIN_TO_UUID(p.equipo_azul_id) as azul_id,
+        ea.nombre as azul_nombre, ea.logo_url as azul_logo, ea.siglas as azul_siglas,
+        COALESCE(SUM(CASE WHEN e.equipo_id = p.equipo_azul_id THEN e.kills ELSE 0 END), 0) as azul_kills,
+        BIN_TO_UUID(p.equipo_rojo_id) as rojo_id,
+        er.nombre as rojo_nombre, er.logo_url as rojo_logo, er.siglas as rojo_siglas,
+        COALESCE(SUM(CASE WHEN e.equipo_id = p.equipo_rojo_id THEN e.kills ELSE 0 END), 0) as rojo_kills
+      FROM partidas p
+      LEFT JOIN torneos t ON p.torneo_id = t.id
+      JOIN equipos ea ON p.equipo_azul_id = ea.id
+      JOIN equipos er ON p.equipo_rojo_id = er.id
+      LEFT JOIN estadisticas e ON p.id = e.partida_id
+      GROUP BY p.id, ea.id, er.id, t.id
+      ORDER BY t.fecha_inicio DESC, p.fecha_partida DESC
+    `)
     return rows
   } catch (error) {
     console.error('Error en getAllPartidas:', error.message)
@@ -28,56 +56,26 @@ export async function getAllPartidas () {
 }
 
 /**
- * Obtener partida por ID
- */
-export async function getPartidaById (partidaId) {
-  try {
-    const [rows] = await pool.query(
-      `SELECT BIN_TO_UUID(p.id) as id, BIN_TO_UUID(p.torneo_id) as torneo_id, t.nombre as torneo_nombre,
-              BIN_TO_UUID(p.equipo_azul_id) as azul_id, ea.nombre as azul_nombre, ea.logo_url as azul_logo,
-              BIN_TO_UUID(p.equipo_rojo_id) as rojo_id, er.nombre as rojo_nombre, er.logo_url as rojo_logo,
-              SUM(CASE WHEN ent.equipo_id = p.equipo_azul_id THEN ent.kills ELSE 0 END) as azul_kills,
-              SUM(CASE WHEN ent.equipo_id = p.equipo_rojo_id THEN ent.kills ELSE 0 END) as rojo_kills,
-              p.fecha_partida, p.fase_torneo, BIN_TO_UUID(p.ganador_id) as ganador_id,
-              p.riot_match_id, p.duracion_segundos
-       FROM partidas p
-       INNER JOIN torneos t ON p.torneo_id = t.id
-       INNER JOIN equipos ea ON p.equipo_azul_id = ea.id
-       INNER JOIN equipos er ON p.equipo_rojo_id = er.id
-       LEFT JOIN estadisticas ent ON p.id = ent.partida_id
-       WHERE p.id = UUID_TO_BIN(?)
-       GROUP BY p.id`,
-      [partidaId]
-    )
-    return rows.length > 0 ? rows[0] : null
-  } catch (error) {
-    console.error('Error en getPartidaById:', error.message)
-    throw error
-  }
-}
-
-/**
- * Obtener partidas de un torneo
+ * Obtener partidas de un torneo (Para el Home/Calendario)
  */
 export async function getPartidasByTorneo (torneoId) {
   try {
-    const [rows] = await pool.query(
-      `SELECT BIN_TO_UUID(p.id) as id, BIN_TO_UUID(p.torneo_id) as torneo_id,
-              BIN_TO_UUID(p.equipo_azul_id) as azul_id, ea.nombre as azul_nombre, ea.logo_url as azul_logo,
-              BIN_TO_UUID(p.equipo_rojo_id) as rojo_id, er.nombre as rojo_nombre, er.logo_url as rojo_logo,
-              SUM(CASE WHEN ent.equipo_id = p.equipo_azul_id THEN ent.kills ELSE 0 END) as azul_kills,
-              SUM(CASE WHEN ent.equipo_id = p.equipo_rojo_id THEN ent.kills ELSE 0 END) as rojo_kills,
-              p.fecha_partida, p.fase_torneo, BIN_TO_UUID(p.ganador_id) as ganador_id,
-              p.riot_match_id, p.duracion_segundos
-       FROM partidas p
-       INNER JOIN equipos ea ON p.equipo_azul_id = ea.id
-       INNER JOIN equipos er ON p.equipo_rojo_id = er.id
-       LEFT JOIN estadisticas ent ON p.id = ent.partida_id
-       WHERE p.torneo_id = UUID_TO_BIN(?)
-       GROUP BY p.id
-       ORDER BY p.fecha_partida ASC`,
-      [torneoId]
-    )
+    const [rows] = await pool.query(`
+      SELECT 
+        BIN_TO_UUID(p.id) as id,
+        BIN_TO_UUID(p.equipo_azul_id) as azul_id, ea.nombre as azul_nombre, ea.logo_url as azul_logo,
+        BIN_TO_UUID(p.equipo_rojo_id) as rojo_id, er.nombre as rojo_nombre, er.logo_url as rojo_logo,
+        COALESCE(SUM(CASE WHEN e.equipo_id = p.equipo_azul_id THEN e.kills ELSE 0 END), 0) as azul_kills,
+        COALESCE(SUM(CASE WHEN e.equipo_id = p.equipo_rojo_id THEN e.kills ELSE 0 END), 0) as rojo_kills,
+        p.fecha_partida, p.fase_torneo, p.estado, BIN_TO_UUID(p.ganador_id) as ganador_id
+      FROM partidas p
+      JOIN equipos ea ON p.equipo_azul_id = ea.id
+      JOIN equipos er ON p.equipo_rojo_id = er.id
+      LEFT JOIN estadisticas e ON p.id = e.partida_id
+      WHERE p.torneo_id = UUID_TO_BIN(?)
+      GROUP BY p.id, ea.id, er.id
+      ORDER BY p.fecha_partida ASC
+    `, [torneoId])
     return rows
   } catch (error) {
     console.error('Error en getPartidasByTorneo:', error.message)
@@ -86,27 +84,31 @@ export async function getPartidasByTorneo (torneoId) {
 }
 
 /**
- * Obtener partidas de un equipo
+ * Obtener una partida específica con detalles
  */
-export async function getPartidasByEquipo (equipoId) {
+export async function getPartidaById (partidaId) {
   try {
-    const [rows] = await pool.query(
-      `SELECT BIN_TO_UUID(p.id) as id, BIN_TO_UUID(p.torneo_id) as torneo_id,
-              BIN_TO_UUID(p.equipo_azul_id) as equipo_azul_id, ea.nombre as azul_nombre, ea.logo_url as azul_logo,
-              BIN_TO_UUID(p.equipo_rojo_id) as equipo_rojo_id, er.nombre as rojo_nombre, er.logo_url as rojo_logo,
-              p.fecha_partida, p.fase_torneo, BIN_TO_UUID(p.ganador_id) as ganador_id,
-              p.riot_match_id, p.duracion_segundos
-       FROM partidas p
-       INNER JOIN equipos ea ON p.equipo_azul_id = ea.id
-       INNER JOIN equipos er ON p.equipo_rojo_id = er.id
-       WHERE p.equipo_azul_id = UUID_TO_BIN(?) OR p.equipo_rojo_id = UUID_TO_BIN(?)
-       ORDER BY p.fecha_partida DESC
-       LIMIT 50`,
-      [equipoId, equipoId]
-    )
-    return rows
+    const [rows] = await pool.query(`
+      SELECT 
+        BIN_TO_UUID(p.id) as id,
+        p.fecha_partida, p.fase_torneo, BIN_TO_UUID(p.ganador_id) as ganador_id,
+        p.estado, p.stream_url,
+        p.riot_match_id, p.duracion_segundos,
+        BIN_TO_UUID(p.torneo_id) as torneo_id,
+        BIN_TO_UUID(p.equipo_azul_id) as azul_id, ea.nombre as azul_nombre, ea.logo_url as azul_logo, ea.siglas as azul_siglas,
+        COALESCE(SUM(CASE WHEN e.equipo_id = p.equipo_azul_id THEN e.kills ELSE 0 END), 0) as azul_kills,
+        BIN_TO_UUID(p.equipo_rojo_id) as rojo_id, er.nombre as rojo_nombre, er.logo_url as rojo_logo, er.siglas as rojo_siglas,
+        COALESCE(SUM(CASE WHEN e.equipo_id = p.equipo_rojo_id THEN e.kills ELSE 0 END), 0) as rojo_kills
+      FROM partidas p
+      JOIN equipos ea ON p.equipo_azul_id = ea.id
+      JOIN equipos er ON p.equipo_rojo_id = er.id
+      LEFT JOIN estadisticas e ON p.id = e.partida_id
+      WHERE p.id = UUID_TO_BIN(?)
+      GROUP BY p.id
+    `, [partidaId])
+    return rows.length > 0 ? rows[0] : null
   } catch (error) {
-    console.error('Error en getPartidasByEquipo:', error.message)
+    console.error('Error en getPartidaById:', error.message)
     throw error
   }
 }
@@ -114,21 +116,21 @@ export async function getPartidasByEquipo (equipoId) {
 /**
  * Crear nueva partida
  */
-export async function createPartida (torneoId, equipoAzulId, equipoRojoId, fechaPartida, faseTorneo = 'Fase de Grupos') {
+export async function createPartida (equipoAzulId, equipoRojoId, fechaPartida, faseTorneo, torneoId = null) {
   try {
-    const [result] = await pool.query(
-      `INSERT INTO partidas (id, torneo_id, equipo_azul_id, equipo_rojo_id, fecha_partida, fase_torneo)
-       VALUES (UUID_TO_BIN(UUID()), UUID_TO_BIN(?), UUID_TO_BIN(?), UUID_TO_BIN(?), ?, ?)`,
-      [torneoId, equipoAzulId, equipoRojoId, fechaPartida, faseTorneo]
-    )
-    return {
-      id: result.insertId,
-      torneo_id: torneoId,
-      equipo_azul_id: equipoAzulId,
-      equipo_rojo_id: equipoRojoId,
-      fecha_partida: fechaPartida,
-      fase_torneo: faseTorneo
+    let query = `INSERT INTO partidas (id, equipo_azul_id, equipo_rojo_id, fecha_partida, fase_torneo`
+    let values = [equipoAzulId, equipoRojoId, fechaPartida, faseTorneo]
+    let placeholders = `VALUES (UUID_TO_BIN(UUID()), UUID_TO_BIN(?), UUID_TO_BIN(?), ?, ?`
+
+    if (torneoId) {
+        query += `, torneo_id`
+        placeholders += `, UUID_TO_BIN(?)`
+        values.push(torneoId)
     }
+    
+    query += `) ${placeholders})`
+
+    await pool.query(query, values)
   } catch (error) {
     console.error('Error en createPartida:', error.message)
     throw error
@@ -136,36 +138,43 @@ export async function createPartida (torneoId, equipoAzulId, equipoRojoId, fecha
 }
 
 /**
- * Actualizar partida
+ * Actualizar partida (Soporta todos los campos nuevos)
  */
 export async function updatePartida (partidaId, updates) {
   try {
     const fields = []
     const values = []
 
-    if (updates.fecha_partida) {
-      fields.push('fecha_partida = ?')
-      values.push(updates.fecha_partida)
-    }
-    if (updates.fase_torneo) {
-      fields.push('fase_torneo = ?')
-      values.push(updates.fase_torneo)
-    }
-    if (updates.ganador_id) {
+    const simpleFields = [
+      'fecha_partida', 'fase_torneo', 'estado', 'stream_url', 
+      'riot_match_id', 'duracion_segundos'
+    ];
+
+    simpleFields.forEach(field => {
+        if (updates[field] !== undefined) {
+            fields.push(`${field} = ?`);
+            values.push(updates[field]);
+        }
+    });
+
+    if (updates.ganador_id !== undefined) {
       fields.push('ganador_id = UUID_TO_BIN(?)')
       values.push(updates.ganador_id)
     }
-    if (updates.riot_match_id) {
-      fields.push('riot_match_id = ?')
-      values.push(updates.riot_match_id)
+    if (updates.equipo_azul_id) {
+      fields.push('equipo_azul_id = UUID_TO_BIN(?)')
+      values.push(updates.equipo_azul_id)
     }
-    if (updates.duracion_segundos !== undefined) {
-      fields.push('duracion_segundos = ?')
-      values.push(updates.duracion_segundos)
+    if (updates.equipo_rojo_id) {
+      fields.push('equipo_rojo_id = UUID_TO_BIN(?)')
+      values.push(updates.equipo_rojo_id)
+    }
+    if (updates.torneo_id) {
+        fields.push('torneo_id = UUID_TO_BIN(?)')
+        values.push(updates.torneo_id)
     }
 
     if (fields.length === 0) return null
-
     values.push(partidaId)
 
     const [result] = await pool.query(
@@ -180,14 +189,40 @@ export async function updatePartida (partidaId, updates) {
 }
 
 /**
- * Obtener partida por Riot Match ID
+ * Obtener partidas de un equipo
+ */
+export async function getPartidasByEquipo (equipoId) {
+  try {
+    const [rows] = await pool.query(`
+      SELECT 
+        BIN_TO_UUID(p.id) as id,
+        p.fecha_partida, p.fase_torneo, BIN_TO_UUID(p.ganador_id) as ganador_id, p.estado,
+        ea.nombre as azul_nombre, ea.logo_url as azul_logo,
+        er.nombre as rojo_nombre, er.logo_url as rojo_logo,
+        COALESCE(SUM(CASE WHEN e.equipo_id = p.equipo_azul_id THEN e.kills ELSE 0 END), 0) as azul_kills,
+        COALESCE(SUM(CASE WHEN e.equipo_id = p.equipo_rojo_id THEN e.kills ELSE 0 END), 0) as rojo_kills
+      FROM partidas p
+      JOIN equipos ea ON p.equipo_azul_id = ea.id
+      JOIN equipos er ON p.equipo_rojo_id = er.id
+      LEFT JOIN estadisticas e ON p.id = e.partida_id
+      WHERE p.equipo_azul_id = UUID_TO_BIN(?) OR p.equipo_rojo_id = UUID_TO_BIN(?)
+      GROUP BY p.id, ea.id, er.id
+      ORDER BY p.fecha_partida DESC
+      LIMIT 10
+    `, [equipoId, equipoId])
+    return rows
+  } catch (error) {
+    console.error('Error en getPartidasByEquipo:', error.message)
+    throw error
+  }
+}
+
+/**
+ * Buscar partida por Riot Match ID
  */
 export async function getPartidaByRiotMatchId (riotMatchId) {
   try {
-    const [rows] = await pool.query(
-      'SELECT BIN_TO_UUID(id) as id FROM partidas WHERE riot_match_id = ?',
-      [riotMatchId]
-    )
+    const [rows] = await pool.query('SELECT BIN_TO_UUID(id) as id FROM partidas WHERE riot_match_id = ?', [riotMatchId])
     return rows.length > 0 ? rows[0] : null
   } catch (error) {
     console.error('Error en getPartidaByRiotMatchId:', error.message)
@@ -200,10 +235,7 @@ export async function getPartidaByRiotMatchId (riotMatchId) {
  */
 export async function deletePartida (partidaId) {
   try {
-    const [result] = await pool.query(
-      'DELETE FROM partidas WHERE id = UUID_TO_BIN(?)',
-      [partidaId]
-    )
+    const [result] = await pool.query('DELETE FROM partidas WHERE id = UUID_TO_BIN(?)', [partidaId])
     return result.affectedRows > 0
   } catch (error) {
     console.error('Error en deletePartida:', error.message)

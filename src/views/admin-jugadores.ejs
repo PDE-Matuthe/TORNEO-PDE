@@ -2,86 +2,197 @@
 <%- include('partials/nav') %>
 
 <main class="max-w-7xl mx-auto px-4 py-8">
-  <!-- Header -->
-  <div class="flex justify-between items-center mb-8">
+  
+  <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
     <div>
-      <h1 class="text-4xl font-bold mb-2">
-        <i class="fas fa-users text-gold mr-3"></i> Gestión de Jugadores
+      <h1 class="text-4xl font-bold mb-2 text-white">
+        <i class="fas fa-users text-blue-500 mr-3"></i> Base de Jugadores
       </h1>
-      <p class="text-slate-400">Administra todos los jugadores registrados</p>
+      <p class="text-slate-400">Directorio global de invocadores registrados</p>
     </div>
-    <a href="/admin/jugadores/crear" class="btn-success">
-      <i class="fas fa-plus mr-2"></i> Nuevo Jugador
+    <a href="/admin/jugadores/crear" class="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-6 rounded-full transition shadow-lg shadow-green-900/20 flex items-center">
+      <i class="fas fa-user-plus mr-2"></i> Nuevo Jugador
     </a>
   </div>
 
-  <% if (typeof jugadores !== 'undefined' && jugadores && jugadores.length > 0) { %>
-    <div class="card">
+  <div class="bg-slate-800 p-4 rounded-t-xl border border-slate-700 border-b-0 flex flex-col md:flex-row justify-between items-center gap-4">
+    <div class="relative w-full md:w-96">
+        <i class="fas fa-search absolute left-3 top-3 text-slate-500"></i>
+        <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Buscar por nombre, rol o equipo..." class="w-full bg-slate-900 border border-slate-600 rounded-lg py-2 pl-10 pr-4 text-slate-300 focus:outline-none focus:border-blue-500 transition placeholder-slate-500">
+    </div>
+    <div class="text-slate-500 text-sm">
+      <span id="rowCount"><%= jugadores ? jugadores.length : 0 %></span> registros
+    </div>
+  </div>
+
+  <div class="bg-slate-800 rounded-b-xl border border-slate-700 shadow-xl overflow-hidden">
+    
+    <% if (jugadores && jugadores.length > 0) { %>
       <div class="overflow-x-auto">
-        <table class="table">
-          <thead>
+        <table class="w-full text-left text-slate-300" id="playersTable">
+          <thead class="bg-slate-900 text-slate-400 uppercase text-xs font-bold select-none">
             <tr>
-              <th style="width: 25%;">Nombre Invocador</th>
-              <th style="width: 15%;">Rol</th>
-              <th style="width: 25%;">Equipo</th>
-              <th style="width: 20%;">Estadísticas</th>
-              <th style="width: 15%;">Acciones</th>
+              <th class="px-6 py-4 cursor-pointer hover:text-white hover:bg-slate-800 transition group" onclick="sortTable(0)">
+                Invocador <i class="fas fa-sort ml-1 text-slate-600 group-hover:text-blue-500"></i>
+              </th>
+              <th class="px-6 py-4 cursor-pointer hover:text-white hover:bg-slate-800 transition group" onclick="sortTable(1)">
+                Rol <i class="fas fa-sort ml-1 text-slate-600 group-hover:text-blue-500"></i>
+              </th>
+              <th class="px-6 py-4 cursor-pointer hover:text-white hover:bg-slate-800 transition group" onclick="sortTable(2)">
+                Equipo Actual <i class="fas fa-sort ml-1 text-slate-600 group-hover:text-blue-500"></i>
+              </th>
+              <th class="px-6 py-4 text-right cursor-default">Acciones</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody class="divide-y divide-slate-700">
             <% jugadores.forEach(jugador => { %>
-              <tr>
-                <td>
-                  <p class="font-bold text-white"><%= jugador.nombre_invocador %></p>
-                  <% if (jugador.nombre_real) { %>
-                    <p class="text-xs text-slate-400"><%= jugador.nombre_real %></p>
-                  <% } %>
+              <tr class="hover:bg-slate-700/50 transition duration-150 player-row">
+                
+                <td class="px-6 py-4" data-value="<%= jugador.nombre_invocador.toLowerCase() %>">
+                  <div class="font-bold text-white text-lg"><%= jugador.nombre_invocador %></div>
+                  <div class="text-xs text-slate-500 font-mono">ID: <%= jugador.id.substring(0,8) %>...</div>
                 </td>
-                <td>
-                  <% const roleEmojis = { 'TOP': '⬆️', 'JUNGLE': '🌳', 'MID': '↔️', 'ADC': '➡️', 'SUPPORT': '🛡️' }; %>
-                  <span class="stat-badge">
-                    <%= roleEmojis[jugador.rol_juego] || '○' %>
-                    <%= jugador.rol_juego %>
+
+                <td class="px-6 py-4" data-value="<%= jugador.rol_juego ? jugador.rol_juego.toLowerCase() : 'z' %>">
+                  <% 
+                    let badgeClass = 'bg-slate-700 text-slate-300';
+                    if(jugador.rol_juego === 'TOP') badgeClass = 'bg-red-900/30 text-red-400 border border-red-900/50';
+                    if(jugador.rol_juego === 'JUNGLE') badgeClass = 'bg-green-900/30 text-green-400 border border-green-900/50';
+                    if(jugador.rol_juego === 'MID') badgeClass = 'bg-purple-900/30 text-purple-400 border border-purple-900/50';
+                    if(jugador.rol_juego === 'ADC') badgeClass = 'bg-blue-900/30 text-blue-400 border border-blue-900/50';
+                    if(jugador.rol_juego === 'SUPPORT') badgeClass = 'bg-yellow-900/30 text-yellow-400 border border-yellow-900/50';
+                  %>
+                  <span class="<%= badgeClass %> px-3 py-1 rounded text-xs font-bold tracking-wider inline-flex items-center gap-1">
+                    <%= jugador.rol_juego || 'SIN ROL' %>
                   </span>
                 </td>
-                <td>
-                  <p class="text-white"><%= jugador.equipo_nombre || 'Sin equipo' %></p>
-                </td>
-                <td>
-                  <% if (typeof jugador.partidas_jugadas !== 'undefined') { %>
-                    <div class="flex gap-2 text-xs">
-                      <span class="text-green-400"><%= jugador.partidas_jugadas %> partidas</span>
-                    </div>
+
+                <td class="px-6 py-4" data-value="<%= jugador.equipo_nombre ? jugador.equipo_nombre.toLowerCase() : 'zzz' %>">
+                  <% if (jugador.equipo_nombre) { %>
+                    <span class="text-white font-bold flex items-center gap-2">
+                      <i class="fas fa-shield-alt text-slate-500"></i> <%= jugador.equipo_nombre %>
+                    </span>
                   <% } else { %>
-                    <span class="text-slate-500">Sin estadísticas</span>
+                    <span class="text-slate-500 italic text-sm flex items-center gap-2">
+                      <i class="fas fa-user-tag"></i> Agente Libre
+                    </span>
                   <% } %>
                 </td>
-                <td>
-                  <div class="flex gap-2">
-                    <a href="/admin/jugadores/<%= jugador.id %>/editar" class="btn-primary btn-sm" title="Editar">
+
+                <td class="px-6 py-4 text-right">
+                  <div class="flex items-center justify-end gap-2">
+                    <a href="/admin/jugadores/<%= jugador.id %>/editar" class="bg-blue-600/10 hover:bg-blue-600 text-blue-500 hover:text-white px-3 py-2 rounded transition" title="Editar">
                       <i class="fas fa-edit"></i>
                     </a>
-                    <a href="/admin/jugadores/<%= jugador.id %>/delete" class="btn-danger btn-sm" onclick="return confirm('¿Eliminar jugador?')" title="Eliminar">
-                      <i class="fas fa-trash"></i>
-                    </a>
+                    
+                    <form action="/admin/jugadores/<%= jugador.id %>/delete" method="POST" class="inline">
+                      <button type="submit" class="bg-red-600/10 hover:bg-red-600 text-red-500 hover:text-white px-3 py-2 rounded transition" onclick="return confirm('¿Eliminar a <%= jugador.nombre_invocador %> permanentemente?')" title="Eliminar">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </form>
                   </div>
                 </td>
+
               </tr>
-            <% }); %>
+            <% }) %>
           </tbody>
         </table>
+        
+        <div id="noResults" class="hidden text-center py-10 text-slate-500">
+            <i class="fas fa-search text-2xl mb-2"></i>
+            <p>No se encontraron coincidencias.</p>
+        </div>
+
       </div>
-    </div>
-  <% } else { %>
-    <div class="card text-center py-12">
-      <i class="fas fa-inbox text-6xl text-slate-600 mb-4"></i>
-      <h2 class="text-2xl font-bold text-slate-300">No hay jugadores registrados</h2>
-      <p class="text-slate-400 mt-2 mb-6">Crea el primer jugador para comenzar</p>
-      <a href="/admin/jugadores/crear" class="btn-primary">
-        <i class="fas fa-plus mr-2"></i> Crear Jugador
-      </a>
-    </div>
-  <% } %>
+    <% } else { %>
+      <div class="text-center py-20 px-4">
+        <div class="bg-slate-900/50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4 border border-slate-700">
+          <i class="fas fa-users-slash text-3xl text-slate-500"></i>
+        </div>
+        <h3 class="text-xl font-bold text-white mb-2">No hay jugadores registrados</h3>
+        <p class="text-slate-400 mb-6">Comienza agregando invocadores para formar equipos.</p>
+        <a href="/admin/jugadores/crear" class="text-blue-400 hover:text-blue-300 font-bold underline">Crear primer jugador</a>
+      </div>
+    <% } %>
+  </div>
+
 </main>
+
+<script>
+  // FUNCION DE BÚSQUEDA
+  function filterTable() {
+    const input = document.getElementById("searchInput");
+    const filter = input.value.toLowerCase();
+    const rows = document.querySelectorAll(".player-row");
+    const noResults = document.getElementById("noResults");
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+      // Concatenamos todo el texto de la fila para buscar
+      const text = row.innerText.toLowerCase();
+      if (text.includes(filter)) {
+        row.style.display = "";
+        visibleCount++;
+      } else {
+        row.style.display = "none";
+      }
+    });
+
+    // Actualizar contador
+    document.getElementById("rowCount").innerText = visibleCount;
+    
+    // Mostrar mensaje si no hay resultados
+    if (visibleCount === 0 && rows.length > 0) {
+        noResults.classList.remove("hidden");
+    } else {
+        noResults.classList.add("hidden");
+    }
+  }
+
+  // FUNCIÓN DE ORDENAMIENTO
+  function sortTable(n) {
+    var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+    table = document.getElementById("playersTable");
+    switching = true;
+    dir = "asc"; // Dirección inicial
+
+    while (switching) {
+      switching = false;
+      rows = table.rows;
+      
+      // Loop a través de todas las filas (excepto headers)
+      for (i = 1; i < (rows.length - 1); i++) {
+        shouldSwitch = false;
+        
+        // Comparar elementos adyacentes usando el atributo data-value para precisión
+        x = rows[i].getElementsByTagName("TD")[n].getAttribute("data-value");
+        y = rows[i + 1].getElementsByTagName("TD")[n].getAttribute("data-value");
+
+        if (dir == "asc") {
+          if (x > y) {
+            shouldSwitch = true;
+            break;
+          }
+        } else if (dir == "desc") {
+          if (x < y) {
+            shouldSwitch = true;
+            break;
+          }
+        }
+      }
+      
+      if (shouldSwitch) {
+        rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+        switching = true;
+        switchcount ++;
+      } else {
+        if (switchcount == 0 && dir == "asc") {
+          dir = "desc";
+          switching = true;
+        }
+      }
+    }
+  }
+</script>
 
 <%- include('partials/footer') %>

@@ -1,71 +1,86 @@
 <%- include('partials/head') %>
 <%- include('partials/nav') %>
 
-<main class="max-w-2xl mx-auto px-4 py-8">
-  <!-- Header -->
-  <div class="mb-8">
-    <a href="/admin/jugadores" class="text-gold hover:text-yellow-300 mb-4 inline-flex items-center gap-2">
-      <i class="fas fa-arrow-left"></i> Volver a Jugadores
-    </a>
-    <h1 class="text-4xl font-bold mb-2">
-      <i class="fas fa-user-plus text-gold mr-3"></i> Crear Nuevo Jugador
-    </h1>
-    <p class="text-slate-400">Registra un nuevo jugador en el sistema</p>
-  </div>
-
-  <div class="card">
-    <form action="/admin/jugadores" method="POST" class="space-y-6">
-      <!-- Nombre Invocador -->
+<main class="max-w-2xl mx-auto px-4 py-16">
+  
+  <div class="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 overflow-hidden">
+    <div class="bg-slate-900 px-8 py-6 border-b border-slate-700 flex items-center gap-4">
+      <div class="w-12 h-12 bg-green-600/20 rounded-full flex items-center justify-center border border-green-500/30 text-green-500">
+        <i class="fas fa-user-plus text-xl"></i>
+      </div>
       <div>
-        <label for="nombre_invocador" class="form-label">Nombre Invocador</label>
-        <input 
-          type="text" 
-          id="nombre_invocador" 
-          name="nombre_invocador" 
-          placeholder="Ej: Faker"
-          class="form-input"
-          required
-        >
-        <p class="text-xs text-slate-400 mt-1">Nombre del personaje en League of Legends</p>
+        <h1 class="text-2xl font-bold text-white">Registrar Jugador</h1>
+        <p class="text-slate-400 text-sm">Nuevo miembro del ecosistema</p>
+      </div>
+    </div>
+
+    <form action="/admin/jugadores" method="POST" class="p-8 space-y-6">
+      
+      <div>
+        <label class="block text-slate-300 text-xs font-bold mb-2 uppercase tracking-wide">Nombre de Invocador</label>
+        <div class="relative">
+          <span class="absolute left-4 top-3.5 text-slate-500"><i class="fas fa-gamepad"></i></span>
+          <input type="text" name="nombre_invocador" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 pl-10 text-white focus:outline-none focus:border-green-500 transition" placeholder="Ej: Faker" required>
+        </div>
       </div>
 
-      <!-- Rol -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <div>
+          <label class="block text-slate-300 text-xs font-bold mb-2 uppercase tracking-wide">Estado en el Equipo</label>
+          <select name="tipo_rol" id="tipoRolSelect" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:outline-none focus:border-green-500 transition">
+            <option value="TITULAR" selected>⭐ Titular</option>
+            <option value="SUPLENTE">🔄 Suplente</option>
+            <option value="COACH">🧠 Coach</option>
+            <option value="STAFF">📋 Staff</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-slate-300 text-xs font-bold mb-2 uppercase tracking-wide">Posición (Solo Jugadores)</label>
+          <select name="rol_juego" id="rolJuegoSelect" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:outline-none focus:border-green-500 transition">
+            <option value="TOP">TOP</option>
+            <option value="JUNGLE">JUNGLE</option>
+            <option value="MID">MID</option>
+            <option value="ADC">ADC</option>
+            <option value="SUPPORT">SUPPORT</option>
+            <option value="">-- Sin Posición --</option>
+          </select>
+        </div>
+
+      </div>
+
       <div>
-        <label for="rol_juego" class="form-label">Rol</label>
-        <select id="rol_juego" name="rol_juego" class="form-input" required>
-          <option value="">-- Selecciona un rol --</option>
-          <option value="TOP">⬆️ TOP</option>
-          <option value="JUNGLE">🌳 JUNGLE</option>
-          <option value="MID">↔️ MID</option>
-          <option value="ADC">➡️ ADC</option>
-          <option value="SUPPORT">🛡️ SUPPORT</option>
+        <label class="block text-slate-300 text-xs font-bold mb-2 uppercase tracking-wide">Equipo (Opcional)</label>
+        <select name="equipo_id" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:outline-none focus:border-green-500 transition">
+          <option value="">-- Agente Libre --</option>
+          <% if (locals.equipos) { equipos.forEach(eq => { %>
+            <option value="<%= eq.id %>"><%= eq.nombre %></option>
+          <% }) } %>
         </select>
       </div>
 
-      <!-- Equipo -->
-      <div>
-        <label for="equipo_id" class="form-label">Equipo</label>
-        <select id="equipo_id" name="equipo_id" class="form-input" required>
-          <option value="">-- Selecciona un equipo --</option>
-          <% if (typeof equipos !== 'undefined' && equipos.length > 0) { %>
-            <% equipos.forEach(eq => { %>
-              <option value="<%= eq.id %>"><%= eq.nombre %></option>
-            <% }) %>
-          <% } %>
-        </select>
-      </div>
-
-      <!-- Buttons -->
-      <div class="flex gap-4 pt-6 border-t border-slate-700">
-        <a href="/admin/jugadores" class="btn-secondary flex-1">
-          <i class="fas fa-times mr-2"></i> Cancelar
-        </a>
-        <button type="submit" class="btn-success flex-1">
-          <i class="fas fa-plus mr-2"></i> Crear Jugador
-        </button>
+      <div class="flex justify-end gap-4 pt-6 border-t border-slate-700">
+        <a href="/admin/jugadores" class="text-slate-400 font-bold px-4 py-3">Cancelar</a>
+        <button type="submit" class="bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg">Guardar</button>
       </div>
     </form>
   </div>
 </main>
+
+<script>
+  const tipoSelect = document.getElementById('tipoRolSelect');
+  const rolSelect = document.getElementById('rolJuegoSelect');
+
+  tipoSelect.addEventListener('change', () => {
+    if (tipoSelect.value === 'COACH' || tipoSelect.value === 'STAFF') {
+      rolSelect.value = ""; // Poner en "Sin Posición"
+      rolSelect.disabled = true; // Deshabilitar
+    } else {
+      rolSelect.disabled = false; // Habilitar
+      if(rolSelect.value === "") rolSelect.value = "MID"; // Default si estaba vacío
+    }
+  });
+</script>
 
 <%- include('partials/footer') %>

@@ -1,93 +1,246 @@
 <%- include('partials/head') %>
 <%- include('partials/nav') %>
 
-<main class="max-w-2xl mx-auto px-4 py-8">
-  <!-- Header -->
-  <div class="mb-8">
-    <a href="/admin/partidas" class="text-gold hover:text-yellow-300 mb-4 inline-flex items-center gap-2">
-      <i class="fas fa-arrow-left"></i> Volver a Partidas
-    </a>
-    <h1 class="text-4xl font-bold mb-2">
-      <i class="fas fa-gamepad text-gold mr-3"></i> Crear Nueva Partida
-    </h1>
-    <p class="text-slate-400">Registra una nueva partida en el torneo</p>
-  </div>
-
-  <div class="card">
-    <form action="/admin/partidas" method="POST" class="space-y-6">
-      <!-- Torneo -->
+<main class="max-w-3xl mx-auto px-4 py-16">
+  
+  <div class="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 overflow-hidden">
+    
+    <div class="bg-slate-900 px-8 py-6 border-b border-slate-700 flex items-center gap-4">
+      <div class="w-12 h-12 bg-yellow-600/20 rounded-full flex items-center justify-center border border-yellow-500/30 text-yellow-500">
+        <i class="fas fa-chess-clock text-xl"></i>
+      </div>
       <div>
-        <label for="torneo_id" class="form-label">Torneo</label>
-        <select id="torneo_id" name="torneo_id" class="form-input" required>
-          <option value="">-- Selecciona un torneo --</option>
-          <% if (typeof torneos !== 'undefined' && torneos.length > 0) { %>
-            <% torneos.forEach(t => { %>
-              <option value="<%= t.id %>"><%= t.nombre %></option>
-            <% }) %>
-          <% } %>
-        </select>
+        <h1 class="text-2xl font-bold text-white">Programar Encuentro</h1>
+        <p class="text-slate-400 text-sm">Define el torneo, los rivales y el horario</p>
+      </div>
+    </div>
+
+    <% if (locals.error) { %>
+      <div class="bg-red-900/50 text-red-200 px-8 py-3 text-sm font-bold border-b border-red-900">
+        <i class="fas fa-exclamation-triangle mr-2"></i> <%= error %>
+      </div>
+    <% } %>
+
+    <form action="/admin/partidas" method="POST" class="p-8 space-y-8" id="matchForm">
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <div>
+          <label class="block text-slate-300 text-xs font-bold mb-2 uppercase tracking-wide">Torneo</label>
+          <select name="torneo_id" id="selectTorneo" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:outline-none focus:border-yellow-500 transition cursor-pointer" required>
+            <option value="" disabled selected>-- Selecciona un Torneo --</option>
+            <% if (locals.torneos) { %>
+              <% torneos.forEach(t => { %>
+                <option value="<%= t.id %>"><%= t.nombre %></option>
+              <% }) %>
+            <% } %>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-slate-300 text-xs font-bold mb-2 uppercase tracking-wide">Instancia / Fase</label>
+          <select name="fase_torneo" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:outline-none focus:border-yellow-500 transition">
+            <option value="Dieciseisavos">Dieciseisavos de Final</option>
+            <option value="Octavos">Octavos de Final</option>
+            <option value="Cuartos">Cuartos de Final</option>
+            <option value="Semifinal">Semifinal</option>
+            <option value="Final">Gran Final</option>
+            <option value="Tercer Puesto">Tercer Puesto</option>
+            <option value="Amistoso">Amistoso / Showmatch</option>
+          </select>
+        </div>
       </div>
 
-      <!-- Equipo Azul -->
-      <div>
-        <label for="equipo_azul_id" class="form-label">Equipo Azul (Lado Izquierdo)</label>
-        <select id="equipo_azul_id" name="equipo_azul_id" class="form-input" required>
-          <option value="">-- Selecciona equipo --</option>
-          <% if (typeof equipos !== 'undefined' && equipos.length > 0) { %>
-            <% equipos.forEach(eq => { %>
-              <option value="<%= eq.id %>"><%= eq.nombre %></option>
-            <% }) %>
-          <% } %>
-        </select>
+      <div class="relative bg-slate-900/50 p-6 rounded-xl border border-slate-700">
+        <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4 border-b border-slate-700 pb-2">Enfrentamiento</h3>
+        
+        <div id="teamsLoader" class="absolute inset-0 bg-slate-900/80 z-20 flex items-center justify-center rounded-xl hidden">
+          <div class="text-yellow-500 flex flex-col items-center">
+            <i class="fas fa-circle-notch fa-spin text-2xl mb-2"></i>
+            <span class="text-xs font-bold uppercase">Cargando Equipos...</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 relative">
+          
+          <div class="relative group">
+            <label class="block text-blue-400 text-xs font-bold mb-2 uppercase tracking-wide flex justify-between">
+              <span>Lado Azul</span>
+              <i class="fas fa-shield-alt"></i>
+            </label>
+            
+            <input type="text" id="searchAzul" placeholder="Escribe para buscar..." class="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 pl-10 text-white focus:outline-none focus:border-blue-500 transition placeholder-slate-600 disabled:opacity-50" disabled autocomplete="off">
+            <i class="fas fa-search absolute left-3 top-9 text-slate-500"></i>
+            
+            <input type="hidden" name="equipo_azul" id="valueAzul" required>
+
+            <div id="listAzul" class="absolute w-full bg-slate-800 border border-slate-600 rounded-lg mt-1 max-h-48 overflow-y-auto z-10 hidden shadow-2xl custom-scrollbar">
+              </div>
+          </div>
+
+          <div class="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-slate-700 rounded-full items-center justify-center text-sm font-black text-slate-400 italic border-4 border-slate-800 z-0">
+            VS
+          </div>
+
+          <div class="relative group">
+            <label class="block text-red-400 text-xs font-bold mb-2 uppercase tracking-wide flex justify-between">
+              <span>Lado Rojo</span>
+              <i class="fas fa-shield-alt"></i>
+            </label>
+            
+            <input type="text" id="searchRojo" placeholder="Escribe para buscar..." class="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 pl-10 text-white focus:outline-none focus:border-red-500 transition placeholder-slate-600 disabled:opacity-50" disabled autocomplete="off">
+            <i class="fas fa-search absolute left-3 top-9 text-slate-500"></i>
+            
+            <input type="hidden" name="equipo_rojo" id="valueRojo" required>
+
+            <div id="listRojo" class="absolute w-full bg-slate-800 border border-slate-600 rounded-lg mt-1 max-h-48 overflow-y-auto z-10 hidden shadow-2xl custom-scrollbar">
+              </div>
+          </div>
+
+        </div>
       </div>
 
-      <!-- Equipo Rojo -->
       <div>
-        <label for="equipo_rojo_id" class="form-label">Equipo Rojo (Lado Derecho)</label>
-        <select id="equipo_rojo_id" name="equipo_rojo_id" class="form-input" required>
-          <option value="">-- Selecciona equipo --</option>
-          <% if (typeof equipos !== 'undefined' && equipos.length > 0) { %>
-            <% equipos.forEach(eq => { %>
-              <option value="<%= eq.id %>"><%= eq.nombre %></option>
-            <% }) %>
-          <% } %>
-        </select>
+        <label class="block text-slate-300 text-xs font-bold mb-2 uppercase tracking-wide">Fecha y Hora</label>
+        <div class="relative">
+          <input type="datetime-local" name="fecha_partida" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:outline-none focus:border-yellow-500 transition" required>
+          <i class="fas fa-calendar-alt absolute right-4 top-3.5 text-slate-500 pointer-events-none"></i>
+        </div>
       </div>
 
-      <!-- Fecha y Hora -->
-      <div>
-        <label for="fecha_partida" class="form-label">Fecha y Hora</label>
-        <input 
-          type="datetime-local" 
-          id="fecha_partida" 
-          name="fecha_partida"
-          class="form-input"
-          required
-        >
-      </div>
-
-      <!-- Fase del Torneo -->
-      <div>
-        <label for="fase_torneo" class="form-label">Fase del Torneo</label>
-        <select id="fase_torneo" name="fase_torneo" class="form-input">
-          <option value="Fase de Grupos">Fase de Grupos</option>
-          <option value="Cuartos de Final">Cuartos de Final</option>
-          <option value="Semifinal">Semifinal</option>
-          <option value="Gran Final">Gran Final</option>
-        </select>
-      </div>
-
-      <!-- Buttons -->
-      <div class="flex gap-4 pt-6 border-t border-slate-700">
-        <a href="/admin/partidas" class="btn-secondary flex-1">
-          <i class="fas fa-times mr-2"></i> Cancelar
-        </a>
-        <button type="submit" class="btn-success flex-1">
-          <i class="fas fa-plus mr-2"></i> Crear Partida
+      <div class="flex items-center justify-end gap-4 pt-6 border-t border-slate-700">
+        <a href="/admin/partidas" class="text-slate-400 hover:text-white font-bold px-4 transition text-sm">Cancelar</a>
+        <button type="submit" class="bg-yellow-600 hover:bg-yellow-500 text-black font-bold py-3 px-8 rounded-lg shadow-lg shadow-yellow-900/20 transition transform hover:-translate-y-0.5">
+          <i class="fas fa-save mr-2"></i> Confirmar Partida
         </button>
       </div>
+
     </form>
   </div>
 </main>
+
+<script>
+  const selectTorneo = document.getElementById('selectTorneo');
+  const teamsLoader = document.getElementById('teamsLoader');
+  
+  // Cache de equipos del torneo actual
+  let equiposDisponibles = [];
+
+  // Configuración de los buscadores
+  const config = {
+    azul: { input: 'searchAzul', hidden: 'valueAzul', list: 'listAzul' },
+    rojo: { input: 'searchRojo', hidden: 'valueRojo', list: 'listRojo' }
+  };
+
+  // 1. EVENTO: CAMBIO DE TORNEO
+  selectTorneo.addEventListener('change', async (e) => {
+    const torneoId = e.target.value;
+    if(!torneoId) return;
+
+    // Mostrar loader y bloquear inputs
+    teamsLoader.classList.remove('hidden');
+    disableInputs(true);
+    resetInputs();
+
+    try {
+      // Pedir equipos a la API
+      const res = await fetch(`/api/torneos/${torneoId}/equipos`);
+      if(!res.ok) throw new Error('Error al cargar equipos');
+      
+      equiposDisponibles = await res.json();
+      
+      // Habilitar inputs
+      disableInputs(false);
+    } catch (err) {
+      console.error(err);
+      alert('Error al cargar los equipos del torneo.');
+    } finally {
+      teamsLoader.classList.add('hidden');
+    }
+  });
+
+  // 2. LÓGICA DE BÚSQUEDA (Para Azul y Rojo)
+  ['azul', 'rojo'].forEach(side => {
+    const input = document.getElementById(config[side].input);
+    const list = document.getElementById(config[side].list);
+    const hidden = document.getElementById(config[side].hidden);
+
+    // Al escribir
+    input.addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase();
+      renderList(side, term);
+    });
+
+    // Al hacer focus (mostrar todos)
+    input.addEventListener('focus', () => {
+      renderList(side, '');
+      list.classList.remove('hidden');
+    });
+
+    // Ocultar lista al hacer click fuera (con delay para permitir click en opción)
+    input.addEventListener('blur', () => {
+      setTimeout(() => list.classList.add('hidden'), 200);
+    });
+  });
+
+  // Renderizar la lista filtrada
+  function renderList(side, term) {
+    const list = document.getElementById(config[side].list);
+    const otherSide = side === 'azul' ? 'rojo' : 'azul';
+    const otherValue = document.getElementById(config[otherSide].hidden).value;
+
+    list.innerHTML = ''; // Limpiar
+
+    const filtered = equiposDisponibles.filter(eq => 
+      eq.nombre.toLowerCase().includes(term) && 
+      eq.id !== otherValue // Excluir el equipo ya seleccionado en el otro lado
+    );
+
+    if(filtered.length === 0) {
+      list.innerHTML = '<div class="p-3 text-slate-500 text-xs text-center">No hay coincidencias</div>';
+      return;
+    }
+
+    filtered.forEach(eq => {
+      const item = document.createElement('div');
+      item.className = 'p-3 hover:bg-slate-700 cursor-pointer flex items-center gap-3 transition';
+      item.innerHTML = `
+        <img src="${eq.logo_url || 'https://via.placeholder.com/30'}" class="w-6 h-6 object-contain">
+        <span class="text-sm text-white font-bold">${eq.nombre}</span>
+      `;
+      
+      // Click en opción
+      item.addEventListener('mousedown', () => { // mousedown ocurre antes que blur
+        selectTeam(side, eq);
+      });
+
+      list.appendChild(item);
+    });
+    
+    list.classList.remove('hidden');
+  }
+
+  // Seleccionar Equipo
+  function selectTeam(side, team) {
+    document.getElementById(config[side].input).value = team.nombre;
+    document.getElementById(config[side].hidden).value = team.id;
+    document.getElementById(config[side].list).classList.add('hidden');
+  }
+
+  // Helper: Bloquear/Desbloquear inputs
+  function disableInputs(state) {
+    document.getElementById('searchAzul').disabled = state;
+    document.getElementById('searchRojo').disabled = state;
+  }
+
+  // Helper: Resetear valores
+  function resetInputs() {
+    ['azul', 'rojo'].forEach(side => {
+      document.getElementById(config[side].input).value = '';
+      document.getElementById(config[side].hidden).value = '';
+    });
+  }
+
+</script>
 
 <%- include('partials/footer') %>

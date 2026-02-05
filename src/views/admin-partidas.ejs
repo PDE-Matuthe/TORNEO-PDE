@@ -1,115 +1,172 @@
 <%- include('partials/head') %>
 <%- include('partials/nav') %>
 
-<main class="max-w-7xl mx-auto px-4 py-8">
-  <!-- Header -->
-  <div class="flex justify-between items-center mb-8">
+<main class="max-w-5xl mx-auto px-4 py-10">
+  
+  <div class="flex flex-col md:flex-row justify-between items-end mb-8 gap-4 border-b border-slate-700 pb-6">
     <div>
-      <h1 class="text-4xl font-bold mb-2">
-        <i class="fas fa-gamepad text-gold mr-3"></i> Gestión de Partidas
+      <h1 class="text-4xl font-black text-white italic tracking-tighter uppercase">
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600">Gestión</span> de Partidas
       </h1>
-      <p class="text-slate-400">Crea y administra todas las partidas del torneo</p>
+      <p class="text-slate-400 mt-1">Organizado por Torneos</p>
     </div>
-    <a href="/admin/partidas/crear" class="btn-success">
-      <i class="fas fa-plus mr-2"></i> Nueva Partida
-    </a>
-  </div>
-
-  <!-- Riot API Import Section -->
-  <div class="card mb-8 border-2 border-gold">
-    <div class="card-header">
-      <h3 class="card-title">
-        <i class="fas fa-rocket text-gold mr-2"></i> Importar Estadísticas de Riot API
-      </h3>
-    </div>
-    <p class="text-slate-400 mb-4">Carga automáticamente estadísticas de una partida de Riot Games</p>
-    <form action="/admin/partidas/import-riot" method="POST" class="flex gap-3">
-      <input 
-        type="text" 
-        name="riot_match_id" 
-        placeholder="Ej: LAKC1_xxxxxxxxxxxxx" 
-        class="flex-1"
-        required
-      >
-      <button type="submit" class="btn-primary">
-        <i class="fas fa-upload mr-2"></i> Importar
-      </button>
-    </form>
-  </div>
-
-  <% if (typeof partidas !== 'undefined' && partidas && partidas.length > 0) { %>
-    <div class="card">
-      <div class="overflow-x-auto">
-        <table class="table">
-          <thead>
-            <tr>
-              <th style="width: 20%;">Fecha</th>
-              <th style="width: 30%;">Equipos</th>
-              <th style="width: 15%;">Resultado</th>
-              <th style="width: 15%;">Fase</th>
-              <th style="width: 20%;">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% partidas.forEach(partida => { %>
-              <tr>
-                <td>
-                  <p class="text-white font-bold">
-                    <%= new Date(partida.fecha_partida).toLocaleDateString('es-ES') %>
-                  </p>
-                  <p class="text-xs text-slate-400">
-                    <%= new Date(partida.fecha_partida).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) %>
-                  </p>
-                </td>
-                <td>
-                  <div class="flex items-center gap-2">
-                    <span class="team-azul-text font-bold"><%= partida.equipo1_nombre || 'TBD' %></span>
-                    <span class="text-slate-500">vs</span>
-                    <span class="team-rojo-text font-bold"><%= partida.equipo2_nombre || 'TBD' %></span>
-                  </div>
-                </td>
-                <td>
-                  <% if (partida.ganador_color) { %>
-                    <% if (partida.ganador_color === 'azul') { %>
-                      <span class="team-azul-text font-bold"><%= partida.equipo1_nombre || 'TBD' %></span>
-                      <p class="text-xs text-slate-400"><%= partida.puntos_equipo1 %>-<%= partida.puntos_equipo2 %></p>
-                    <% } else { %>
-                      <span class="team-rojo-text font-bold"><%= partida.equipo2_nombre || 'TBD' %></span>
-                      <p class="text-xs text-slate-400"><%= partida.puntos_equipo1 %>-<%= partida.puntos_equipo2 %></p>
-                    <% } %>
-                  <% } else { %>
-                    <span class="text-slate-500">Pendiente</span>
-                  <% } %>
-                </td>
-                <td>
-                  <span class="stat-badge"><%= partida.fase_torneo || 'General' %></span>
-                </td>
-                <td>
-                  <div class="flex gap-2">
-                    <a href="/admin/partidas/<%= partida.id %>/editar" class="btn-primary btn-sm" title="Editar">
-                      <i class="fas fa-edit"></i>
-                    </a>
-                    <a href="/admin/partidas/<%= partida.id %>/delete" class="btn-danger btn-sm" onclick="return confirm('¿Eliminar partida?')" title="Eliminar">
-                      <i class="fas fa-trash"></i>
-                    </a>
-                  </div>
-                </td>
-              </tr>
-            <% }); %>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  <% } else { %>
-    <div class="card text-center py-12">
-      <i class="fas fa-inbox text-6xl text-slate-600 mb-4"></i>
-      <h2 class="text-2xl font-bold text-slate-300">No hay partidas creadas</h2>
-      <p class="text-slate-400 mt-2 mb-6">Crea la primera partida para comenzar</p>
-      <a href="/admin/partidas/crear" class="btn-primary">
-        <i class="fas fa-plus mr-2"></i> Crear Partida
+    
+    <div class="flex gap-3 w-full md:w-auto">
+      <a href="/admin/partidas/crear" class="bg-yellow-600 hover:bg-yellow-500 text-black font-bold py-3 px-6 rounded-lg transition shadow-lg shadow-yellow-900/20 flex items-center justify-center gap-2 transform hover:-translate-y-0.5 w-full md:w-auto">
+        <i class="fas fa-plus"></i> <span>Nueva Partida</span>
       </a>
     </div>
-  <% } %>
+  </div>
+
+  <div class="space-y-6">
+    
+    <% if (Object.keys(partidasPorTorneo).length > 0) { %>
+      <% Object.keys(partidasPorTorneo).forEach((nombreTorneo, index) => { %>
+        <% const partidas = partidasPorTorneo[nombreTorneo]; %>
+        
+        <div class="bg-slate-900 rounded-xl border border-slate-700 overflow-hidden">
+          
+          <button onclick="toggleAccordion('torneo-<%= index %>')" class="w-full flex items-center justify-between p-5 bg-slate-800 hover:bg-slate-750 transition border-b border-slate-700 group text-left">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 bg-slate-700 rounded-lg flex items-center justify-center text-yellow-500 shadow-inner">
+                <i class="fas fa-trophy text-lg"></i>
+              </div>
+              <div>
+                <h2 class="text-xl font-bold text-white group-hover:text-yellow-400 transition"><%= nombreTorneo %></h2>
+                <span class="text-sm text-slate-500"><%= partidas.length %> partidos registrados</span>
+              </div>
+            </div>
+            <i id="icon-torneo-<%= index %>" class="fas fa-chevron-down text-slate-500 transition-transform duration-300 transform -rotate-90"></i>
+          </button>
+
+          <div id="torneo-<%= index %>" class="hidden bg-slate-900/50 p-4 space-y-3 border-t border-slate-700 shadow-inner">
+            
+            <% partidas.forEach(p => { %>
+              
+              <div class="relative bg-slate-800 rounded-lg border border-slate-700 overflow-hidden hover:border-slate-500 transition duration-200 group flex flex-col md:flex-row items-center">
+                
+                <% 
+                  let statusColor = 'bg-slate-500';
+                  if(p.estado === 'EN_VIVO') statusColor = 'bg-red-600';
+                  if(p.estado === 'FINALIZADO') statusColor = 'bg-green-500';
+                  if(p.estado === 'ACTIVO') statusColor = 'bg-blue-500';
+                %>
+                <div class="absolute left-0 top-0 bottom-0 w-1 <%= statusColor %>"></div>
+
+                <div class="p-3 w-full md:w-36 text-center md:text-left md:pl-5 flex flex-col justify-center h-full">
+                   <div class="text-white font-bold text-sm">
+                      <%= new Date(p.fecha_partida).toLocaleDateString('es-ES', {day: '2-digit', month: 'short'}) %>
+                   </div>
+                   <div class="text-[10px] text-slate-500 uppercase font-bold mb-1"><%= p.fase_torneo %></div>
+                   
+                   <div class="mt-1">
+                     <% if (p.estado === 'EN_VIVO') { %>
+                        <span class="inline-block bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded animate-pulse shadow-lg shadow-red-900/50">
+                          ● EN VIVO
+                        </span>
+                     <% } else if (p.estado === 'FINALIZADO') { %>
+                        <span class="inline-block bg-green-900/30 text-green-400 border border-green-800 text-[10px] font-bold px-2 py-0.5 rounded">
+                          FINALIZADO
+                        </span>
+                     <% } else if (p.estado === 'CANCELADO') { %>
+                        <span class="inline-block bg-slate-700 text-slate-400 border border-slate-600 text-[10px] font-bold px-2 py-0.5 rounded line-through">
+                          CANCELADO
+                        </span>
+                     <% } else { %>
+                        <span class="inline-block bg-blue-900/30 text-blue-400 border border-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">
+                          <%= new Date(p.fecha_partida).toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'}) %> HS
+                        </span>
+                     <% } %>
+                   </div>
+                </div>
+
+                <div class="flex-grow p-2 flex items-center justify-center gap-4 md:gap-8 w-full">
+                  <div class="flex items-center justify-end gap-2 flex-1 text-right">
+                    <span class="hidden md:inline text-sm font-bold text-blue-400 truncate"><%= p.azul_nombre %></span>
+                    <span class="md:hidden text-sm font-bold text-blue-400"><%= p.azul_siglas %></span>
+                    <img src="<%= p.azul_logo %>" onerror="this.src='https://via.placeholder.com/30'" class="w-8 h-8 object-contain bg-slate-900 rounded-full p-0.5 border border-blue-900/30">
+                  </div>
+                  
+                  <div class="font-mono font-bold text-white bg-slate-900 px-3 py-1 rounded border border-slate-700 text-sm min-w-[60px] text-center">
+                    <% if(p.estado === 'FINALIZADO' || p.ganador_id) { %>
+                       <span class="<%= p.azul_kills > p.rojo_kills ? 'text-green-400' : '' %>"><%= p.azul_kills %></span> 
+                       <span class="text-slate-600">:</span>
+                       <span class="<%= p.rojo_kills > p.azul_kills ? 'text-green-400' : '' %>"><%= p.rojo_kills %></span>
+                    <% } else { %>
+                       <span class="text-slate-500 italic text-xs">VS</span>
+                    <% } %>
+                  </div>
+
+                  <div class="flex items-center justify-start gap-2 flex-1 text-left">
+                    <img src="<%= p.rojo_logo %>" onerror="this.src='https://via.placeholder.com/30'" class="w-8 h-8 object-contain bg-slate-900 rounded-full p-0.5 border border-red-900/30">
+                    <span class="hidden md:inline text-sm font-bold text-red-400 truncate"><%= p.rojo_nombre %></span>
+                    <span class="md:hidden text-sm font-bold text-red-400"><%= p.rojo_siglas %></span>
+                  </div>
+                </div>
+
+                <div class="p-3 flex gap-2 w-full md:w-auto justify-end md:justify-center border-t md:border-t-0 md:border-l border-slate-700 bg-slate-800/80">
+                  
+                  <a href="/admin/partidas/<%= p.id %>/editar" class="w-8 h-8 flex items-center justify-center bg-slate-700 hover:bg-white hover:text-slate-900 text-slate-400 rounded transition" title="Configurar Partida">
+                    <i class="fas fa-cog text-xs"></i>
+                  </a>
+
+                  <% if (p.estado !== 'FINALIZADO' && !p.ganador_id) { %>
+                    <a href="/admin/partidas/<%= p.id %>/cargar" class="w-8 h-8 flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white rounded transition shadow-lg shadow-blue-900/20" title="Cargar Resultados">
+                       <i class="fas fa-upload text-xs"></i>
+                    </a>
+                  <% } else { %>
+                    <a href="/admin/partidas/<%= p.id %>/cargar" class="w-8 h-8 flex items-center justify-center bg-green-600 hover:bg-green-500 text-white rounded transition shadow-lg shadow-green-900/20" title="Ver Detalles">
+                       <i class="fas fa-chart-bar text-xs"></i>
+                    </a>
+                  <% } %>
+
+                  <form action="/admin/partidas/<%= p.id %>/delete" method="POST" class="inline">
+                    <button type="submit" class="w-8 h-8 flex items-center justify-center bg-red-900/20 hover:bg-red-600 text-red-500 hover:text-white rounded transition border border-red-900/30" onclick="return confirm('¿Borrar partida?')">
+                      <i class="fas fa-trash text-xs"></i>
+                    </button>
+                  </form>
+
+                </div>
+
+              </div>
+
+            <% }) %>
+
+          </div>
+        </div>
+      <% }) %>
+    <% } else { %>
+      <div class="text-center py-20 bg-slate-800 rounded-xl border border-slate-700">
+        <i class="fas fa-folder-open text-4xl text-slate-600 mb-4"></i>
+        <h3 class="text-xl font-bold text-white">No hay torneos activos</h3>
+        <p class="text-slate-500">Crea un torneo y programa partidas para verlas aquí.</p>
+      </div>
+    <% } %>
+
+  </div>
 </main>
+
+<script>
+  function toggleAccordion(id) {
+    const content = document.getElementById(id);
+    const icon = document.getElementById('icon-' + id);
+    
+    // Toggle visibilidad
+    if (content.classList.contains('hidden')) {
+      content.classList.remove('hidden');
+      // Rotar flecha hacia abajo (0deg)
+      icon.classList.remove('-rotate-90');
+      icon.classList.add('rotate-0');
+    } else {
+      content.classList.add('hidden');
+      // Rotar flecha hacia la izquierda (-90deg)
+      icon.classList.remove('rotate-0');
+      icon.classList.add('-rotate-90');
+    }
+  }
+  
+  // NOTA: Se eliminó el script que abría automáticamente el primer torneo.
+  // Ahora todos inician cerrados.
+</script>
 
 <%- include('partials/footer') %>

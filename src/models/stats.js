@@ -1,41 +1,74 @@
-import pool from './db.js'
+// ==========================================
+// MODELO: Estadísticas
+// ==========================================
+import pool from '../config/db.js'
 
-// 1. Guardar estadísticas de UN jugador en UNA partida
-export const savePlayerStats = async (data) => {
-  const { partida_id, jugador_id, kills, deaths, assists, cs_min, dmg_min } = data
-  
-  // Calculamos el KP% (Kill Participation) luego, por ahora guardamos lo básico
-  // Ojo: Si ya existen datos para este jugador en esta partida, los actualizamos
-  await pool.query(`
-    INSERT INTO estadisticas (partida_id, jugador_id, kills, deaths, assists, cs_min, dmg_min)
-    VALUES (UUID_TO_BIN(?), UUID_TO_BIN(?), ?, ?, ?, ?, ?)
-    ON DUPLICATE KEY UPDATE 
-    kills = VALUES(kills), deaths = VALUES(deaths), assists = VALUES(assists), 
-    cs_min = VALUES(cs_min), dmg_min = VALUES(dmg_min)
-  `, [partida_id, jugador_id, kills, deaths, assists, cs_min, dmg_min])
+/**
+ * Obtener estadísticas de una partida
+ * Se usa para mostrar la tabla de resultados en el admin y en la vista pública.
+ */
+export async function getEstadisticasByPartida (partidaId) {
+  try {
+    const [rows] = await pool.query(`
+      SELECT 
+        e.*,
+        BIN_TO_UUID(e.id) as id,
+        BIN_TO_UUID(e.partida_id) as partida_id,
+        BIN_TO_UUID(e.jugador_id) as jugador_id,
+        BIN_TO_UUID(e.equipo_id) as equipo_id,
+        j.nombre_invocador,
+        eq.nombre as nombre_equipo, eq.logo_url as logo_equipo
+      FROM estadisticas e
+      JOIN jugadores j ON e.jugador_id = j.id
+      JOIN equipos eq ON e.equipo_id = eq.id
+      WHERE e.partida_id = UUID_TO_BIN(?)
+      ORDER BY e.equipo_id, e.rol, e.kills DESC
+    `, [partidaId])
+    return rows
+  } catch (error) {
+    console.error('Error en getEstadisticasByPartida:', error.message)
+    throw error
+  }
 }
 
-// 2. Obtener el Ranking MVP (Top jugadores por KDA)
-export const getMVPLeaderboard = async () => {
-  const [rows] = await pool.query(`
-    SELECT 
-      j.nombre_invocador,
-      j.rol_juego,
-      e.nombre as equipo,
-      e.logo_url as equipo_logo,
-      SUM(s.kills) as total_kills,
-      SUM(s.deaths) as total_deaths,
-      SUM(s.assists) as total_assists,
-      -- Fórmula de KDA: (K + A) / D (Si muertes es 0, usamos 1 para no dividir por cero)
-      ROUND((SUM(s.kills) + SUM(s.assists)) / GREATEST(SUM(s.deaths), 1), 2) as kda_ratio,
-      AVG(s.cs_min) as avg_cs,
-      AVG(s.dmg_min) as avg_dmg
-    FROM estadisticas s
-    JOIN jugadores j ON BIN_TO_UUID(s.jugador_id) = BIN_TO_UUID(j.id)
-    JOIN equipos e ON BIN_TO_UUID(j.equipo_id) = BIN_TO_UUID(e.id)
-    GROUP BY BIN_TO_UUID(j.id), j.nombre_invocador, j.rol_juego, BIN_TO_UUID(e.id), e.nombre, e.logo_url
-    ORDER BY kda_ratio DESC, total_kills DESC
-    LIMIT 10
-  `)
-  return rows
+/**
+ * Crear una nueva estadística
+ * NOTA: El campo 'rol' se inserta como texto plano (sin UUID_TO_BIN)
+ */
+export async function createEstadistica (partidaId, jugadorId, equipoId, stats) {
+  try {
+    await pool.query(`
+      INSERT INTO estadisticas 
+      (id, partida_id, jugador_id, equipo_id, rol, kills, deaths, assists, cs_min, dmg_min, champion_name, win)
+      VALUES (UUID_TO_BIN(UUID()), UUID_TO_BIN(?), UUID_TO_BIN(?), UUID_TO_BIN(?), ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      partidaId, 
+      jugadorId, 
+      equipoId, 
+      stats.rol || 'UNKNOWN', // <--- CORRECCIÓN: Esto es texto, va directo al ?
+      stats.kills, 
+      stats.deaths, 
+      stats.assists, 
+      stats.cs_min, 
+      stats.dmg_min, 
+      stats.champion_name, 
+      stats.win
+    ])
+  } catch (error) {
+    console.error('Error en createEstadistica:', error.message)
+    throw error
+  }
+}
+
+/**
+ * Eliminar estadísticas de una partida
+ * Se usa para limpiar datos antes de una re-importación o carga manual.
+ */
+export async function deleteEstadisticasByPartida (partidaId) {
+  try {
+    await pool.query('DELETE FROM estadisticas WHERE partida_id = UUID_TO_BIN(?)', [partidaId])
+  } catch (error) {
+    console.error('Error en deleteEstadisticasByPartida:', error.message)
+    throw error
+  }
 }

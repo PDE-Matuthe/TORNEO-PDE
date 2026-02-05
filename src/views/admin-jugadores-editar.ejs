@@ -1,70 +1,83 @@
 <%- include('partials/head') %>
 <%- include('partials/nav') %>
 
-<main class="max-w-2xl mx-auto px-4 py-8">
-  <!-- Header -->
-  <div class="mb-8">
-    <a href="/admin/jugadores" class="text-gold hover:text-yellow-300 mb-4 inline-flex items-center gap-2">
-      <i class="fas fa-arrow-left"></i> Volver a Jugadores
-    </a>
-    <h1 class="text-4xl font-bold mb-2">
-      <i class="fas fa-edit text-gold mr-3"></i> Editar Jugador
-    </h1>
-    <p class="text-slate-400">Actualiza los datos del jugador</p>
-  </div>
-
-  <div class="card">
-    <form action="/admin/jugadores/<%= jugador.id %>/update" method="POST" class="space-y-6">
-      <!-- Nombre Invocador -->
+<main class="max-w-2xl mx-auto px-4 py-16">
+  
+  <div class="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 overflow-hidden">
+    
+    <div class="bg-slate-900 px-8 py-6 border-b border-slate-700 flex items-center gap-4">
+      <div class="w-12 h-12 bg-blue-600/20 rounded-full flex items-center justify-center border border-blue-500/30 text-blue-500">
+        <i class="fas fa-user-edit text-xl"></i>
+      </div>
       <div>
-        <label for="nombre_invocador" class="form-label">Nombre Invocador</label>
-        <input 
-          type="text" 
-          id="nombre_invocador" 
-          name="nombre_invocador" 
-          placeholder="Ej: Faker"
-          class="form-input"
-          value="<%= jugador.nombre_invocador %>"
-          required
-        >
-        <p class="text-xs text-slate-400 mt-1">Nombre del personaje en League of Legends</p>
+        <h1 class="text-2xl font-bold text-white">Editar Jugador</h1>
+        <p class="text-slate-400 text-sm">Modificar datos de <span class="text-blue-400"><%= jugador.nombre_invocador %></span></p>
+      </div>
+    </div>
+
+    <form action="/admin/jugadores/<%= jugador.id %>/update" method="POST" class="p-8 space-y-6">
+      
+      <div>
+        <label class="block text-slate-300 text-xs font-bold mb-2 uppercase tracking-wide">Nombre de Invocador</label>
+        <div class="relative">
+          <span class="absolute left-4 top-3.5 text-slate-500"><i class="fas fa-gamepad"></i></span>
+          <input type="text" name="nombre_invocador" value="<%= jugador.nombre_invocador %>" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 pl-10 text-white focus:outline-none focus:border-blue-500 transition placeholder-slate-600" required>
+        </div>
       </div>
 
-      <!-- Rol -->
       <div>
-        <label for="rol_juego" class="form-label">Rol</label>
-        <select id="rol_juego" name="rol_juego" class="form-input" required>
-          <option value="">-- Selecciona un rol --</option>
-          <option value="TOP" <%= jugador.rol_juego === 'TOP' ? 'selected' : '' %>>⬆️ TOP</option>
-          <option value="JUNGLE" <%= jugador.rol_juego === 'JUNGLE' ? 'selected' : '' %>>🌳 JUNGLE</option>
-          <option value="MID" <%= jugador.rol_juego === 'MID' ? 'selected' : '' %>>↔️ MID</option>
-          <option value="ADC" <%= jugador.rol_juego === 'ADC' ? 'selected' : '' %>>➡️ ADC</option>
-          <option value="SUPPORT" <%= jugador.rol_juego === 'SUPPORT' ? 'selected' : '' %>>🛡️ SUPPORT</option>
+        <label class="block text-slate-300 text-xs font-bold mb-2 uppercase tracking-wide">Estado en el Equipo</label>
+        <select name="tipo_rol" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500 transition">
+          <option value="TITULAR" <%= jugador.tipo_rol === 'TITULAR' ? 'selected' : '' %>>⭐ Titular</option>
+          <option value="SUPLENTE" <%= jugador.tipo_rol === 'SUPLENTE' ? 'selected' : '' %>>🔄 Suplente</option>
+          <option value="COACH" <%= jugador.tipo_rol === 'COACH' ? 'selected' : '' %>>🧠 Coach</option>
+          <option value="STAFF" <%= jugador.tipo_rol === 'STAFF' ? 'selected' : '' %>>📋 Staff</option>
         </select>
       </div>
 
-      <!-- Equipo -->
       <div>
-        <label for="equipo_id" class="form-label">Equipo</label>
-        <select id="equipo_id" name="equipo_id" class="form-input" required>
-          <option value="">-- Selecciona un equipo --</option>
-          <% if (typeof equipos !== 'undefined' && equipos.length > 0) { %>
-            <% equipos.forEach(eq => { %>
-              <option value="<%= eq.id %>" <%= jugador.equipo_id === eq.id ? 'selected' : '' %>><%= eq.nombre %></option>
-            <% }) %>
-          <% } %>
-        </select>
+        <label class="block text-slate-300 text-xs font-bold mb-2 uppercase tracking-wide">Posición (Solo Jugadores)</label>
+        <div class="grid grid-cols-5 gap-2">
+          <% const roles = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT']; %>
+          <% roles.forEach(rol => { %>
+            <label class="cursor-pointer">
+              <input type="radio" name="rol_juego" value="<%= rol %>" class="peer sr-only" <%= jugador.rol_juego === rol ? 'checked' : '' %>>
+              <div class="bg-slate-900 border border-slate-600 rounded-lg p-3 text-center transition hover:border-slate-400 peer-checked:bg-blue-600 peer-checked:border-blue-500 peer-checked:text-white">
+                <span class="text-xs font-bold block"><%= rol.substring(0,3) %></span>
+              </div>
+            </label>
+          <% }) %>
+        </div>
+        <p class="text-xs text-slate-500 mt-2 italic">* Si el estado es Coach o Staff, esta selección será ignorada.</p>
       </div>
 
-      <!-- Buttons -->
-      <div class="flex gap-4 pt-6 border-t border-slate-700">
-        <a href="/admin/jugadores" class="btn-secondary flex-1">
-          <i class="fas fa-times mr-2"></i> Cancelar
-        </a>
-        <button type="submit" class="btn-primary flex-1">
+      <div>
+        <label class="block text-slate-300 text-xs font-bold mb-2 uppercase tracking-wide">Equipo Actual</label>
+        <div class="relative">
+          <span class="absolute left-4 top-3.5 text-slate-500"><i class="fas fa-shield-alt"></i></span>
+          <select name="equipo_id" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 pl-10 text-white focus:outline-none focus:border-blue-500 transition appearance-none">
+            <option value="">-- Agente Libre --</option>
+            <% if (locals.equipos && equipos.length > 0) { %>
+              <% equipos.forEach(eq => { %>
+                <option value="<%= eq.id %>" <%= jugador.equipo_id === eq.id ? 'selected' : '' %>>
+                  <%= eq.nombre %>
+                </option>
+              <% }) %>
+            <% } %>
+          </select>
+          <div class="absolute right-4 top-4 text-slate-500 pointer-events-none">
+            <i class="fas fa-chevron-down text-xs"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-4 pt-6 border-t border-slate-700">
+        <a href="/admin/jugadores" class="text-slate-400 hover:text-white font-bold px-4 transition text-sm">Cancelar</a>
+        <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg shadow-blue-900/20 transition transform hover:-translate-y-0.5">
           <i class="fas fa-save mr-2"></i> Guardar Cambios
         </button>
       </div>
+
     </form>
   </div>
 </main>

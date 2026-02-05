@@ -155,8 +155,13 @@ export async function postAddPlayerToTeam (req, res) {
 // POST: QUITAR JUGADOR (Liberar)
 export async function postRemovePlayerFromTeam (req, res) {
   try {
-    const { id } = req.params // ID del Equipo (solo para redirect)
+    const { id } = req.params 
     const { jugadorId } = req.body
+
+    // --- AGREGA ESTAS 2 LÍNEAS ---
+    console.log('🔵 INTENTO DE LIBERAR JUGADOR');
+    console.log('👉 ID Recibido:', jugadorId);
+    // -----------------------------
 
     await jugadoresModel.liberarJugador(jugadorId)
     
@@ -164,5 +169,16 @@ export async function postRemovePlayerFromTeam (req, res) {
   } catch (error) {
     console.error('Error:', error)
     res.redirect(`/admin/equipos/${req.params.id}/editar?error=Error al liberar`)
+  }
+}
+
+// API: Obtener equipos por torneo (Devuelve JSON)
+export async function getEquiposTorneoJSON (req, res) {
+  try {
+    const { id } = req.params
+    const equipos = await equiposModel.getEquiposByTorneo(id)
+    res.json(equipos)
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener equipos' })
   }
 }

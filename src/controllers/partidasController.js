@@ -1,293 +1,312 @@
 // ==========================================
-// CONTROLADOR: Partidas & Estadísticas (Admin)
+// CONTROLADOR: Partidas (Admin)
 // ==========================================
 import * as partidasModel from '../models/partidas.js'
+import * as equiposModel from '../models/equipos.js'
+import * as torneosModel from '../models/torneos.js'
 import * as estadisticasModel from '../models/estadisticas.js'
 import * as jugadoresModel from '../models/jugadores.js'
-import * as torneosModel from '../models/torneos.js'
-import * as equiposModel from '../models/equipos.js'
-import * as riotService from '../services/riotService.js'
+import * as riotService from '../services/riotService.js' 
 
 /**
- * GET /admin/partidas - Listar todas las partidas
+ * GET /admin/partidas - Listado agrupado
  */
 export async function getPartidas (req, res) {
   try {
-    const partidas = await partidasModel.getAllPartidas()
-    const torneos = await torneosModel.getAllTorneos()
-
-    res.render('admin-partidas', {
-      partidas,
-      torneos
+    const partidasRaw = await partidasModel.getAllPartidas()
+    
+    // Agrupar por Torneo
+    const partidasPorTorneo = {}
+    partidasRaw.forEach(p => {
+      const nombreTorneo = p.torneo_nombre || 'Partidas Sin Torneo Asignado'
+      if (!partidasPorTorneo[nombreTorneo]) {
+        partidasPorTorneo[nombreTorneo] = []
+      }
+      partidasPorTorneo[nombreTorneo].push(p)
     })
+
+    res.render('admin-partidas', { partidasPorTorneo })
   } catch (error) {
     console.error('Error en getPartidas:', error.message)
-    res.status(500).render('error', {
-      codigo: 500,
-      mensaje: 'Error al cargar partidas'
-    })
+    res.status(500).render('error', { codigo: 500, mensaje: 'Error al cargar partidas' })
   }
 }
 
 /**
- * GET /admin/partidas/crear - Mostrar formulario para crear partida
+ * GET /admin/partidas/crear
  */
 export async function getCreatePartida (req, res) {
   try {
     const torneos = await torneosModel.getAllTorneos()
-    const equipos = await equiposModel.getAllEquipos()
-    
-    res.render('admin-partidas-crear', {
-      torneos,
-      equipos
-    })
+    res.render('admin-partidas-crear', { torneos })
   } catch (error) {
     console.error('Error en getCreatePartida:', error.message)
-    res.status(500).render('error', {
-      codigo: 500,
-      mensaje: 'Error al cargar formulario de partidas'
-    })
+    res.status(500).render('error', { codigo: 500, mensaje: 'Error al cargar formulario' })
   }
 }
 
 /**
- * GET /admin/partidas/:id/editar - Mostrar formulario para editar partida
+ * POST /admin/partidas
+ */
+export async function postCreatePartida (req, res) {
+  try {
+    const { torneo_id, equipo_azul, equipo_rojo, fecha_partida, fase_torneo } = req.body
+
+    if (!torneo_id || !equipo_azul || !equipo_rojo || !fecha_partida) {
+       const torneos = await torneosModel.getAllTorneos()
+       return res.render('admin-partidas-crear', { 
+          torneos, 
+          error: 'Todos los campos son obligatorios.' 
+       })
+    }
+
+    if (equipo_azul === equipo_rojo) {
+      const torneos = await torneosModel.getAllTorneos()
+      return res.render('admin-partidas-crear', { 
+        torneos, 
+        error: 'El equipo Azul y Rojo no pueden ser el mismo.' 
+      })
+    }
+
+    await partidasModel.createPartida(equipo_azul, equipo_rojo, fecha_partida, fase_torneo, torneo_id)
+    
+    console.log(`✅ Partida creada en torneo ${torneo_id}`)
+    res.redirect('/admin/partidas?success=Partida programada exitosamente')
+
+  } catch (error) {
+    console.error('Error en postCreatePartida:', error.message)
+    res.redirect('/admin/partidas/crear?error=Error al crear la partida')
+  }
+}
+
+/**
+ * GET /admin/partidas/:id/editar
  */
 export async function getEditPartida (req, res) {
   try {
     const { id } = req.params
     const partida = await partidasModel.getPartidaById(id)
     
-    if (!partida) {
-      return res.status(404).render('error', {
-        codigo: 404,
-        mensaje: 'Partida no encontrada'
-      })
-    }
+    if (!partida) return res.status(404).render('error', { codigo: 404, mensaje: 'Partida no encontrada' })
     
-    const torneos = await torneosModel.getAllTorneos()
-    const equipos = await equiposModel.getAllEquipos()
-    
-    res.render('admin-partidas-editar', {
-      partida,
-      torneos,
-      equipos
-    })
+    res.render('admin-partidas-editar', { partida })
   } catch (error) {
     console.error('Error en getEditPartida:', error.message)
-    res.status(500).render('error', {
-      codigo: 500,
-      mensaje: 'Error al cargar formulario de edición'
-    })
+    res.status(500).render('error', { codigo: 500, mensaje: 'Error al cargar edición' })
   }
 }
 
 /**
- * GET /admin/partidas/:id - Detalle de partida (para editar y cargar Riot stats)
+ * POST /admin/partidas/:id/update
+ */
+export async function postUpdatePartida (req, res) {
+  try {
+    const { id } = req.params
+    let { fecha_partida, fase_torneo, estado, stream_url, swap_sides } = req.body
+
+    if (estado === 'EN_VIVO') {
+        if (!stream_url) {
+            estado = 'ACTIVO'; 
+        } else {
+            await partidasModel.resetOtrasPartidasEnVivo(id);
+        }
+    } else {
+        stream_url = null;
+    }
+
+    const updates = { fecha_partida, fase_torneo, estado, stream_url };
+    
+    if (swap_sides === 'on') {
+        const currentPartida = await partidasModel.getPartidaById(id);
+        updates.equipo_azul_id = currentPartida.rojo_id;
+        updates.equipo_rojo_id = currentPartida.azul_id;
+    }
+
+    await partidasModel.updatePartida(id, updates);
+    res.redirect('/admin/partidas?success=Partida modificada correctamente');
+
+  } catch (error) {
+    console.error('Error en postUpdatePartida:', error.message)
+    res.redirect(`/admin/partidas?error=Error al actualizar partida`);
+  }
+}
+
+/**
+ * GET /admin/partidas/:id/cargar
  */
 export async function getPartidaDetalle (req, res) {
   try {
     const { id } = req.params
 
     const partida = await partidasModel.getPartidaById(id)
-    if (!partida) {
-      return res.status(404).render('error', {
-        codigo: 404,
-        mensaje: 'Partida no encontrada'
-      })
-    }
+    if (!partida) return res.status(404).render('error', { codigo: 404, mensaje: 'Partida no encontrada' })
 
     const stats = await estadisticasModel.getEstadisticasByPartida(id)
-    const torneos = await torneosModel.getAllTorneos()
+    const jugadoresAzul = await jugadoresModel.getJugadoresByEquipo(partida.azul_id)
+    const jugadoresRojo = await jugadoresModel.getJugadoresByEquipo(partida.rojo_id)
 
     res.render('admin-partida-detalle', {
       partida,
       stats,
-      torneos,
+      jugadoresAzul,
+      jugadoresRojo,
       riotConfigured: riotService.isApiKeyConfigured()
     })
   } catch (error) {
     console.error('Error en getPartidaDetalle:', error.message)
-    res.status(500).render('error', {
-      codigo: 500,
-      mensaje: 'Error al cargar detalle de partida'
-    })
+    res.status(500).render('error', { codigo: 500, mensaje: 'Error al cargar detalle' })
   }
 }
 
 /**
- * POST /admin/partidas - Crear nueva partida
+ * POST /admin/partidas/:id/guardar-manual (CON ROL Y SUPLENTES)
  */
-export async function postCreatePartida (req, res) {
+export async function postCargarStatsManual (req, res) {
   try {
-    const { torneo_id, equipo_azul_id, equipo_rojo_id, fecha_partida, fase_torneo } = req.body
+    const { id } = req.params
+    const { duracion_minutos, ganador_id, datos_jugadores } = req.body
+    
+    // Parsear si viene como string
+    const playersData = typeof datos_jugadores === 'string' ? JSON.parse(datos_jugadores) : datos_jugadores;
 
-    if (!torneo_id || !equipo_azul_id || !equipo_rojo_id || !fecha_partida) {
-      return res.status(400).render('admin-partidas', {
-        error: 'Todos los campos son requeridos'
-      })
+    // 1. Limpiar stats previas
+    await estadisticasModel.deleteEstadisticasByPartida(id)
+
+    // 2. Procesar filas
+    if (playersData && Array.isArray(playersData)) {
+      for (const row of playersData) {
+         
+         let jugadorId = row.jugador_id;
+         const nombreJugador = row.nombre_nuevo || 'Desconocido';
+         const equipoId = row.equipo_id;
+
+         // Si es Jugador Nuevo (Suplente)
+         if (jugadorId === 'NEW' || !jugadorId) {
+            console.log(`👤 Creando jugador nuevo: ${nombreJugador} en equipo ${equipoId}`);
+            
+            const nuevoJugador = await jugadoresModel.createJugador({
+                nombre_invocador: nombreJugador,
+                rol_principal: row.rol || 'FILL', // Usamos el rol seleccionado como principal también
+                rango: 'UNRANKED',
+                equipo_id: equipoId,
+                tipo_rol: 'SUPLENTE'
+            });
+            jugadorId = nuevoJugador.id || nuevoJugador; 
+         }
+
+         const kills = parseInt(row.kills) || 0
+         const deaths = parseInt(row.deaths) || 0
+         const assists = parseInt(row.assists) || 0
+         const cs = parseInt(row.cs) || 0
+         const dmg = parseInt(row.dmg) || 0
+         
+         // Guardar estadística con el ROL
+         await estadisticasModel.createEstadistica(
+           id,
+           jugadorId,
+           equipoId,
+           {
+             rol: row.rol, // <--- Importante: Pasamos el Rol
+             kills, deaths, assists,
+             cs_min: cs,
+             dmg_min: dmg,
+             champion_name: row.champion,
+             win: (equipoId === ganador_id) ? 1 : 0
+           }
+         )
+      }
     }
 
-    const newPartida = await partidasModel.createPartida(
-      torneo_id,
-      equipo_azul_id,
-      equipo_rojo_id,
-      fecha_partida,
-      fase_torneo
-    )
+    // 3. Finalizar partida
+    const duracionSegundos = (parseInt(duracion_minutos) || 0) * 60;
 
-    console.log(`✅ Partida creada: ${newPartida.id}`)
-    res.redirect(`/admin/partidas/${newPartida.id}`)
-  } catch (error) {
-    console.error('Error en postCreatePartida:', error.message)
-    res.status(500).render('error', {
-      codigo: 500,
-      mensaje: 'Error al crear partida'
+    await partidasModel.updatePartida(id, {
+      ganador_id: ganador_id,
+      duracion_segundos: duracionSegundos,
+      estado: 'FINALIZADO'
     })
+
+    console.log(`📝 Stats guardadas con roles. Partida ${id} finalizada.`)
+    res.json({ success: true, redirect: `/admin/partidas/${id}/cargar?success=Datos guardados` });
+
+  } catch (error) {
+    console.error('Error en postCargarStatsManual:', error.message)
+    res.status(500).json({ error: 'Error al guardar datos: ' + error.message });
   }
 }
 
 /**
- * POST /admin/partidas/:id/import-riot - Importar estadísticas desde Riot API
- * CRÍTICO: Esta es la función más importante para la funcionalidad del torneo
+ * POST /admin/partidas/:id/import-riot (Legacy)
  */
 export async function postImportRiotStats (req, res) {
   try {
     const { id: partidaId } = req.params
     const { riot_match_id } = req.body
 
-    if (!riot_match_id) {
-      return res.status(400).json({
-        error: 'Riot Match ID es requerido'
-      })
-    }
+    if (!riotService.isApiKeyConfigured()) return res.status(400).json({ error: 'API Key no configurada' })
 
-    // Verificar que Riot API esté configurada
-    if (!riotService.isApiKeyConfigured()) {
-      return res.status(400).json({
-        error: 'Riot API no está configurada. Agrega tu API key en .env'
-      })
-    }
-
-    // Obtener detalles de la partida
     const partida = await partidasModel.getPartidaById(partidaId)
-    if (!partida) {
-      return res.status(404).json({
-        error: 'Partida no encontrada'
-      })
-    }
-
-    // Importar datos de Riot
     const riotData = await riotService.importMatchStats(riot_match_id)
-    if (!riotData) {
-      return res.status(404).json({
-        error: 'No se encontró la partida en Riot API'
-      })
-    }
+    if (!riotData) return res.status(404).json({ error: 'Partida no encontrada en Riot' })
 
-    // Eliminar stats existentes (si las hay)
     await estadisticasModel.deleteEstadisticasByPartida(partidaId)
 
-    // Procesar stats de cada jugador
     let statsCreados = 0
     for (const stat of riotData.stats) {
-      // Buscar al jugador en la BD por nombre invocador
       const jugador = await jugadoresModel.getJugadorByNombreInvocador(stat.summoner_name)
+      if (!jugador) continue 
 
-      if (!jugador) {
-        console.warn(`⚠️ Jugador no encontrado: ${stat.summoner_name}`)
-        continue
-      }
+      let equipoId = (stat.team === 'azul') ? partida.azul_id : partida.rojo_id
 
-      // Determinar equipo correcto basado en el color en Riot
-      let equipoId
-      if (stat.team === 'azul') {
-        equipoId = partida.equipo_azul_id
-      } else {
-        equipoId = partida.equipo_rojo_id
-      }
-
-      // Crear estadística
       await estadisticasModel.createEstadistica(
-        partidaId,
-        jugador.id,
-        equipoId,
+        partidaId, jugador.id, equipoId,
         {
-          kills: stat.kills,
-          deaths: stat.deaths,
-          assists: stat.assists,
-          cs_min: Math.round(stat.cs_min * 100) / 100,
-          dmg_min: Math.round(stat.dmg_min * 100) / 100,
-          champion_name: stat.champion_name,
-          win: stat.win
+          rol: stat.role || 'UNKNOWN', // Riot suele dar esto
+          kills: stat.kills, deaths: stat.deaths, assists: stat.assists,
+          cs_min: stat.cs_min, dmg_min: stat.dmg_min,
+          champion_name: stat.champion_name, win: stat.win
         }
       )
-
       statsCreados++
     }
 
-    // Actualizar partida con datos de Riot
+    const ganadorId = riotData.stats[0].win ? partida.azul_id : partida.rojo_id;
     await partidasModel.updatePartida(partidaId, {
       riot_match_id: riot_match_id,
       duracion_segundos: riotData.duration_segundos,
-      ganador_id: riotData.stats[0].win ? partida.equipo_azul_id : partida.equipo_rojo_id
+      ganador_id: ganadorId,
+      estado: 'FINALIZADO'
     })
 
-    console.log(`✅ Estadísticas importadas: ${statsCreados} jugadores`)
-    res.json({
-      success: true,
-      message: `Se importaron estadísticas de ${statsCreados} jugadores`,
-      stats_count: statsCreados
-    })
+    res.json({ success: true, message: `Importado exitosamente: ${statsCreados} jugadores.` })
+
   } catch (error) {
     console.error('Error en postImportRiotStats:', error.message)
-    res.status(500).json({
-      error: error.message || 'Error al importar estadísticas'
-    })
+    res.status(500).json({ error: error.message || 'Error al importar' })
   }
 }
 
-/**
- * POST /admin/partidas/:id/delete - Eliminar partida
- */
 export async function postDeletePartida (req, res) {
   try {
     const { id } = req.params
-
-    // Eliminar estadísticas primero (por FK)
     await estadisticasModel.deleteEstadisticasByPartida(id)
-
-    // Eliminar partida
     await partidasModel.deletePartida(id)
-
-    console.log(`✅ Partida eliminada: ${id}`)
-    res.redirect('/admin/partidas?success=Partida eliminada exitosamente')
+    res.redirect('/admin/partidas?success=Partida eliminada')
   } catch (error) {
     console.error('Error en postDeletePartida:', error.message)
-    res.status(500).render('error', {
-      codigo: 500,
-      mensaje: 'Error al eliminar partida'
-    })
+    res.redirect('/admin/partidas?error=No se pudo eliminar la partida')
   }
 }
 
-/**
- * GET /admin/stats - Ver todas las estadísticas
- */
-export async function getStats (req, res) {
+export async function getTestRiot (req, res) {
   try {
-    const torneos = await torneosModel.getAllTorneos()
-    const torneoActivo = await torneosModel.getTorneoActivo()
-
-    res.render('admin-stats', {
-      torneos,
-      torneoActivo
-    })
+    const { riotId } = req.query 
+    if (!riotId) return res.send('Falta riotId')
+    const datos = await riotService.importMatchStats(riotId)
+    res.json(datos) 
   } catch (error) {
-    console.error('Error en getStats:', error.message)
-    res.status(500).render('error', {
-      codigo: 500,
-      mensaje: 'Error al cargar estadísticas'
-    })
+    res.status(500).json({ error: 'Falló la prueba', detalle: error.message })
   }
 }
+
+export async function getStats (req, res) { res.send('Stats: En construcción') }

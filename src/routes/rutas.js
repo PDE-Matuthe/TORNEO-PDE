@@ -17,63 +17,43 @@ import { isAuthenticated, isAdmin, userLocals } from '../middleware/auth.js'
 
 const router = Router()
 
-// Middleware global: Pasar info del usuario a todas las vistas
+// Middleware global
 router.use(userLocals)
 
 // ==========================================
-// RUTAS PÚBLICAS (Sin autenticación)
+// RUTAS PÚBLICAS
 // ==========================================
-
-// HOME
 router.get('/', publicController.getHome)
-
-// CALENDARIO
 router.get('/calendario', publicController.getCalendario)
-
-// BRACKET (LLAVES)
 router.get('/bracket', publicController.getBracket)
-
-// EQUIPOS
 router.get('/equipos', publicController.getEquiposPublic)
-
-// MVP RANKING
 router.get('/mvp', statsController.getMVPPublic)
-
-// PERFIL JUGADOR
 router.get('/jugador/:id', publicController.getPerfilJugador)
-
-// DETALLES PARTIDA
 router.get('/partida/:id', publicController.getPartidaDetalle)
-
-// DETALLES EQUIPO
-router.get('/equipo/:id', publicController.getDetallesEquipo)
-
-// TORNEOS ANTERIORES
+router.get('/equipos/:id', publicController.getDetallesEquipo)
 router.get('/torneos-anteriores', publicController.getTorneosAnteriores)
 
-// TORNEO ESPECÍFICO
+// Torneo Específico
 router.get('/torneo/:id/calendario', publicController.getCalendarioTorneo)
 router.get('/torneo/:id/bracket', publicController.getBracketTorneo)
 router.get('/torneo/:id/equipos', publicController.getEquiposTorneo)
 router.get('/torneo/:id/mvp', publicController.getMVPTorneo)
 
 // ==========================================
-// RUTAS DE AUTENTICACIÓN
+// AUTENTICACIÓN
 // ==========================================
-
-// LOGIN
 router.get('/login', authController.getLogin)
 router.post('/login', authController.postLogin)
-
-// LOGOUT
 router.get('/logout', authController.getLogout)
 
 // ==========================================
-// RUTAS ADMIN (Protegidas por middleware)
+// RUTAS ADMIN
 // ==========================================
-
-// DASHBOARD ADMIN
 router.get('/admin', isAuthenticated, isAdmin, publicController.getAdminDashboard)
+
+// API INTERNA
+router.get('/api/torneos/:id/equipos', isAuthenticated, isAdmin, equiposController.getEquiposTorneoJSON)
+router.get('/admin/test-riot', isAuthenticated, isAdmin, partidasController.getTestRiot)
 
 // ------- TORNEOS -------
 router.get('/admin/torneos', isAuthenticated, isAdmin, torneosController.getTorneos)
@@ -93,8 +73,7 @@ router.get('/admin/equipos/:id/editar', isAuthenticated, isAdmin, equiposControl
 router.post('/admin/equipos', isAuthenticated, isAdmin, equiposController.postCreateEquipo)
 router.post('/admin/equipos/:id/update', isAuthenticated, isAdmin, equiposController.postUpdateEquipo)
 router.post('/admin/equipos/:id/delete', isAuthenticated, isAdmin, equiposController.postDeleteEquipo)
-
-// NUEVAS RUTAS PARA ROSTER (GESTIÓN JUGADORES EN EQUIPO)
+// Gestión Roster
 router.post('/admin/equipos/:id/add-player', isAuthenticated, isAdmin, equiposController.postAddPlayerToTeam)
 router.post('/admin/equipos/:id/remove-player', isAuthenticated, isAdmin, equiposController.postRemovePlayerFromTeam)
 
@@ -107,13 +86,25 @@ router.post('/admin/jugadores/:id/update', isAuthenticated, isAdmin, jugadoresCo
 router.post('/admin/jugadores/:id/delete', isAuthenticated, isAdmin, jugadoresController.postDeleteJugador)
 
 // ------- PARTIDAS -------
+// 1. Listado y Creación
 router.get('/admin/partidas', isAuthenticated, isAdmin, partidasController.getPartidas)
 router.get('/admin/partidas/crear', isAuthenticated, isAdmin, partidasController.getCreatePartida)
-router.get('/admin/partidas/:id', isAuthenticated, isAdmin, partidasController.getPartidaDetalle)
-router.get('/admin/partidas/:id/editar', isAuthenticated, isAdmin, partidasController.getEditPartida)
 router.post('/admin/partidas', isAuthenticated, isAdmin, partidasController.postCreatePartida)
+
+// 2. Edición (Configuración)
+router.get('/admin/partidas/:id/editar', isAuthenticated, isAdmin, partidasController.getEditPartida)
+router.post('/admin/partidas/:id/update', isAuthenticated, isAdmin, partidasController.postUpdatePartida)
+
+// 3. Carga Manual y Detalles (EL ORDEN IMPORTA)
+router.get('/admin/partidas/:id/cargar', isAuthenticated, isAdmin, partidasController.getPartidaDetalle)
+router.post('/admin/partidas/:id/guardar-manual', isAuthenticated, isAdmin, partidasController.postCargarStatsManual)
+
+// 4. Importación Riot (Opcional)
 router.post('/admin/partidas/:id/import-riot', isAuthenticated, isAdmin, partidasController.postImportRiotStats)
+
+// 5. Borrar
 router.post('/admin/partidas/:id/delete', isAuthenticated, isAdmin, partidasController.postDeletePartida)
+
 
 // ------- ESTADÍSTICAS -------
 router.get('/admin/stats', isAuthenticated, isAdmin, partidasController.getStats)

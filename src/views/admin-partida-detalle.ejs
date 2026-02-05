@@ -1,0 +1,382 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<script>
+  const EQUIPO_AZUL_ID = "<%= partida.azul_id %>";
+  const EQUIPO_ROJO_ID = "<%= partida.rojo_id %>";
+  
+  const ROSTER_AZUL = <%- JSON.stringify(jugadoresAzul) %>;
+  const ROSTER_ROJO = <%- JSON.stringify(jugadoresRojo) %>;
+  
+  const STATS_EXISTENTES = <%- JSON.stringify(stats || []) %>;
+</script>
+
+<main class="max-w-7xl mx-auto px-4 py-10">
+
+  <div class="flex items-center justify-between mb-8">
+    <h1 class="text-3xl font-black text-white italic uppercase">
+      Planilla <span class="text-yellow-500">Oficial</span>
+    </h1>
+    <a href="/admin/partidas" class="text-slate-400 hover:text-white font-bold flex items-center gap-2">
+      <i class="fas fa-arrow-left"></i> Volver
+    </a>
+  </div>
+
+  <div class="space-y-8">
+    
+    <div class="bg-slate-800 rounded-xl border border-slate-700 p-6 shadow-lg">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-slate-300 text-xs font-bold mb-2 uppercase">Duración (Minutos)</label>
+          <input type="number" id="duracionInput" value="<%= Math.round(partida.duracion_segundos / 60) || 30 %>" class="w-full bg-slate-900 border border-slate-600 rounded p-3 text-white focus:border-yellow-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-slate-300 text-xs font-bold mb-2 uppercase">Ganador</label>
+          <select id="ganadorInput" class="w-full bg-slate-900 border border-slate-600 rounded p-3 text-white focus:border-green-500 outline-none font-bold">
+            <option value="" disabled <%= !partida.ganador_id ? 'selected' : '' %>>-- Seleccionar Ganador --</option>
+            <option value="<%= partida.azul_id %>" <%= partida.ganador_id === partida.azul_id ? 'selected' : '' %>>🔵 <%= partida.azul_nombre %></option>
+            <option value="<%= partida.rojo_id %>" <%= partida.ganador_id === partida.rojo_id ? 'selected' : '' %>>🔴 <%= partida.rojo_nombre %></option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+      
+      <div class="bg-slate-800 rounded-xl border border-blue-900/50 p-4 shadow-lg flex flex-col h-full">
+        <div class="flex items-center justify-between mb-4 pb-2 border-b border-blue-900/30">
+          <div class="flex items-center gap-3">
+            <img src="<%= partida.azul_logo %>" class="w-8 h-8 object-contain">
+            <h2 class="text-lg font-bold text-blue-400 uppercase truncate max-w-[200px]"><%= partida.azul_nombre %></h2>
+          </div>
+          <button onclick="addRow('azul')" class="text-xs bg-blue-900 text-blue-200 px-2 py-1 rounded hover:bg-blue-800 transition">
+            <i class="fas fa-plus"></i> Jugador
+          </button>
+        </div>
+        <div id="container-azul" class="space-y-2"></div>
+      </div>
+
+      <div class="bg-slate-800 rounded-xl border border-red-900/50 p-4 shadow-lg flex flex-col h-full">
+         <div class="flex items-center justify-between mb-4 pb-2 border-b border-red-900/30">
+          <div class="flex items-center gap-3">
+            <img src="<%= partida.rojo_logo %>" class="w-8 h-8 object-contain">
+            <h2 class="text-lg font-bold text-red-400 uppercase truncate max-w-[200px]"><%= partida.rojo_nombre %></h2>
+          </div>
+          <button onclick="addRow('rojo')" class="text-xs bg-red-900 text-red-200 px-2 py-1 rounded hover:bg-red-800 transition">
+            <i class="fas fa-plus"></i> Jugador
+          </button>
+        </div>
+        <div id="container-rojo" class="space-y-2"></div>
+      </div>
+
+    </div>
+
+    <div class="fixed bottom-0 left-0 right-0 bg-slate-900/95 border-t border-slate-700 p-4 backdrop-blur-md flex justify-end gap-4 z-40">
+      <button onclick="saveAll()" id="btnSave" class="bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg shadow-green-900/20 transition transform hover:-translate-y-1 w-full md:w-auto">
+        <i class="fas fa-save mr-2"></i> Guardar Resultados
+      </button>
+    </div>
+    <div class="h-20"></div>
+
+  </div>
+</main>
+
+<div id="champModal" class="fixed inset-0 bg-black/80 z-50 hidden flex flex-col items-center justify-center p-4">
+  <div class="bg-slate-800 w-full max-w-4xl h-[80vh] rounded-2xl flex flex-col border border-slate-600 shadow-2xl">
+    <div class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-900 rounded-t-2xl">
+      <input type="text" id="champSearch" placeholder="Buscar campeón..." class="bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white w-64 focus:border-yellow-500 outline-none" autocomplete="off">
+      <button onclick="closeChampModal()" class="text-slate-400 hover:text-white text-2xl"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="champGrid" class="flex-1 overflow-y-auto p-4 grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 custom-scrollbar"></div>
+  </div>
+</div>
+
+<style>
+  .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
+</style>
+
+<script>
+  let championsData = []; 
+  let currentRowId = null; 
+  let latestVersion = '14.1.1'; // Fallback por defecto, se actualizará
+
+  // === 1. INICIALIZACIÓN ===
+  document.addEventListener('DOMContentLoaded', async () => {
+    await fetchChampions();
+    initRows();
+  });
+
+  async function fetchChampions() {
+    try {
+      // 1. Obtener la última versión disponible (Ej: 16.2.1)
+      const verRes = await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
+      const versions = await verRes.json();
+      latestVersion = versions[0]; // ¡Aquí actualizamos la versión!
+      
+      console.log("Versión DDragon:", latestVersion);
+
+      // 2. Obtener campeones de esa versión
+      const dataRes = await fetch(`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/data/es_ES/champion.json`);
+      const data = await dataRes.json();
+      
+      championsData = Object.values(data.data).sort((a,b) => a.name.localeCompare(b.name));
+      renderChampGrid(championsData);
+    } catch (e) {
+      console.error("Error cargando campeones", e);
+      // Si falla, seguimos con la versión por defecto, aunque las imágenes podrían romperse
+    }
+  }
+
+function initRows() {
+    const statsAzul = STATS_EXISTENTES.filter(s => s.equipo_id === EQUIPO_AZUL_ID);
+    const statsRojo = STATS_EXISTENTES.filter(s => s.equipo_id === EQUIPO_ROJO_ID);
+
+    // --- LÓGICA CORREGIDA: SIEMPRE 5 FILAS INICIALES ---
+
+    // EQUIPO AZUL
+    if (statsAzul.length > 0) {
+      // Si ya hay estadísticas guardadas (Edición), cargamos las que existan (sean 5, 6, etc.)
+      statsAzul.forEach(s => addRow('azul', s, true));
+    } else {
+      // Si es carga nueva: Forzamos exactamente 5 filas
+      for (let i = 0; i < 5; i++) {
+        // Intentamos pre-seleccionar el jugador 'i' del roster si existe (ej: Titular)
+        // Si el roster tiene 8, solo pre-seleccionamos los primeros 5.
+        // El resto estará disponible en el desplegable.
+        const p = ROSTER_AZUL[i]; 
+        const datosDefault = p ? { jugador_id: p.id, nombre: p.nombre_invocador } : {};
+        
+        // Asignamos rol por defecto según la posición de la fila (0=TOP, 1=JGL...)
+        const rolesOrder = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
+        datosDefault.rol = rolesOrder[i] || 'UNKNOWN';
+
+        addRow('azul', datosDefault);
+      }
+    }
+
+    // EQUIPO ROJO
+    if (statsRojo.length > 0) {
+      statsRojo.forEach(s => addRow('rojo', s, true));
+    } else {
+      for (let i = 0; i < 5; i++) {
+        const p = ROSTER_ROJO[i];
+        const datosDefault = p ? { jugador_id: p.id, nombre: p.nombre_invocador } : {};
+        
+        const rolesOrder = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
+        datosDefault.rol = rolesOrder[i] || 'UNKNOWN';
+
+        addRow('rojo', datosDefault);
+      }
+    }
+  }
+
+// === 2. GESTIÓN DE FILAS ===
+  function addRow(side, data = {}, isStat = false) {
+    const container = document.getElementById(`container-${side}`);
+    const rowId = `row-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const teamId = side === 'azul' ? EQUIPO_AZUL_ID : EQUIPO_ROJO_ID;
+    const roster = side === 'azul' ? ROSTER_AZUL : ROSTER_ROJO;
+
+    const playerId = data.jugador_id || '';
+    const playerName = data.nombre || data.nombre_invocador || '';
+    const champion = data.champion_name || 'Annie'; 
+    
+    // Recuperamos el rol guardado o ponemos TOP por defecto
+    const role = data.rol || 'TOP'; 
+
+    const kills = data.kills || 0;
+    const deaths = data.deaths || 0;
+    const assists = data.assists || 0;
+    const cs = data.cs_min || 0;
+    const dmg = data.dmg_min || 0;
+
+    const rowDiv = document.createElement('div');
+    rowDiv.className = "flex flex-col sm:flex-row gap-2 bg-slate-900/50 p-2 rounded border border-slate-700 items-center animate-fadeIn";
+    rowDiv.id = rowId;
+    rowDiv.dataset.teamId = teamId;
+
+    // --- 1. SELECTOR DE ROL (NUEVO) ---
+    // Usamos un select pequeño con estilo oscuro
+    const roleHtml = `
+      <div class="flex flex-col items-center justify-center w-14">
+        <label class="text-[9px] text-slate-500 uppercase font-bold mb-0.5">Rol</label>
+        <select class="val-role w-full bg-slate-800 border border-slate-600 rounded text-[10px] text-white py-1 px-1 font-bold text-center focus:border-yellow-500 outline-none">
+           <option value="TOP" ${role === 'TOP' ? 'selected' : ''}>TOP</option>
+           <option value="JUNGLE" ${role === 'JUNGLE' ? 'selected' : ''}>JGL</option>
+           <option value="MID" ${role === 'MID' ? 'selected' : ''}>MID</option>
+           <option value="ADC" ${role === 'ADC' ? 'selected' : ''}>ADC</option>
+           <option value="SUPPORT" ${role === 'SUPPORT' ? 'selected' : ''}>SUP</option>
+        </select>
+      </div>
+    `;
+
+    // --- 2. JUGADOR ---
+    let playerOptions = `<option value="NEW">➕ Nuevo</option>`;
+    roster.forEach(p => {
+      const selected = p.id === playerId ? 'selected' : '';
+      playerOptions += `<option value="${p.id}" ${selected}>${p.nombre_invocador}</option>`;
+    });
+    const showNewInput = !playerId || playerId === 'NEW' || (isStat && !roster.find(p => p.id === playerId)); 
+
+    const playerInputHtml = `
+      <div class="flex-1 w-full min-w-[140px]">
+        <select class="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-xs text-white mb-1 focus:border-blue-500 outline-none" onchange="toggleNameInput(this)">
+           <option value="" disabled ${!playerId ? 'selected' : ''}>Jugador...</option>
+           ${playerOptions}
+           ${showNewInput && playerId && playerId !== 'NEW' ? `<option value="${playerId}" selected>${playerName} (Histórico)</option>` : ''} 
+        </select>
+        <input type="text" class="new-player-name w-full bg-slate-700 border border-slate-500 rounded px-2 py-1 text-xs text-yellow-300 placeholder-slate-400 ${showNewInput ? '' : 'hidden'}" placeholder="Nombre Invocador" value="${showNewInput ? playerName : ''}">
+      </div>
+    `;
+
+    // --- 3. CAMPEÓN ---
+    const champUrl = `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/champion/${champion}.png`;
+    const champHtml = `
+      <div class="w-12 h-12 relative cursor-pointer group shrink-0" onclick="openChampModal('${rowId}')">
+        <img src="${champUrl}" class="champ-img w-full h-full object-cover rounded border border-slate-500 group-hover:border-yellow-500 transition" onerror="this.src='https://via.placeholder.com/64?text=?'">
+        <input type="hidden" class="champ-val" value="${champion}">
+        <div class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition rounded backdrop-blur-sm">
+          <i class="fas fa-search text-white text-xs"></i>
+        </div>
+      </div>
+    `;
+
+    // --- 4. STATS ---
+    const statsHtml = `
+      <div class="grid grid-cols-5 gap-1 w-full sm:w-auto">
+        <div class="text-center"><div class="text-[9px] text-slate-500">K</div><input type="number" class="val-k w-10 bg-slate-800 border border-slate-600 rounded text-center text-green-400 font-bold text-sm" value="${kills}"></div>
+        <div class="text-center"><div class="text-[9px] text-slate-500">D</div><input type="number" class="val-d w-10 bg-slate-800 border border-slate-600 rounded text-center text-red-400 font-bold text-sm" value="${deaths}"></div>
+        <div class="text-center"><div class="text-[9px] text-slate-500">A</div><input type="number" class="val-a w-10 bg-slate-800 border border-slate-600 rounded text-center text-yellow-400 font-bold text-sm" value="${assists}"></div>
+        <div class="text-center"><div class="text-[9px] text-slate-500">CS</div><input type="number" class="val-cs w-12 bg-slate-800 border border-slate-600 rounded text-center text-white text-xs" value="${cs}"></div>
+        <div class="text-center"><div class="text-[9px] text-slate-500">DMG</div><input type="number" class="val-dmg w-12 bg-slate-800 border border-slate-600 rounded text-center text-white text-xs" value="${dmg}"></div>
+      </div>
+    `;
+
+    const deleteHtml = `
+      <button onclick="this.parentElement.remove()" class="text-slate-600 hover:text-red-500 px-2 ml-1"><i class="fas fa-times"></i></button>
+    `;
+
+    // Orden visual: ROL -> FOTO -> NOMBRE -> STATS
+    rowDiv.innerHTML = roleHtml + champHtml + playerInputHtml + statsHtml + deleteHtml;
+    container.appendChild(rowDiv);
+  }
+
+  // === 3. SELECTOR DE CAMPEONES ===
+  const modal = document.getElementById('champModal');
+  const searchInput = document.getElementById('champSearch');
+  const grid = document.getElementById('champGrid');
+
+  function openChampModal(rowId) {
+    currentRowId = rowId;
+    modal.classList.remove('hidden');
+    searchInput.value = '';
+    searchInput.focus();
+    renderChampGrid(championsData);
+  }
+
+  function closeChampModal() {
+    modal.classList.add('hidden');
+    currentRowId = null;
+  }
+
+  function renderChampGrid(list) {
+    grid.innerHTML = '';
+    list.forEach(c => {
+      const div = document.createElement('div');
+      div.className = "flex flex-col items-center cursor-pointer group";
+      div.onclick = () => selectChampion(c.id);
+      
+      // CORRECCIÓN: Usamos latestVersion en el grid también
+      div.innerHTML = `
+        <img src="https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/champion/${c.id}.png" class="w-12 h-12 rounded border border-slate-600 group-hover:border-yellow-500 group-hover:scale-110 transition" loading="lazy">
+        <span class="text-[10px] text-slate-400 mt-1 truncate w-full text-center group-hover:text-white">${c.name}</span>
+      `;
+      grid.appendChild(div);
+    });
+  }
+
+  function selectChampion(champId) {
+    if(!currentRowId) return;
+    const row = document.getElementById(currentRowId);
+    // CORRECCIÓN: Usamos latestVersion al seleccionar
+    row.querySelector('.champ-img').src = `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/champion/${champId}.png`;
+    row.querySelector('.champ-val').value = champId;
+    closeChampModal();
+  }
+
+  searchInput.addEventListener('input', (e) => {
+    const term = e.target.value.toLowerCase();
+    const filtered = championsData.filter(c => c.name.toLowerCase().includes(term));
+    renderChampGrid(filtered);
+  });
+
+  // === 4. GUARDADO ===
+  async function saveAll() {
+    const duracion = document.getElementById('duracionInput').value;
+    const ganadorId = document.getElementById('ganadorInput').value;
+    
+    if(!ganadorId) return alert("Debes seleccionar un equipo ganador.");
+
+    const rows = [];
+    document.querySelectorAll('[id^="row-"]').forEach(row => {
+       const select = row.querySelector('select');
+       const nameInput = row.querySelector('.new-player-name');
+       
+       let jugId = select.value;
+       let jugName = null;
+
+       if (jugId === 'NEW' || !jugId) {
+         jugId = 'NEW';
+         jugName = nameInput.value.trim();
+         if(!jugName) return; 
+       }
+
+       rows.push({
+         equipo_id: row.dataset.teamId,
+         jugador_id: jugId,
+         nombre_nuevo: jugName,
+         rol: row.querySelector('.val-role').value, // <--- AGREGAR ESTA LÍNEA
+         champion: row.querySelector('.champ-val').value,
+         kills: row.querySelector('.val-k').value,
+         deaths: row.querySelector('.val-d').value,
+         assists: row.querySelector('.val-a').value,
+         cs: row.querySelector('.val-cs').value,
+         dmg: row.querySelector('.val-dmg').value
+    });
+    });
+
+    try {
+       const btn = document.getElementById('btnSave');
+       btn.disabled = true;
+       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+       const res = await fetch(`/admin/partidas/<%= partida.id %>/guardar-manual`, {
+         method: 'POST',
+         headers: {'Content-Type': 'application/json'},
+         body: JSON.stringify({
+           duracion_minutos: duracion,
+           ganador_id: ganadorId,
+           datos_jugadores: rows
+         })
+       });
+
+       const json = await res.json();
+       if(json.success) {
+         window.location.href = json.redirect;
+       } else {
+         alert('Error: ' + json.error);
+         btn.disabled = false;
+         btn.innerHTML = 'Guardar Resultados';
+       }
+    } catch(e) {
+      console.error(e);
+      alert('Error de conexión');
+      document.getElementById('btnSave').disabled = false;
+    }
+  }
+</script>
+
+<%- include('partials/footer') %>
