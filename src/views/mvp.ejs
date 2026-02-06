@@ -1,178 +1,315 @@
 <%- include('partials/head') %>
 <%- include('partials/nav') %>
 
-<main class="max-w-7xl mx-auto px-4 py-8">
-  <!-- Header -->
-  <div class="mb-8">
-    <% if (typeof isTorneoEspecifico !== 'undefined' && isTorneoEspecifico) { %>
-      <div class="mb-4 flex items-center gap-2">
-        <a href="/torneos-anteriores" class="text-gold hover:text-yellow-400 text-sm">Torneos Anteriores</a>
-        <span class="text-slate-500">/</span>
-        <span class="text-slate-400 text-sm"><%= torneo.nombre %></span>
-      </div>
-    <% } %>
-    <h1 class="text-4xl font-bold mb-2">
-      <i class="fas fa-star text-gold mr-3"></i> Ranking MVP<% if (typeof isTorneoEspecifico !== 'undefined' && isTorneoEspecifico) { %> - <%= torneo.nombre %><% } %>
-    </h1>
-    <p class="text-slate-400">Los mejores jugadores del torneo según su desempeño</p>
+<main class="max-w-6xl mx-auto px-4 py-12 min-h-screen">
+
+  <div class="text-center mb-10">
+      <h1 class="text-5xl md:text-7xl font-black text-white italic uppercase tracking-tighter mb-2 drop-shadow-lg">
+          MVP Ranking
+      </h1>
+      <p class="text-slate-400 uppercase tracking-widest text-xs font-bold">Estadísticas Globales</p>
   </div>
 
-  <% if (typeof ranking !== 'undefined' && ranking && ranking.length > 0) { %>
-    <!-- Top 3 Podium -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-      <% ranking.slice(0, 3).forEach((player, index) => { %>
-        <% const medals = ['🥇', '🥈', '🥉']; %>
-        <div class="card hover:shadow-gold transition transform hover:scale-105">
-          <div class="text-center">
-            <!-- Medal -->
-            <div class="text-5xl mb-3"><%= medals[index] %></div>
-            
-            <!-- Player Image / Logo -->
-            <% if (player.equipo_logo) { %>
-              <img src="<%= player.equipo_logo %>" 
-                   alt="<%= player.equipo_nombre %>" 
-                   class="h-16 w-16 rounded-full mx-auto mb-3 border-2 border-gold object-cover">
-            <% } else { %>
-              <div class="h-16 w-16 rounded-full mx-auto mb-3 bg-slate-700 flex items-center justify-center">
-                <i class="fas fa-user text-2xl text-slate-500"></i>
-              </div>
-            <% } %>
-            
-            <!-- Name & Team -->
-            <h2 class="text-2xl font-bold text-white">
-              <a href="/jugador/<%= player.jugador_id %>" class="hover:text-gold transition">
-                <%= player.nombre_invocador %>
-              </a>
-            </h2>
-            <p class="text-slate-400 mb-3"><%= player.equipo_nombre %></p>
-            
-            <!-- KDA Ratio -->
-            <div class="mvp-badge mb-4">
-              <%= parseFloat(player.kda).toFixed(2) %> KDA
-            </div>
-            
-            <!-- Stats Grid -->
-            <div class="grid grid-cols-3 gap-2 text-sm">
-              <div class="bg-slate-700 p-2 rounded">
-                <p class="text-xs text-slate-400">K</p>
-                <p class="font-bold text-green-400"><%= player.total_kills %></p>
-              </div>
-              <div class="bg-slate-700 p-2 rounded">
-                <p class="text-xs text-slate-400">D</p>
-                <p class="font-bold text-red-400"><%= player.total_deaths %></p>
-              </div>
-              <div class="bg-slate-700 p-2 rounded">
-                <p class="text-xs text-slate-400">A</p>
-                <p class="font-bold text-gold"><%= player.total_assists %></p>
-              </div>
-            </div>
-          </div>
-        </div>
-      <% }); %>
-    </div>
+  <% if (typeof ranking !== 'undefined' && ranking.length > 0) { %>
 
-    <!-- Full Ranking Table -->
-    <div class="card">
-      <div class="card-header">
-        <h3 class="card-title">Ranking Completo</h3>
-      </div>
-      
-      <div class="overflow-x-auto">
-        <table class="table">
-          <thead>
-            <tr>
-              <th style="width: 5%;">#</th>
-              <th style="width: 25%;">Jugador</th>
-              <th style="width: 12%;">Rol</th>
-              <th style="width: 15%;">KDA Ratio</th>
-              <th style="width: 18%;">K / D / A</th>
-              <th style="width: 12%;">CS/min</th>
-              <th style="width: 13%;">Dmg/min</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% ranking.forEach((player, index) => { %>
-              <tr>
-                <td class="font-bold text-gold">
-                  <% if (index === 0) { %>
-                    <i class="fas fa-crown text-gold mr-2"></i>1
-                  <% } else if (index === 1) { %>
-                    <i class="fas fa-star text-silver mr-2"></i>2
-                  <% } else if (index === 2) { %>
-                    <i class="fas fa-gem text-bronze mr-2"></i>3
-                  <% } else { %>
-                    <%= index + 1 %>
-                  <% } %>
-                </td>
-                <td>
-                  <div class="flex items-center gap-2">
-                    <% if (player.equipo_logo) { %>
-                      <img src="<%= player.equipo_logo %>" 
-                           alt="<%= player.equipo_nombre %>"
-                           class="w-8 h-8 rounded-full object-cover">
-                    <% } else { %>
-                      <div class="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center">
-                        <i class="fas fa-user text-xs text-slate-400"></i>
-                      </div>
-                    <% } %>
-                    <div>
-                      <p class="font-bold text-white"><%= player.nombre_invocador %></p>
-                      <p class="text-xs text-slate-400"><%= player.equipo_nombre %></p>
-                    </div>
+      <div class="sticky top-20 z-50 bg-slate-900/95 backdrop-blur-md p-4 rounded-xl border border-slate-700 shadow-2xl mb-12 flex flex-col md:flex-row gap-4 items-center justify-between">
+          
+          <div class="relative w-full md:w-96 group">
+              <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <i class="fas fa-search text-slate-500 group-focus-within:text-yellow-500 transition-colors"></i>
+              </div>
+              <input type="text" id="searchInput" autocomplete="off"
+                     class="block w-full p-3 pl-10 text-sm text-white bg-slate-950 border border-slate-700 rounded-lg focus:ring-yellow-500 focus:border-yellow-500 placeholder-slate-500 transition-all" 
+                     placeholder="Buscar jugador para ir a su posición...">
+              
+              <div id="searchResults" class="absolute top-full left-0 w-full mt-2 bg-slate-800 border border-slate-700 rounded-lg shadow-2xl hidden max-h-60 overflow-y-auto z-50 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-900">
                   </div>
-                </td>
-                <td>
-                  <span class="stat-badge"><%= player.rol_juego %></span>
-                </td>
-                <td class="font-bold text-gold">
-                  <%= parseFloat(player.kda).toFixed(2) %>
-                </td>
-                <td>
-                  <span class="text-green-400"><%= player.total_kills %></span>
-                  <span class="text-slate-500">/</span>
-                  <span class="text-red-400"><%= player.total_deaths %></span>
-                  <span class="text-slate-500">/</span>
-                  <span class="text-gold"><%= player.total_assists %></span>
-                </td>
-                <td class="text-slate-300">
-                  <%= parseFloat(player.avg_cs).toFixed(1) %>
-                </td>
-                <td class="text-slate-300">
-                  <%= parseFloat(player.avg_dmg).toFixed(0) %>
-                </td>
-              </tr>
-            <% }); %>
-          </tbody>
-        </table>
+          </div>
+
+          <div class="flex gap-4 w-full md:w-auto">
+              <select id="roleFilter" class="bg-slate-950 border border-slate-700 text-white text-sm rounded-lg focus:ring-yellow-500 focus:border-yellow-500 block w-full p-2.5 cursor-pointer hover:bg-slate-900 transition">
+                  <option value="all">Todos los Roles</option>
+                  <option value="TOP">Top</option>
+                  <option value="JUNGLE">Jungle</option>
+                  <option value="MID">Mid</option>
+                  <option value="ADC">ADC</option>
+                  <option value="SUPPORT">Support</option>
+              </select>
+          </div>
       </div>
-    </div>
+
+      <div id="dynamicContent" class="min-h-[50vh]">
+          </div>
+      
+      <div id="noResults" class="hidden text-center py-20">
+          <i class="fas fa-filter text-4xl text-slate-700 mb-4"></i>
+          <h3 class="text-white font-bold text-xl">No hay jugadores con este rol</h3>
+      </div>
+
   <% } else { %>
-    <div class="card text-center py-12">
-      <i class="fas fa-trophy text-6xl text-slate-600 mb-4"></i>
-      <h2 class="text-2xl font-bold text-slate-300">No hay datos de estadísticas</h2>
-      <p class="text-slate-400 mt-2">Las estadísticas aparecerán cuando se carguen partidas</p>
-    </div>
+      <div class="text-center py-20 bg-slate-900 rounded-xl border border-slate-800 border-dashed">
+          <i class="fas fa-chart-bar text-4xl text-slate-700 mb-4"></i>
+          <h2 class="text-xl text-slate-400 font-bold uppercase">Sin datos</h2>
+          <p class="text-slate-600 text-sm mt-2">Asegúrate de cargar las estadísticas de las partidas.</p>
+      </div>
   <% } %>
 
-  <!-- Enlaces de navegación para torneo específico -->
-  <% if (typeof isTorneoEspecifico !== 'undefined' && isTorneoEspecifico && typeof torneo !== 'undefined' && torneo) { %>
-    <div class="mt-12 pt-8 border-t border-slate-700">
-      <div class="flex flex-wrap gap-3 justify-center">
-        <a href="/torneo/<%= torneo.id %>/calendario" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded transition flex items-center gap-2">
-          <i class="fas fa-calendar"></i> Calendario
-        </a>
-        <a href="/torneo/<%= torneo.id %>/bracket" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded transition flex items-center gap-2">
-          <i class="fas fa-sitemap"></i> Bracket
-        </a>
-        <a href="/torneo/<%= torneo.id %>/equipos" class="px-4 py-2 bg-pink-600 hover:bg-pink-500 text-white rounded transition flex items-center gap-2">
-          <i class="fas fa-users"></i> Equipos
-        </a>
-        <a href="/torneos-anteriores" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded transition flex items-center gap-2">
-          <i class="fas fa-arrow-left"></i> Volver
-        </a>
-      </div>
-    </div>
-  <% } %>
 </main>
+
+<script>
+    // 1. OBTENER DATOS
+    const allPlayers = <%- JSON.stringify(ranking) %>;
+    
+    // Referencias al DOM
+    const container = document.getElementById('dynamicContent');
+    const noResults = document.getElementById('noResults');
+    const roleFilter = document.getElementById('roleFilter');
+    
+    // Referencias Buscador
+    const searchInput = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
+
+    // Mapeo de roles
+    const roleMap = { 'TOP': 'Top', 'JUNGLE': 'Jungle', 'JGL': 'Jungle', 'MID': 'Mid', 'MIDDLE': 'Mid', 'ADC': 'ADC', 'BOT': 'ADC', 'SUPPORT': 'Support', 'SUPP': 'Support' };
+
+    // --- GENERADORES DE HTML ---
+
+    function getPodiumCardHTML(player, displayRank) {
+        let heightClass = "h-64"; 
+        let colorClass = "border-slate-700 bg-slate-900";
+        let iconColor = "text-slate-600";
+        let bgNumberColor = "text-white/5"; 
+        let orderClass = "order-last md:order-none";
+
+        if (displayRank === 1) {
+            heightClass = "h-80";
+            orderClass = "order-first md:order-none";
+            colorClass = "border-yellow-500/50 bg-gradient-to-b from-yellow-900/20 to-slate-900 shadow-[0_0_50px_rgba(234,179,8,0.2)]";
+            iconColor = "text-yellow-400";
+            bgNumberColor = "text-yellow-500/10"; 
+        } else if (displayRank === 2) {
+            heightClass = "h-72";
+            colorClass = "border-slate-400/50 bg-gradient-to-b from-slate-700/20 to-slate-900";
+            iconColor = "text-slate-300";
+        } else if (displayRank === 3) {
+            heightClass = "h-64";
+            colorClass = "border-orange-700/50 bg-gradient-to-b from-orange-900/20 to-slate-900";
+            iconColor = "text-orange-400";
+        }
+
+        const kda = Number(player.kda_ratio || 0).toFixed(2);
+        const rolDisplay = roleMap[(player.rol_juego || '').toUpperCase()] || (player.rol_juego || 'FILL');
+        const profileLink = `/perfil/${player.id}`; 
+        const cardId = `player-${player.id}`; // ID ÚNICO PARA SCROLL
+
+        return `
+            <a href="${profileLink}" id="${cardId}" class="w-full md:w-1/3 ${heightClass} ${colorClass} ${orderClass} border rounded-t-2xl flex flex-col items-center justify-end p-6 relative group transition-all duration-500 animate-fade-in-up overflow-hidden hover:brightness-110 scroll-mt-40">
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-0 overflow-hidden">
+                    <span class="text-[20rem] leading-[0] font-black italic ${bgNumberColor} select-none transform transition-transform duration-500 group-hover:scale-110">${displayRank}</span>
+                </div>
+                <div class="text-center z-10 w-full relative">
+                    <img src="${player.equipo_logo}" class="w-16 h-16 object-contain mx-auto drop-shadow-md mb-3 transition-transform group-hover:scale-110" onerror="this.src='https://via.placeholder.com/48'">
+                    <h2 class="text-2xl font-black text-white italic uppercase tracking-tighter truncate drop-shadow-lg relative group-hover:text-yellow-400 transition-colors">
+                        ${player.nombre_invocador}
+                    </h2>
+                    <div class="flex items-center justify-center gap-2 mb-4 relative">
+                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-900/50 px-1 rounded">${player.equipo_nombre}</span>
+                         <span class="w-1 h-1 bg-slate-600 rounded-full"></span>
+                         <span class="text-[10px] font-bold text-yellow-600 uppercase tracking-widest bg-slate-900/50 px-1 rounded">${rolDisplay}</span>
+                    </div>
+                    <div class="flex items-center justify-center gap-4 bg-slate-900/60 backdrop-blur-md py-3 rounded-lg border border-white/10 shadow-xl relative group-hover:border-yellow-500/30 transition-colors">
+                        <div class="text-center px-4">
+                            <div class="text-3xl font-black ${iconColor} italic leading-none">${kda}</div>
+                            <div class="text-[9px] text-slate-500 uppercase font-bold tracking-widest mt-1">KDA RATIO</div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        `;
+    }
+
+    function getListItemHTML(player, displayRank) {
+        const kda = Number(player.kda_ratio || 0).toFixed(2);
+        const rolDisplay = roleMap[(player.rol_juego || '').toUpperCase()] || (player.rol_juego || 'FILL');
+        const profileLink = `/perfil/${player.id}`;
+        const cardId = `player-${player.id}`; // ID ÚNICO PARA SCROLL
+
+        return `
+            <a href="${profileLink}" id="${cardId}" class="flex items-center bg-slate-900 border border-slate-800 p-4 rounded-lg hover:border-slate-600 hover:bg-slate-800 transition group animate-fade-in block scroll-mt-40">
+                <div class="w-12 text-center font-black text-slate-600 text-xl italic">#${displayRank}</div>
+                <div class="flex items-center gap-4 flex-1">
+                     <img src="${player.equipo_logo}" class="w-10 h-10 object-contain grayscale group-hover:grayscale-0 transition" onerror="this.src='https://via.placeholder.com/40'">
+                     <div>
+                         <div class="text-white font-bold uppercase italic tracking-tight text-lg leading-none group-hover:text-yellow-400 transition">${player.nombre_invocador}</div>
+                         <div class="flex items-center gap-2 mt-1">
+                             <span class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">${player.equipo_nombre}</span>
+                             <span class="text-slate-700">•</span>
+                             <span class="text-slate-500 text-[10px] font-bold uppercase">${rolDisplay}</span>
+                         </div>
+                     </div>
+                </div>
+                <div class="flex items-center gap-8 text-right">
+                    <div class="w-24">
+                        <div class="text-2xl font-black text-yellow-500 italic text-shadow-glow">${kda}</div>
+                        <div class="text-[9px] text-slate-600 uppercase font-bold tracking-wider">KDA</div>
+                    </div>
+                </div>
+            </a>
+        `;
+    }
+
+    // --- LÓGICA DE VISTA PRINCIPAL (Solo Filtro de Rol) ---
+
+    function updateView() {
+        const selectedRole = roleFilter.value; 
+
+        // Filtrar solo por ROL (El buscador es independiente ahora)
+        const filteredPlayers = allPlayers.filter(p => {
+            const role = (p.rol_juego || 'FILL').toUpperCase();
+            
+            let matchRole = (selectedRole === 'all');
+            if (!matchRole) {
+                if (selectedRole === 'JUNGLE') matchRole = (role === 'JUNGLE' || role === 'JGL');
+                else if (selectedRole === 'SUPPORT') matchRole = (role === 'SUPPORT' || role === 'SUPP' || role === 'SUP');
+                else matchRole = (role === selectedRole);
+            }
+            return matchRole;
+        });
+
+        if (filteredPlayers.length === 0) {
+            container.innerHTML = '';
+            noResults.classList.remove('hidden');
+            return;
+        }
+        noResults.classList.add('hidden');
+
+        // Generar HTML
+        const podiumPlayers = filteredPlayers.slice(0, 3);
+        const listPlayers = filteredPlayers.slice(3);
+        let html = '';
+
+        // Podio
+        if (podiumPlayers.length > 0) {
+            let podiumVisualOrder = [];
+            if (podiumPlayers.length === 1) podiumVisualOrder = [podiumPlayers[0]];
+            else if (podiumPlayers.length === 2) podiumVisualOrder = [podiumPlayers[1], podiumPlayers[0]];
+            else podiumVisualOrder = [podiumPlayers[1], podiumPlayers[0], podiumPlayers[2]];
+
+            html += `<div class="flex flex-col md:flex-row items-end justify-center gap-6 mb-16 px-2">`;
+            podiumVisualOrder.forEach(p => {
+                const rank = filteredPlayers.indexOf(p) + 1; 
+                html += getPodiumCardHTML(p, rank);
+            });
+            html += `</div>`;
+        }
+
+        // Lista
+        if (listPlayers.length > 0) {
+            html += `<div class="space-y-3 animate-fade-in">`;
+            listPlayers.forEach(p => {
+                const rank = filteredPlayers.indexOf(p) + 1; 
+                html += getListItemHTML(p, rank);
+            });
+            html += `</div>`;
+        }
+        container.innerHTML = html;
+    }
+
+    // --- LÓGICA DEL BUSCADOR (AUTOCOMPLETE + SCROLL) ---
+
+    function handleSearch(e) {
+        const query = e.target.value.toLowerCase();
+        
+        if (query.length < 1) {
+            searchResults.innerHTML = '';
+            searchResults.classList.add('hidden');
+            return;
+        }
+
+        // Buscar en TODOS los jugadores (no importa el filtro actual)
+        const matches = allPlayers.filter(p => p.nombre_invocador.toLowerCase().includes(query));
+
+        if (matches.length > 0) {
+            searchResults.classList.remove('hidden');
+            searchResults.innerHTML = matches.map(p => {
+                // Calcular su posición global
+                const globalRank = allPlayers.indexOf(p) + 1;
+                
+                return `
+                    <div class="px-4 py-3 hover:bg-slate-700 cursor-pointer border-b border-slate-700/50 last:border-0 flex justify-between items-center transition-colors"
+                         onclick="scrollToPlayer('${p.id}')">
+                        <div class="flex items-center gap-3">
+                            <img src="${p.equipo_logo}" class="w-8 h-8 object-contain" onerror="this.src='https://via.placeholder.com/32'">
+                            <div>
+                                <div class="text-white font-bold text-sm">${p.nombre_invocador}</div>
+                                <div class="text-xs text-slate-400">${p.equipo_nombre}</div>
+                            </div>
+                        </div>
+                        <div class="text-yellow-500 font-bold italic text-xs">#${globalRank}</div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            searchResults.classList.remove('hidden');
+            searchResults.innerHTML = `<div class="px-4 py-3 text-slate-400 text-sm italic text-center">No se encontraron resultados</div>`;
+        }
+    }
+
+    // Función para saltar al jugador
+    window.scrollToPlayer = function(playerId) {
+        // 1. Ocultar dropdown y limpiar input
+        searchResults.classList.add('hidden');
+        searchInput.value = '';
+
+        // 2. Verificar si el elemento existe en el DOM actual
+        let element = document.getElementById(`player-${playerId}`);
+
+        // 3. Si no existe (porque el filtro de ROL lo oculta), reseteamos el filtro
+        if (!element) {
+            roleFilter.value = 'all'; // Resetear select
+            updateView(); // Regenerar vista con todos
+            // Volver a buscar el elemento tras el render
+            element = document.getElementById(`player-${playerId}`);
+        }
+
+        // 4. Scroll y resaltar
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Efecto Flash visual
+            element.classList.add('ring-4', 'ring-yellow-500', 'ring-offset-4', 'ring-offset-slate-900');
+            setTimeout(() => {
+                element.classList.remove('ring-4', 'ring-yellow-500', 'ring-offset-4', 'ring-offset-slate-900');
+            }, 2000);
+        }
+    };
+
+    // Event Listeners
+    roleFilter.addEventListener('change', updateView);
+    searchInput.addEventListener('input', handleSearch);
+
+    // Cerrar buscador si clic fuera
+    document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+            searchResults.classList.add('hidden');
+        }
+    });
+
+    // Cargar inicial
+    updateView();
+
+</script>
+
+<style>
+    .text-shadow-glow { text-shadow: 0 0 10px rgba(234, 179, 8, 0.3); }
+    @keyframes fade-in-up {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in-up { animation: fade-in-up 0.5s ease-out forwards; }
+    
+    /* Scroll offset para que el sticky header no tape la tarjeta al scrollear */
+    .scroll-mt-40 { scroll-margin-top: 10rem; }
+</style>
 
 <%- include('partials/footer') %>

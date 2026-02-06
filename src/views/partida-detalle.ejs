@@ -1,213 +1,218 @@
 <%- include('partials/head') %>
 <%- include('partials/nav') %>
 
-<main class="max-w-7xl mx-auto px-4 py-8">
-  <!-- Header -->
-  <div class="mb-8">
-    <h1 class="text-4xl font-bold mb-2">
-      <i class="fas fa-gamepad text-gold mr-3"></i>Detalles de Partida
-    </h1>
-    <p class="text-slate-400">Estadísticas y análisis de la partida</p>
+<main class="max-w-7xl mx-auto px-4 py-10">
+
+  <% if (typeof partida !== 'undefined' && partida) { 
+      
+      const ganadorId = partida.ganador_id;
+      const esAzulGanador = (ganadorId === partida.azul_id);
+      
+      function getChampId(name) {
+          if (!name) return 'Aatrox';
+          const exceptions = {
+              "Wukong": "MonkeyKing", "Renata Glasc": "Renata", "Renata": "Renata",
+              "Nunu & Willump": "Nunu", "Nunu": "Nunu", "Bel'Veth": "Belveth",
+              "Kai'Sa": "Kaisa", "Kha'Zix": "Khazix", "Vel'Koz": "Velkoz",
+              "Cho'Gath": "Chogath", "LeBlanc": "Leblanc", "Fiddlesticks": "Fiddlesticks",
+              "K'Sante": "KSante", "Dr. Mundo": "DrMundo", "Kog'Maw": "KogMaw",
+              "Rek'Sai": "RekSai", "Master Yi": "MasterYi", "Jarvan IV": "JarvanIV",
+              "Lee Sin": "LeeSin", "Xin Zhao": "XinZhao", "Miss Fortune": "MissFortune",
+              "Twisted Fate": "TwistedFate", "Tahm Kench": "TahmKench", "Aurelion Sol": "AurelionSol"
+          };
+          return exceptions[name] || name.replace(/[\s'.]/g, ''); 
+      }
+
+      const roleOrder = { 'TOP': 1, 'JUNGLE': 2, 'JGL': 2, 'MID': 3, 'MIDDLE': 3, 'ADC': 4, 'BOT': 4, 'BOTTOM': 4, 'SUPPORT': 5, 'SUPP': 5 };
+      
+      let statsAzul = stats.filter(s => s.equipo_id === partida.azul_id);
+      let statsRojo = stats.filter(s => s.equipo_id === partida.rojo_id);
+
+      const sortFunc = (a, b) => (roleOrder[a.rol?.toUpperCase()] || 99) - (roleOrder[b.rol?.toUpperCase()] || 99);
+      statsAzul.sort(sortFunc);
+      statsRojo.sort(sortFunc);
+  %>
+
+  <div class="relative mb-12">
+      <div class="absolute inset-0 bg-slate-900 border-y border-slate-800 shadow-2xl"></div>
+      
+      <div class="relative z-10 py-10 px-4 max-w-5xl mx-auto flex items-center justify-between">
+          
+          <div class="flex-1 flex flex-col items-center md:flex-row md:items-center gap-6 text-center md:text-left transition-all duration-500 <%= esAzulGanador ? '' : 'grayscale opacity-60' %>">
+              <img src="<%= partida.azul_logo %>" class="w-20 h-20 md:w-28 md:h-28 object-contain drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+              <div>
+                  <h2 class="text-3xl md:text-5xl font-black text-white italic uppercase tracking-tighter leading-none"><%= partida.azul_nombre %></h2>
+                  <% if(esAzulGanador) { %> 
+                      <div class="text-yellow-400 font-bold uppercase tracking-[0.3em] text-xs mt-2 text-shadow-gold">Victoria</div> 
+                  <% } %>
+              </div>
+          </div>
+
+          <div class="px-8 flex flex-col items-center justify-center shrink-0">
+              <div class="text-slate-500 font-bold text-xs uppercase tracking-widest mb-1"><%= partida.fase_torneo %></div>
+              <div class="text-4xl font-black text-slate-700 italic">VS</div>
+              <div class="text-slate-500 font-mono text-xs mt-1"><%= Math.floor(partida.duracion_segundos / 60) %> MIN</div>
+          </div>
+
+          <div class="flex-1 flex flex-col-reverse items-center md:flex-row md:items-center justify-end gap-6 text-center md:text-right transition-all duration-500 <%= !esAzulGanador ? '' : 'grayscale opacity-60' %>">
+              <div>
+                  <h2 class="text-3xl md:text-5xl font-black text-white italic uppercase tracking-tighter leading-none"><%= partida.rojo_nombre %></h2>
+                  <% if(!esAzulGanador) { %> 
+                      <div class="text-yellow-400 font-bold uppercase tracking-[0.3em] text-xs mt-2 text-shadow-gold">Victoria</div> 
+                  <% } %>
+              </div>
+              <img src="<%= partida.rojo_logo %>" class="w-20 h-20 md:w-28 md:h-28 object-contain drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+          </div>
+
+      </div>
   </div>
 
-  <% if (typeof partida !== 'undefined' && partida) { %>
-    <!-- Partida Header -->
-    <div class="bg-slate-800 rounded-lg p-6 border border-slate-700 mb-8">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Equipo Azul -->
-        <div class="text-center">
-          <img src="<%= partida.azul_logo %>" alt="<%= partida.azul_nombre %>" class="h-20 w-20 object-contain mx-auto mb-3">
-          <h2 class="text-2xl font-bold text-white"><%= partida.azul_nombre %></h2>
-        </div>
+  <div class="flex flex-col lg:flex-row gap-8 items-start justify-center">
 
-        <!-- Resultado -->
-        <div class="flex flex-col items-center justify-center">
-          <% if (partida.ganador_id) { %>
-            <div class="text-center">
-              <p class="text-5xl font-bold text-green-400 mb-2"><%= partida.azul_kills %>-<%= partida.rojo_kills %></p>
-              <p class="text-slate-400 text-sm">FINALIZADO</p>
-              <% if (partida.azul_kills > partida.rojo_kills) { %>
-                <p class="text-gold font-bold mt-2"><i class="fas fa-trophy"></i> <%= partida.azul_nombre %> Gana</p>
-              <% } else { %>
-                <p class="text-gold font-bold mt-2"><i class="fas fa-trophy"></i> <%= partida.rojo_nombre %> Gana</p>
-              <% } %>
-            </div>
-          <% } else { %>
-            <p class="text-slate-400 font-bold text-xl">VS</p>
-            <p class="text-slate-500 text-sm mt-2">
-              <%= new Date(partida.fecha_partida).toLocaleDateString('es-ES', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              }) %>
-            </p>
-          <% } %>
-        </div>
-
-        <!-- Equipo Rojo -->
-        <div class="text-center">
-          <img src="<%= partida.rojo_logo %>" alt="<%= partida.rojo_nombre %>" class="h-20 w-20 object-contain mx-auto mb-3">
-          <h2 class="text-2xl font-bold text-white"><%= partida.rojo_nombre %></h2>
-        </div>
-      </div>
-
-      <!-- Partida Info -->
-      <div class="mt-6 pt-6 border-t border-slate-600 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-        <div>
-          <p class="text-slate-400 text-xs uppercase mb-1">Fase</p>
-          <p class="font-bold text-white"><%= partida.fase_torneo %></p>
-        </div>
-        <div>
-          <p class="text-slate-400 text-xs uppercase mb-1">Duración</p>
-          <p class="font-bold text-white"><%= partida.duracion_minutos || 'N/A' %> min</p>
-        </div>
-        <div>
-          <p class="text-slate-400 text-xs uppercase mb-1">Fecha</p>
-          <p class="font-bold text-white text-sm">
-            <%= new Date(partida.fecha_partida).toLocaleDateString('es-ES') %>
-          </p>
-        </div>
-        <div>
-          <p class="text-slate-400 text-xs uppercase mb-1">Estado</p>
-          <% if (partida.ganador_id) { %>
-            <p class="font-bold text-green-400">Completada</p>
-          <% } else { %>
-            <p class="font-bold text-yellow-400">Pendiente</p>
-          <% } %>
-        </div>
-      </div>
-    </div>
-
-    <!-- Estadísticas por Jugador -->
-    <% if (typeof stats !== 'undefined' && stats && stats.length > 0) { %>
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Equipo Azul Stats -->
-        <div>
-          <h3 class="text-xl font-bold text-white mb-4 border-b border-blue-600 pb-2">
-            <i class="fas fa-users text-blue-400 mr-2"></i><%= partida.azul_nombre %>
-          </h3>
-          
-          <div class="space-y-3">
-            <% stats.filter(s => s.equipo_id === partida.azul_id).forEach(player => { %>
-              <div class="bg-slate-800 rounded p-4 border border-slate-700 hover:border-blue-600 transition">
-                <div class="flex items-center justify-between mb-3">
-                  <div>
-                    <h4 class="font-bold text-white"><%= player.nombre_invocador %></h4>
-                    <p class="text-xs text-slate-400"><%= player.champion_name %></p>
-                  </div>
-                  <div class="text-right">
-                    <% if (player.win) { %>
-                      <span class="text-green-400 font-bold text-sm"><i class="fas fa-check"></i> Victoria</span>
-                    <% } else { %>
-                      <span class="text-red-400 font-bold text-sm"><i class="fas fa-times"></i> Derrota</span>
-                    <% } %>
-                  </div>
-                </div>
-                
-                <div class="grid grid-cols-4 gap-2 text-center text-sm mb-2">
-                  <div class="bg-slate-700/50 rounded p-2">
-                    <p class="text-slate-400 text-xs">K</p>
-                    <p class="font-bold text-green-400"><%= player.kills %></p>
-                  </div>
-                  <div class="bg-slate-700/50 rounded p-2">
-                    <p class="text-slate-400 text-xs">D</p>
-                    <p class="font-bold text-red-400"><%= player.deaths %></p>
-                  </div>
-                  <div class="bg-slate-700/50 rounded p-2">
-                    <p class="text-slate-400 text-xs">A</p>
-                    <p class="font-bold text-gold"><%= player.assists %></p>
-                  </div>
-                  <div class="bg-slate-700/50 rounded p-2">
-                    <p class="text-slate-400 text-xs">KDA</p>
-                    <% const kda = (player.deaths > 0) ? ((player.kills + player.assists) / player.deaths).toFixed(2) : (player.kills + player.assists); %>
-                    <p class="font-bold text-yellow-400"><%= kda %></p>
-                  </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2 text-xs text-slate-400">
-                  <div>CS: <span class="text-white font-bold"><%= parseFloat(player.cs_min).toFixed(1) %></span>/min</div>
-                  <div>Dmg: <span class="text-white font-bold"><%= parseFloat(player.dmg_min).toFixed(0) %></span>/min</div>
-                </div>
-              </div>
-            <% }); %>
+      <div class="w-full flex-1 space-y-3">
+          <div class="flex items-center justify-between px-2 py-2 border-b-2 border-blue-600 mb-2">
+             <span class="text-blue-500 font-black uppercase italic text-lg"><%= partida.azul_nombre %></span>
+             <div class="flex items-center gap-2">
+                 <span class="text-slate-400 text-xs font-bold uppercase mr-2"><%= esAzulGanador ? 'VICTORIA' : 'DERROTA' %></span>
+                 <span class="text-2xl font-black text-white"><%= partida.azul_kills %></span>
+             </div>
           </div>
-        </div>
 
-        <!-- Equipo Rojo Stats -->
-        <div>
-          <h3 class="text-xl font-bold text-white mb-4 border-b border-red-600 pb-2">
-            <i class="fas fa-users text-red-400 mr-2"></i><%= partida.rojo_nombre %>
-          </h3>
-          
-          <div class="space-y-3">
-            <% stats.filter(s => s.equipo_id === partida.rojo_id).forEach(player => { %>
-              <div class="bg-slate-800 rounded p-4 border border-slate-700 hover:border-red-600 transition">
-                <div class="flex items-center justify-between mb-3">
-                  <div>
-                    <h4 class="font-bold text-white"><%= player.nombre_invocador %></h4>
-                    <p class="text-xs text-slate-400"><%= player.champion_name %></p>
+          <% statsAzul.forEach(s => { 
+               const champId = getChampId(s.champion_name);
+               const deaths = Math.max(1, s.deaths);
+               const kdaRaw = (s.kills + s.assists) / deaths;
+               const kdaText = (s.deaths === 0 && (s.kills + s.assists) > 0) ? "Perfect" : kdaRaw.toFixed(2);
+               let kdaColor = "text-slate-500";
+               if (kdaText === "Perfect" || kdaRaw >= 5) kdaColor = "text-yellow-400";
+               else if (kdaRaw >= 3) kdaColor = "text-blue-300";
+          %>
+              <a href="/jugador/<%= s.jugador_id %>" class="relative h-20 w-full rounded-md overflow-hidden group border border-slate-800 hover:border-blue-500/80 transition-all block bg-slate-900">
+                  
+                  <div class="absolute right-0 top-0 bottom-0 w-72 z-0">
+                      <img src="https://ddragon.leagueoflegends.com/cdn/img/champion/centered/<%= champId %>_0.jpg" 
+                           class="w-full h-full object-cover object-center scale-105 opacity-50 group-hover:opacity-80 transition-all duration-500"
+                           style="-webkit-mask-image: linear-gradient(to left, black 40%, transparent 100%); mask-image: linear-gradient(to left, black 40%, transparent 100%);">
                   </div>
-                  <div class="text-right">
-                    <% if (player.win) { %>
-                      <span class="text-green-400 font-bold text-sm"><i class="fas fa-check"></i> Victoria</span>
-                    <% } else { %>
-                      <span class="text-red-400 font-bold text-sm"><i class="fas fa-times"></i> Derrota</span>
-                    <% } %>
-                  </div>
-                </div>
-                
-                <div class="grid grid-cols-4 gap-2 text-center text-sm mb-2">
-                  <div class="bg-slate-700/50 rounded p-2">
-                    <p class="text-slate-400 text-xs">K</p>
-                    <p class="font-bold text-green-400"><%= player.kills %></p>
-                  </div>
-                  <div class="bg-slate-700/50 rounded p-2">
-                    <p class="text-slate-400 text-xs">D</p>
-                    <p class="font-bold text-red-400"><%= player.deaths %></p>
-                  </div>
-                  <div class="bg-slate-700/50 rounded p-2">
-                    <p class="text-slate-400 text-xs">A</p>
-                    <p class="font-bold text-gold"><%= player.assists %></p>
-                  </div>
-                  <div class="bg-slate-700/50 rounded p-2">
-                    <p class="text-slate-400 text-xs">KDA</p>
-                    <% const kda = (player.deaths > 0) ? ((player.kills + player.assists) / player.deaths).toFixed(2) : (player.kills + player.assists); %>
-                    <p class="font-bold text-yellow-400"><%= kda %></p>
-                  </div>
-                </div>
 
-                <div class="grid grid-cols-2 gap-2 text-xs text-slate-400">
-                  <div>CS: <span class="text-white font-bold"><%= parseFloat(player.cs_min).toFixed(1) %></span>/min</div>
-                  <div>Dmg: <span class="text-white font-bold"><%= parseFloat(player.dmg_min).toFixed(0) %></span>/min</div>
-                </div>
-              </div>
-            <% }); %>
+                  <div class="relative z-10 h-full flex items-center px-4 gap-4">
+                      
+                      <div class="w-36 flex flex-col justify-center h-full shrink-0">
+                          <span class="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-0.5"><%= s.rol %></span>
+                          <span class="text-white font-bold text-sm leading-none truncate group-hover:text-blue-300 transition"><%= s.nombre_invocador %></span>
+                          <span class="text-[9px] text-slate-400 uppercase font-bold mt-1"><%= s.champion_name %></span>
+                      </div>
+
+                      <div class="flex-1 flex flex-col items-center justify-center h-full">
+                          <div class="font-mono font-black text-xl text-white tracking-widest">
+                              <%= s.kills %>/<span class="text-red-500"><%= s.deaths %></span>/<%= s.assists %>
+                          </div>
+                          <div class="text-[9px] font-bold uppercase <%= kdaColor %> tracking-widest mt-0.5">
+                              <%= kdaText %> KDA
+                          </div>
+                      </div>
+
+                      <div class="flex flex-col items-end justify-center w-28 text-right h-full shrink-0 pl-4">
+                          <div class="text-xs font-black text-white drop-shadow-md">
+                             <%= s.cs_min %> <span class="text-slate-300 text-[9px] uppercase font-bold">CS</span>
+                          </div>
+                          <div class="text-xs font-black text-white mt-1 drop-shadow-md">
+                             <%= (s.dmg_min / 1000).toFixed(1) %>k <span class="text-slate-300 text-[9px] uppercase font-bold">DMG</span>
+                          </div>
+                      </div>
+
+                  </div>
+              </a>
+          <% }) %>
+      </div>
+
+      <div class="hidden lg:flex flex-col items-center justify-center pt-24 opacity-10">
+          <div class="w-0.5 h-full bg-gradient-to-b from-transparent via-slate-500 to-transparent"></div>
+      </div>
+
+      <div class="w-full flex-1 space-y-3">
+          <div class="flex items-center justify-between px-2 py-2 border-b-2 border-red-600 mb-2 flex-row-reverse lg:flex-row">
+             <div class="flex items-center gap-2">
+                 <span class="text-2xl font-black text-white"><%= partida.rojo_kills %></span>
+                 <span class="text-slate-400 text-xs font-bold uppercase ml-2"><%= !esAzulGanador ? 'VICTORIA' : 'DERROTA' %></span>
+             </div>
+             <span class="text-red-500 font-black uppercase italic text-lg"><%= partida.rojo_nombre %></span>
           </div>
-        </div>
-      </div>
-    <% } else { %>
-      <div class="bg-slate-800 rounded-lg p-8 text-center border border-slate-700">
-        <i class="fas fa-chart-bar text-slate-600 text-4xl mb-3"></i>
-        <p class="text-slate-400">No hay estadísticas disponibles para esta partida</p>
-      </div>
-    <% } %>
 
-    <!-- Back Button -->
-    <div class="mt-8">
-      <a href="/calendario" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded transition">
-        <i class="fas fa-arrow-left"></i> Volver al Calendario
+          <% statsRojo.forEach(s => { 
+               const champId = getChampId(s.champion_name);
+               const deaths = Math.max(1, s.deaths);
+               const kdaRaw = (s.kills + s.assists) / deaths;
+               const kdaText = (s.deaths === 0 && (s.kills + s.assists) > 0) ? "Perfect" : kdaRaw.toFixed(2);
+               let kdaColor = "text-slate-500";
+               if (kdaText === "Perfect" || kdaRaw >= 5) kdaColor = "text-yellow-400";
+               else if (kdaRaw >= 3) kdaColor = "text-red-300";
+          %>
+              <a href="/jugador/<%= s.jugador_id %>" class="relative h-20 w-full rounded-md overflow-hidden group border border-slate-800 hover:border-red-500/80 transition-all block bg-slate-900">
+                  
+                  <div class="absolute left-0 top-0 bottom-0 w-72 z-0">
+                      <img src="https://ddragon.leagueoflegends.com/cdn/img/champion/centered/<%= champId %>_0.jpg" 
+                           class="w-full h-full object-cover object-center scale-105 opacity-50 group-hover:opacity-80 transition-all duration-500"
+                           style="-webkit-mask-image: linear-gradient(to right, black 40%, transparent 100%); mask-image: linear-gradient(to right, black 40%, transparent 100%);">
+                  </div>
+
+                  <div class="relative z-10 h-full flex items-center px-4 gap-4 flex-row-reverse">
+                      
+                      <div class="w-36 flex flex-col justify-center h-full shrink-0 text-right">
+                          <span class="text-[10px] font-black text-red-400 uppercase tracking-widest mb-0.5"><%= s.rol %></span>
+                          <span class="text-white font-bold text-sm leading-none truncate group-hover:text-red-300 transition"><%= s.nombre_invocador %></span>
+                          <span class="text-[9px] text-slate-400 uppercase font-bold mt-1"><%= s.champion_name %></span>
+                      </div>
+
+                      <div class="flex-1 flex flex-col items-center justify-center h-full">
+                          <div class="font-mono font-black text-xl text-white tracking-widest">
+                              <%= s.kills %>/<span class="text-red-500"><%= s.deaths %></span>/<%= s.assists %>
+                          </div>
+                          <div class="text-[9px] font-bold uppercase <%= kdaColor %> tracking-widest mt-0.5">
+                              <%= kdaText %> KDA
+                          </div>
+                      </div>
+
+                      <div class="flex flex-col items-start justify-center w-28 text-left h-full shrink-0 pr-4 mr-auto">
+                          <div class="text-xs font-black text-white drop-shadow-md">
+                             <%= s.cs_min %> <span class="text-slate-300 text-[9px] uppercase font-bold">CS</span>
+                          </div>
+                          <div class="text-xs font-black text-white mt-1 drop-shadow-md">
+                             <%= (s.dmg_min / 1000).toFixed(1) %>k <span class="text-slate-300 text-[9px] uppercase font-bold">DMG</span>
+                          </div>
+                      </div>
+
+                  </div>
+              </a>
+          <% }) %>
+      </div>
+
+  </div>
+
+  <div class="mt-16 flex flex-col items-center gap-4">
+      <% if (partida.vod_url) { %>
+        <a href="<%= partida.vod_url %>" target="_blank" class="flex items-center gap-3 bg-[#c4b998] hover:bg-[#a09472] text-slate-900 font-bold py-3 px-8 rounded-sm shadow-lg transition-all border border-[#938354]">
+            <i class="fas fa-play"></i>
+            <span class="uppercase tracking-widest text-xs">Ver Repetición</span>
+        </a>
+      <% } %>
+      
+      <a href="/calendario" class="text-slate-500 hover:text-white font-bold uppercase tracking-widest text-[10px] transition mt-4">
+          Volver al Calendario
       </a>
-    </div>
+  </div>
 
   <% } else { %>
-    <div class="bg-slate-800 rounded-lg p-8 text-center border border-slate-700">
-      <i class="fas fa-exclamation-circle text-red-400 text-4xl mb-3"></i>
-      <p class="text-red-400">Partida no encontrada</p>
+    <div class="min-h-[50vh] flex flex-col items-center justify-center text-center">
+        <h2 class="text-6xl font-black text-slate-800 uppercase italic mb-4">404</h2>
+        <a href="/calendario" class="text-yellow-500 hover:underline">Volver</a>
     </div>
   <% } %>
+
 </main>
+
+<style>
+  .text-shadow-gold { text-shadow: 0 0 25px rgba(250, 204, 21, 0.6); }
+</style>
 
 <%- include('partials/footer') %>

@@ -322,10 +322,12 @@ function initRows() {
 
     const rows = [];
     document.querySelectorAll('[id^="row-"]').forEach(row => {
-       const select = row.querySelector('select');
+       const selects = row.querySelectorAll('select');
+       const playerSelect = selects[1]; // El 2do select es el del JUGADOR (primero es el ROL)
+       const roleSelect = selects[0];   // El 1er select es el ROL
        const nameInput = row.querySelector('.new-player-name');
        
-       let jugId = select.value;
+       let jugId = playerSelect.value;
        let jugName = null;
 
        if (jugId === 'NEW' || !jugId) {

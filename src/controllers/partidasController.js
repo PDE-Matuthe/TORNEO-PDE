@@ -98,23 +98,25 @@ export async function getEditPartida (req, res) {
 
 /**
  * POST /admin/partidas/:id/update
+ * (Lógica corregida para VOD y En Vivo único)
  */
 export async function postUpdatePartida (req, res) {
   try {
     const { id } = req.params
-    let { fecha_partida, fase_torneo, estado, stream_url, swap_sides } = req.body
+    // Recibimos vod_url y NO stream_url
+    let { fecha_partida, fase_torneo, estado, swap_sides, vod_url } = req.body
 
+    // Si ponemos esta partida En Vivo, apagamos las demás automáticamente
     if (estado === 'EN_VIVO') {
-        if (!stream_url) {
-            estado = 'ACTIVO'; 
-        } else {
-            await partidasModel.resetOtrasPartidasEnVivo(id);
-        }
-    } else {
-        stream_url = null;
+        await partidasModel.resetOtrasPartidasEnVivo(id);
     }
 
-    const updates = { fecha_partida, fase_torneo, estado, stream_url };
+    const updates = { 
+        fecha_partida, 
+        fase_torneo, 
+        estado, 
+        vod_url // Guardamos el link de YouTube
+    };
     
     if (swap_sides === 'on') {
         const currentPartida = await partidasModel.getPartidaById(id);
@@ -159,7 +161,7 @@ export async function getPartidaDetalle (req, res) {
 }
 
 /**
- * POST /admin/partidas/:id/guardar-manual (CON ROL Y SUPLENTES)
+ * POST /admin/partidas/:id/guardar-manual
  */
 export async function postCargarStatsManual (req, res) {
   try {
@@ -186,7 +188,7 @@ export async function postCargarStatsManual (req, res) {
             
             const nuevoJugador = await jugadoresModel.createJugador({
                 nombre_invocador: nombreJugador,
-                rol_principal: row.rol || 'FILL', // Usamos el rol seleccionado como principal también
+                rol_principal: row.rol || 'FILL', 
                 rango: 'UNRANKED',
                 equipo_id: equipoId,
                 tipo_rol: 'SUPLENTE'
@@ -200,13 +202,13 @@ export async function postCargarStatsManual (req, res) {
          const cs = parseInt(row.cs) || 0
          const dmg = parseInt(row.dmg) || 0
          
-         // Guardar estadística con el ROL
+         // Guardar estadística
          await estadisticasModel.createEstadistica(
            id,
            jugadorId,
            equipoId,
            {
-             rol: row.rol, // <--- Importante: Pasamos el Rol
+             rol: row.rol,
              kills, deaths, assists,
              cs_min: cs,
              dmg_min: dmg,
@@ -226,7 +228,7 @@ export async function postCargarStatsManual (req, res) {
       estado: 'FINALIZADO'
     })
 
-    console.log(`📝 Stats guardadas con roles. Partida ${id} finalizada.`)
+    console.log(`📝 Stats guardadas. Partida ${id} finalizada.`)
     res.json({ success: true, redirect: `/admin/partidas/${id}/cargar?success=Datos guardados` });
 
   } catch (error) {
@@ -236,7 +238,7 @@ export async function postCargarStatsManual (req, res) {
 }
 
 /**
- * POST /admin/partidas/:id/import-riot (Legacy)
+ * POST /admin/partidas/:id/import-riot
  */
 export async function postImportRiotStats (req, res) {
   try {
@@ -261,7 +263,7 @@ export async function postImportRiotStats (req, res) {
       await estadisticasModel.createEstadistica(
         partidaId, jugador.id, equipoId,
         {
-          rol: stat.role || 'UNKNOWN', // Riot suele dar esto
+          rol: stat.role || 'UNKNOWN',
           kills: stat.kills, deaths: stat.deaths, assists: stat.assists,
           cs_min: stat.cs_min, dmg_min: stat.dmg_min,
           champion_name: stat.champion_name, win: stat.win

@@ -1,78 +1,62 @@
-<nav class="bg-slate-900 border-b border-yellow-600/30 shadow-lg relative z-50">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex items-center justify-between h-20">
-      
-      <div class="flex-shrink-0 flex items-center gap-3 cursor-pointer" onclick="window.location.href='/'">
-        <div class="h-10 w-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-[0_0_15px_orange]">
-          <i class="fas fa-dragon text-slate-900 text-xl"></i>
+<nav class="fixed w-full z-50 top-0 start-0 border-b border-white/10 bg-slate-900/90 backdrop-blur-md transition-all duration-300" id="mainNav">
+  <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between p-4">
+    
+    <a href="/" class="flex items-center space-x-3 rtl:space-x-reverse group">
+        <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 transform -skew-x-12 flex items-center justify-center shadow-lg group-hover:shadow-yellow-500/50 transition-all">
+            <span class="text-black font-black italic text-xl transform skew-x-12">P</span>
         </div>
-        <span class="text-white font-black text-xl tracking-wider uppercase hidden md:block">
-          Punilla <span class="text-yellow-500">Deers</span>
+        <span class="self-center text-xl font-black whitespace-nowrap text-white italic tracking-tighter uppercase group-hover:text-yellow-400 transition-colors">
+            Copa PDE
         </span>
-      </div>
+    </a>
 
-      <div class="hidden md:block">
-        <div class="ml-10 flex items-baseline space-x-6">
-          <a href="/" class="text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-md text-sm font-bold transition">Inicio</a>
-          <a href="/calendario" class="text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-md text-sm font-bold transition">Calendario</a>
-          <a href="/equipos" class="text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-md text-sm font-bold transition">Equipos</a>
-          <a href="/bracket" class="text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-md text-sm font-bold transition">Bracket</a>
-          <a href="/mvp" class="text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-md text-sm font-bold transition">MVP</a>
-        </div>
-      </div>
+    <button data-collapse-toggle="navbar-default" type="button" class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-slate-400 rounded-lg md:hidden hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-600" aria-controls="navbar-default" aria-expanded="false">
+        <span class="sr-only">Abrir menú</span>
+        <i class="fas fa-bars text-xl"></i>
+    </button>
 
-      <div class="hidden md:flex items-center gap-4">
-        <% if (locals.isLoggedIn) { %>
-          <a href="/admin" class="bg-yellow-600 hover:bg-yellow-500 text-black px-4 py-2 rounded font-bold text-sm shadow-lg hover:shadow-yellow-500/20 transition flex items-center gap-2">
-            <i class="fas fa-tachometer-alt"></i> Dashboard
+    <div class="hidden w-full md:block md:w-auto" id="navbar-default">
+      <ul class="font-bold flex flex-col p-4 md:p-0 mt-4 border border-slate-700 rounded-lg bg-slate-800 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-transparent">
+        
+        <li>
+          <a href="/" class="block py-2 px-3 text-white uppercase tracking-widest text-xs hover:text-yellow-400 md:p-0 transition-colors">Inicio</a>
+        </li>
+        <li>
+          <a href="/calendario" class="block py-2 px-3 text-slate-400 uppercase tracking-widest text-xs hover:text-white md:p-0 transition-colors">Calendario</a>
+        </li>
+        <li>
+          <a href="/equipos" class="block py-2 px-3 text-slate-400 uppercase tracking-widest text-xs hover:text-white md:p-0 transition-colors">Equipos</a>
+        </li>
+        <li>
+          <a href="/bracket" class="block py-2 px-3 text-slate-400 uppercase tracking-widest text-xs hover:text-white md:p-0 transition-colors">Bracket</a>
+        </li>
+        <li>
+          <a href="/mvp" class="block py-2 px-3 text-slate-400 uppercase tracking-widest text-xs hover:text-yellow-400 md:p-0 transition-colors flex items-center gap-1">
+             <i class="fas fa-crown text-[10px] mb-0.5"></i> MVP
           </a>
-          <a href="/logout" class="text-slate-400 hover:text-red-400 font-bold text-sm transition" title="Cerrar Sesión">
-            <i class="fas fa-sign-out-alt text-lg"></i>
-          </a>
-        <% } else { %>
-          <a href="/login" class="text-yellow-500 hover:text-white border border-yellow-600 hover:bg-yellow-600 px-4 py-2 rounded font-bold text-sm transition">
-            <i class="fas fa-user-circle mr-2"></i> Acceso Admin
-          </a>
-        <% } %>
-      </div>
+        </li>
+        
+        <li>
+            <a href="/admin" class="block py-2 px-3 text-slate-600 hover:text-red-500 md:p-0 transition-colors" title="Administración">
+                <i class="fas fa-cog"></i>
+            </a>
+        </li>
 
-      <div class="-mr-2 flex md:hidden">
-        <button onclick="toggleMenu()" type="button" class="bg-slate-800 inline-flex items-center justify-center p-2 rounded-md text-slate-400 hover:text-white hover:bg-slate-700 focus:outline-none">
-          <span class="sr-only">Abrir menú</span>
-          <i class="fas fa-bars text-xl"></i>
-        </button>
-      </div>
+      </ul>
     </div>
   </div>
-
-  <div class="hidden md:hidden bg-slate-800 border-t border-slate-700" id="mobile-menu">
-    <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-      <a href="/" class="text-slate-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Inicio</a>
-      <a href="/calendario" class="text-slate-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Calendario</a>
-      <a href="/equipos" class="text-slate-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Equipos</a>
-      <a href="/bracket" class="text-slate-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Bracket</a>
-      
-      <div class="border-t border-slate-700 mt-4 pt-4">
-        <% if (locals.isLoggedIn) { %>
-          <a href="/admin" class="text-yellow-500 hover:text-white block px-3 py-2 rounded-md text-base font-bold">
-            <i class="fas fa-tachometer-alt mr-2"></i> Ir al Dashboard
-          </a>
-          <a href="/logout" class="text-red-400 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
-            <i class="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión
-          </a>
-        <% } else { %>
-          <a href="/login" class="text-slate-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
-            <i class="fas fa-key mr-2"></i> Login Admin
-          </a>
-        <% } %>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    function toggleMenu() {
-      const menu = document.getElementById('mobile-menu');
-      menu.classList.toggle('hidden');
-    }
-  </script>
 </nav>
+
+<div class="h-20"></div>
+
+<script>
+    // Script simple para menú móvil
+    const btn = document.querySelector('[data-collapse-toggle="navbar-default"]');
+    const menu = document.getElementById('navbar-default');
+    
+    if(btn && menu) {
+        btn.addEventListener('click', () => {
+            menu.classList.toggle('hidden');
+        });
+    }
+</script>

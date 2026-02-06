@@ -1,175 +1,250 @@
 <%- include('partials/head') %>
 <%- include('partials/nav') %>
 
-<main class="min-h-screen bg-slate-900 py-12 px-4">
-  <div class="max-w-6xl mx-auto space-y-8">
+<% const DDRAGON_VER = "16.3.1"; %>
 
-    <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl overflow-hidden relative">
-      <div class="absolute inset-0 bg-gradient-to-r from-slate-900 to-slate-800 opacity-90"></div>
+<main class="max-w-7xl mx-auto px-4 py-12">
+
+  <% if (typeof jugador !== 'undefined' && jugador) { 
       
-      <div class="relative z-10 p-8 md:p-12 flex flex-col md:flex-row items-center gap-8">
-        
-        <div class="relative">
-          <div class="w-32 h-32 md:w-40 md:h-40 rounded-full bg-slate-700 border-4 border-slate-600 flex items-center justify-center shadow-xl">
-             <% 
-               let iconClass = 'fa-user';
-               if(jugador.rol_juego === 'TOP') iconClass = 'fa-arrow-up';
-               if(jugador.rol_juego === 'JUNGLE') iconClass = 'fa-tree';
-               if(jugador.rol_juego === 'MID') iconClass = 'fa-bolt';
-               if(jugador.rol_juego === 'ADC') iconClass = 'fa-crosshairs';
-               if(jugador.rol_juego === 'SUPPORT') iconClass = 'fa-hand-holding-heart';
-               if(jugador.tipo_rol === 'COACH') iconClass = 'fa-brain';
-             %>
-             <i class="fas <%= iconClass %> text-5xl md:text-6xl text-slate-400"></i>
-          </div>
-          <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-yellow-500 text-black font-bold text-xs uppercase tracking-widest rounded shadow-lg whitespace-nowrap">
-            <%= jugador.tipo_rol %>
-          </div>
-        </div>
+     // 1. CORRECCIÓN DE VARIABLES (El error "stats is not defined" se arregla aquí)
+     // El controlador manda 'resumen', no 'stats'.
+     const r = resumen || {};
+     
+     // Usamos Number() para asegurar cálculos matemáticos
+     const kills = Number(r.total_kills || 0);
+     const deaths = Number(r.total_deaths || 0);
+     const assists = Number(r.total_assists || 0);
+     const games = Number(r.partidas_jugadas || 0);
+     const wins = Number(r.victorias || 0);
 
-        <div class="text-center md:text-left flex-1">
-          <h1 class="text-4xl md:text-5xl font-black text-white tracking-tighter mb-2">
-            <%= jugador.nombre_invocador %>
-          </h1>
+     // Cálculos seguros (evitar división por cero)
+     const kdaRatio = deaths === 0 ? (kills + assists) : ((kills + assists) / deaths).toFixed(2);
+     const winrate = games > 0 ? ((wins / games) * 100).toFixed(0) : 0;
+     const avgCs = games > 0 ? (Number(r.total_cs || 0) / games).toFixed(1) : 0;
+     const avgDmg = games > 0 ? (Number(r.total_dmg || 0) / games / 1000).toFixed(1) : 0;
+
+     // Campeón Principal (para el fondo)
+     const mainChamp = (typeof topChampions !== 'undefined' && topChampions.length > 0) ? topChampions[0].champion_name : 'Aatrox';
+     
+     // Función para limpiar nombres raros (Wukong, Renata, etc.)
+     function getChampId(name) {
+          if (!name) return 'Aatrox';
+          const exceptions = {
+              "Wukong": "MonkeyKing", "Renata Glasc": "Renata", "Renata": "Renata",
+              "Nunu & Willump": "Nunu", "Nunu": "Nunu", "Bel'Veth": "Belveth",
+              "Kai'Sa": "Kaisa", "Kha'Zix": "Khazix", "Vel'Koz": "Velkoz",
+              "Cho'Gath": "Chogath", "LeBlanc": "Leblanc", "Fiddlesticks": "Fiddlesticks",
+              "K'Sante": "KSante", "Dr. Mundo": "DrMundo", "Kog'Maw": "KogMaw",
+              "Rek'Sai": "RekSai", "Master Yi": "MasterYi", "Jarvan IV": "JarvanIV",
+              "Lee Sin": "LeeSin", "Xin Zhao": "XinZhao", "Miss Fortune": "MissFortune",
+              "Twisted Fate": "TwistedFate", "Tahm Kench": "TahmKench", "Aurelion Sol": "AurelionSol",
+              "Aurora": "Aurora", "Ambessa": "Ambessa", "Hwei": "Hwei", "Smolder": "Smolder"
+          };
+          return exceptions[name] || name.replace(/[\s'.]/g, ''); 
+     }
+  %>
+
+<div class="relative w-full h-80 rounded-2xl overflow-hidden mb-12 border border-slate-700 shadow-2xl group">
+      
+      <div class="absolute inset-0">
+          <img src="https://ddragon.leagueoflegends.com/cdn/img/champion/splash/<%= getChampId(mainChamp) %>_0.jpg" 
+               class="w-full h-full object-cover object-top opacity-40 group-hover:scale-105 transition-transform duration-1000"
+               onerror="this.src='https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Aatrox_0.jpg'">
+          <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent"></div>
+          <div class="absolute inset-0 bg-gradient-to-r from-slate-900 via-transparent to-transparent"></div>
+      </div>
+
+      <div class="relative z-10 h-full flex flex-col justify-end p-8 md:p-12">
           
-          <div class="flex flex-wrap justify-center md:justify-start gap-4 items-center text-slate-300 mb-4">
-            <% if (jugador.equipo_nombre) { %>
-              <a href="/equipos/<%= jugador.equipo_id %>" class="flex items-center gap-2 hover:text-white transition">
-                <i class="fas fa-shield-alt text-blue-400"></i>
-                <span class="font-bold text-lg"><%= jugador.equipo_nombre %></span>
-              </a>
-            <% } else { %>
-              <span class="flex items-center gap-2 text-slate-500">
-                <i class="fas fa-user-tag"></i> Agente Libre
-              </span>
-            <% } %>
+          <div class="flex items-end gap-6">
+              
+              <% 
+                 // Usamos 'rol_juego' que es el nombre real en tu BD
+                 let rawRol = (jugador.rol_juego || 'FILL').toUpperCase();
+                 let displayRol = rawRol;
 
-            <span class="text-slate-600">|</span>
+                 const mapRoles = {
+                     'TOP': 'TOP',
+                     'JUNGLE': 'JG',  'JGL': 'JG',
+                     'MID': 'MID',    'MIDDLE': 'MID',
+                     'ADC': 'ADC',    'BOT': 'ADC', 'BOTTOM': 'ADC',
+                     'SUPPORT': 'SUP', 'SUPP': 'SUP'
+                 };
 
-            <span class="flex items-center gap-2">
-              <i class="fas fa-map-marker-alt text-red-400"></i>
-              <span class="font-bold"><%= jugador.rol_juego || 'Sin Posición' %></span>
-            </span>
+                 if (mapRoles[rawRol]) {
+                     displayRol = mapRoles[rawRol];
+                 } else if (rawRol !== 'FILL') {
+                     displayRol = rawRol.substring(0, 3);
+                 }
+              %>
+
+              <div class="mb-1">
+                  <h1 class="text-5xl md:text-7xl font-black text-white italic uppercase tracking-tighter leading-none drop-shadow-lg">
+                      <%= jugador.nombre_invocador %>
+                  </h1>
+                  <div class="flex items-center gap-3 mt-2">
+                      <% if (jugador.equipo_nombre) { %>
+                          <span class="text-2xl text-yellow-500 font-bold uppercase tracking-widest"><%= jugador.equipo_nombre %></span>
+                      <% } else { %>
+                          <span class="text-slate-500 font-bold uppercase tracking-widest">Agente Libre</span>
+                      <% } %>
+                  </div>
+                  <h4 class="text-3xl md:text-3xl font-black text-white italic uppercase tracking-tighter leading-none drop-shadow-lg">
+                      <%= displayRol %>
+                  </h4>
+              </div>
           </div>
-        </div>
-
-        <% 
-           // CORRECCIÓN AQUÍ: Usamos Number() para evitar concatenación de strings
-           const k = Number(stats.total_kills || 0);
-           const d = Number(stats.total_deaths || 0);
-           const a = Number(stats.total_assists || 0);
-           
-           // Cálculo seguro
-           const kdaRatio = d > 0 ? ((k + a) / d).toFixed(2) : (k + a).toFixed(2);
-           const kdaDisplay = (d === 0 && (k+a) > 0) ? "Perfect" : kdaRatio;
-        %>
-        <div class="bg-slate-900/50 p-6 rounded-xl border border-slate-700 text-center min-w-[150px]">
-           <div class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">KDA RATIO</div>
-           <div class="text-4xl font-black text-yellow-400"><%= stats.total_partidas > 0 ? kdaRatio : '-' %></div>
-        </div>
 
       </div>
-    </div>
+  </div>
 
-    <% if (stats.total_partidas > 0) { %>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        
-        <% const wr = ((Number(stats.victorias) / Number(stats.total_partidas)) * 100).toFixed(1); %>
-        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 text-center">
-          <div class="text-3xl font-bold <%= wr >= 50 ? 'text-green-400' : 'text-red-400' %>"><%= wr %>%</div>
-          <div class="text-slate-500 text-xs font-bold uppercase mt-1">Win Ratio</div>
-          <div class="text-xs text-slate-600 mt-1"><%= stats.victorias %>W - <%= stats.total_partidas - stats.victorias %>L</div>
-        </div>
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 text-center">
-          <div class="text-3xl font-bold text-white"><%= stats.total_kills %></div>
-          <div class="text-slate-500 text-xs font-bold uppercase mt-1">Asesinatos</div>
-        </div>
+      <div class="space-y-6">
+          
+          <div class="bg-slate-900 border border-slate-700 p-6 rounded-xl relative overflow-hidden group">
+              <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                  <i class="fas fa-chart-pie text-6xl text-blue-500"></i>
+              </div>
+              <div class="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">KDA Ratio</div>
+              <div class="text-5xl font-black text-white italic tracking-tighter"><%= kdaRatio %></div>
+              <div class="text-sm text-slate-400 font-mono mt-2">
+                  <span class="text-green-400"><%= kills %></span> / <span class="text-red-400"><%= deaths %></span> / <span class="text-yellow-400"><%= assists %></span>
+              </div>
+          </div>
 
-        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 text-center">
-          <div class="text-3xl font-bold text-blue-300"><%= Math.round(Number(stats.total_minions)).toLocaleString() %></div>
-          <div class="text-slate-500 text-xs font-bold uppercase mt-1">Minions Totales</div>
-        </div>
+          <div class="bg-slate-900 border border-slate-700 p-6 rounded-xl relative overflow-hidden group">
+              <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                  <i class="fas fa-trophy text-6xl text-yellow-500"></i>
+              </div>
+              <div class="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">Winrate</div>
+              <div class="text-5xl font-black <%= winrate >= 50 ? 'text-green-400' : 'text-red-400' %> italic tracking-tighter">
+                  <%= winrate %>%
+              </div>
+              <div class="text-sm text-slate-400 font-mono mt-2">
+                  <%= wins %>W - <%= games - wins %>L (<%= games %> Games)
+              </div>
+          </div>
 
-        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 text-center">
-          <div class="text-3xl font-bold text-purple-300"><%= stats.total_partidas %></div>
-          <div class="text-slate-500 text-xs font-bold uppercase mt-1">Partidas Jugadas</div>
-        </div>
-        
+          <div class="grid grid-cols-2 gap-4">
+              <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl">
+                  <div class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">CS / Min</div>
+                  <div class="text-2xl font-black text-white"><%= avgCs %></div>
+              </div>
+              <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl">
+                  <div class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Dmg / Min</div>
+                  <div class="text-2xl font-black text-white"><%= avgDmg %>k</div>
+              </div>
+          </div>
+
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
-        <div class="bg-slate-800 rounded-xl p-6 border border-slate-700">
-          <h3 class="text-white font-bold uppercase tracking-widest mb-6 border-b border-slate-700 pb-2">
-            <i class="fas fa-crosshairs text-red-500 mr-2"></i> Combate
+      <div class="lg:col-span-2 space-y-6">
+          <h3 class="text-xl text-white font-black italic uppercase tracking-widest border-b border-slate-800 pb-2">
+              Top Campeones
           </h3>
-          <div class="flex justify-around items-center text-center py-4">
-             <div>
-                <div class="text-2xl font-bold text-green-400"><%= stats.total_kills %></div>
-                <div class="text-xs text-slate-500 uppercase">Kills</div>
-             </div>
-             <div class="text-2xl text-slate-600 font-light">/</div>
-             <div>
-                <div class="text-2xl font-bold text-red-400"><%= stats.total_deaths %></div>
-                <div class="text-xs text-slate-500 uppercase">Deaths</div>
-             </div>
-             <div class="text-2xl text-slate-600 font-light">/</div>
-             <div>
-                <div class="text-2xl font-bold text-yellow-400"><%= stats.total_assists %></div>
-                <div class="text-xs text-slate-500 uppercase">Assists</div>
-             </div>
-          </div>
-        </div>
 
-        <div class="bg-slate-800 rounded-xl p-6 border border-slate-700">
-          <h3 class="text-white font-bold uppercase tracking-widest mb-6 border-b border-slate-700 pb-2">
-            <i class="fas fa-trophy text-yellow-500 mr-2"></i> Mejores Campeones
+          <div class="grid gap-3">
+              <% if (typeof topChampions !== 'undefined' && topChampions.length > 0) { %>
+                  <% topChampions.forEach(champ => { 
+                      const cId = getChampId(champ.champion_name);
+                      const cWins = Number(champ.victorias);
+                      const cGames = Number(champ.partidas);
+                      const cWr = cGames > 0 ? ((cWins / cGames) * 100).toFixed(0) : 0;
+                      const cKills = Number(champ.total_kills);
+                      const cDeaths = Number(champ.total_deaths);
+                      const cAssists = Number(champ.total_assists);
+                      const cKda = cDeaths === 0 ? (cKills+cAssists) : ((cKills+cAssists)/cDeaths).toFixed(2);
+                  %>
+                  <div class="relative h-20 w-full rounded-md overflow-hidden group border border-slate-800 hover:border-yellow-500/50 transition-all block bg-slate-900">
+                      
+                      <div class="absolute left-0 top-0 bottom-0 w-64 z-0">
+                          <img src="https://ddragon.leagueoflegends.com/cdn/img/champion/centered/<%= cId %>_0.jpg" 
+                               class="w-full h-full object-cover object-center scale-110 opacity-60 group-hover:opacity-100 transition-all duration-500"
+                               style="-webkit-mask-image: linear-gradient(to right, black 40%, transparent 100%); mask-image: linear-gradient(to right, black 40%, transparent 100%);">
+                      </div>
+
+                      <div class="relative z-10 h-full flex items-center justify-between px-6 pl-32 md:pl-48">
+                          <div class="flex flex-col">
+                              <span class="text-2xl font-black text-white italic tracking-tighter uppercase"><%= champ.champion_name %></span>
+                              <span class="text-xs text-slate-400 font-bold"><%= cGames %> Partidas</span>
+                          </div>
+                          <div class="flex items-center gap-8 text-right">
+                              <div>
+                                  <div class="text-xl font-bold <%= cWr >= 50 ? 'text-green-400' : 'text-slate-400' %>"><%= cWr %>%</div>
+                                  <div class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Winrate</div>
+                              </div>
+                              <div class="hidden md:block">
+                                  <div class="text-xl font-bold text-yellow-500"><%= cKda %></div>
+                                  <div class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">KDA</div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+                  <% }) %>
+              <% } else { %>
+                  <div class="text-slate-500 italic p-4 text-center bg-slate-900 rounded border border-slate-800">
+                      Sin datos de campeones aún.
+                  </div>
+              <% } %>
+          </div>
+
+          <h3 class="text-xl text-white font-black italic uppercase tracking-widest border-b border-slate-800 pb-2 mt-8">
+              Historial Reciente
           </h3>
           
-          <div class="space-y-4">
-            <% if (topChampions && topChampions.length > 0) { %>
-              <% topChampions.forEach((champ, index) => { %>
-                <div class="flex items-center gap-4 bg-slate-900/50 p-3 rounded-lg border border-slate-700">
-                  <div class="w-8 h-8 flex items-center justify-center font-black text-slate-600 italic">
-                    #<%= index + 1 %>
+          <div class="space-y-2">
+              <% if (typeof estadisticas !== 'undefined' && estadisticas.length > 0) { %>
+                  <% estadisticas.slice(0, 5).forEach(stat => { 
+                      const isWin = (stat.win === 1);
+                      const sCId = getChampId(stat.champion_name);
+                  %>
+                  <a href="/partida/<%= stat.partida_id %>" class="flex items-center justify-between bg-slate-900 border-l-4 <%= isWin ? 'border-l-green-500' : 'border-l-red-500' %> border-y border-r border-slate-800 p-3 hover:bg-slate-800 transition group">
+                      
+                      <div class="flex items-center gap-4">
+                          <img src="https://ddragon.leagueoflegends.com/cdn/<%= DDRAGON_VER %>/img/champion/<%= sCId %>.png" 
+                               class="w-10 h-10 rounded-sm border border-slate-600 grayscale group-hover:grayscale-0 transition shadow-lg"
+                               onerror="this.src='https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/-1.png'">
+                          
+                          <div class="flex flex-col">
+                              <span class="font-bold text-white text-sm <%= isWin ? 'text-green-400' : 'text-red-400' %>"><%= isWin ? 'Victoria' : 'Derrota' %></span>
+                              <span class="text-xs text-slate-500 font-bold uppercase"><%= stat.champion_name %></span>
+                          </div>
+                      </div>
+
+                      <div class="flex items-center gap-6">
+                          <div class="text-right">
+                              <div class="font-mono font-bold text-slate-200"><%= stat.kills %>/<%= stat.deaths %>/<%= stat.assists %></div>
+                              <div class="text-[9px] text-slate-500 font-bold uppercase">KDA</div>
+                          </div>
+                          <div class="hidden md:block text-right w-16">
+                              <div class="font-bold text-slate-400"><%= stat.cs_min %></div>
+                              <div class="text-[9px] text-slate-600 font-bold uppercase">CS</div>
+                          </div>
+                          <i class="fas fa-chevron-right text-slate-700 group-hover:text-yellow-500 transition"></i>
+                      </div>
+
+                  </a>
+                  <% }) %>
+              <% } else { %>
+                  <div class="text-slate-500 italic p-4 text-center bg-slate-900 rounded border border-slate-800">
+                      No hay partidas registradas.
                   </div>
-                  <div class="flex-1">
-                    <div class="text-white font-bold"><%= champ.champion_name %></div>
-                    <div class="text-xs text-slate-500"><%= champ.juegos %> partidas</div>
-                  </div>
-                  <% const champWr = ((Number(champ.victorias) / Number(champ.juegos)) * 100).toFixed(0); %>
-                  <div class="text-right">
-                    <div class="<%= champWr >= 50 ? 'text-green-400' : 'text-red-400' %> font-bold"><%= champWr %>% WR</div>
-                    <div class="text-xs text-yellow-500 font-bold">KDA <%= parseFloat(champ.kda).toFixed(2) %></div>
-                  </div>
-                </div>
-              <% }) %>
-            <% } else { %>
-              <div class="text-center py-8 text-slate-500 text-sm">Sin datos de campeones aún.</div>
-            <% } %>
+              <% } %>
           </div>
-        </div>
 
       </div>
-
-    <% } else { %>
-      <div class="bg-slate-800 rounded-xl p-12 text-center border border-slate-700">
-        <div class="bg-slate-900/50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-          <i class="fas fa-chart-bar text-3xl text-slate-600"></i>
-        </div>
-        <h3 class="text-xl font-bold text-white">Debut Pendiente</h3>
-        <p class="text-slate-400 mt-2">Este jugador aún no ha disputado partidas oficiales en el torneo.</p>
-      </div>
-    <% } %>
-
-    <div class="text-center">
-      <a href="javascript:history.back()" class="text-slate-500 hover:text-white transition flex items-center justify-center gap-2">
-        <i class="fas fa-arrow-left"></i> Volver atrás
-      </a>
-    </div>
 
   </div>
+
+  <% } else { %>
+    <div class="text-center py-20">
+        <h2 class="text-3xl text-white font-black">Jugador no encontrado</h2>
+        <a href="/" class="text-yellow-500 mt-4 block">Volver al inicio</a>
+    </div>
+  <% } %>
+
 </main>
 
 <%- include('partials/footer') %>

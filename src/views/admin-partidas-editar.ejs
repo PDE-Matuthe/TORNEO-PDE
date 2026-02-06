@@ -77,24 +77,24 @@
           
           <div>
             <label class="block text-slate-300 text-xs font-bold mb-2 uppercase tracking-wide">Estado Actual</label>
-            <select name="estado" id="estadoSelect" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500 transition font-bold">
+            <select name="estado" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500 transition font-bold">
               <option value="ACTIVO" <%= partida.estado === 'ACTIVO' ? 'selected' : '' %>>📅 Activo (Programado)</option>
               <option value="EN_VIVO" <%= partida.estado === 'EN_VIVO' ? 'selected' : '' %> class="text-red-400">🔴 En Vivo (Live)</option>
               <option value="FINALIZADO" <%= partida.estado === 'FINALIZADO' ? 'selected' : '' %> class="text-green-400">🏁 Finalizado</option>
               <option value="CANCELADO" <%= partida.estado === 'CANCELADO' ? 'selected' : '' %> class="text-slate-500">❌ Cancelado</option>
             </select>
+            <p class="text-[10px] text-slate-500 mt-2">
+               Nota: Al poner "En Vivo", cualquier otra partida activa se apagará automáticamente.
+            </p>
           </div>
 
-          <div id="streamInputContainer" class="<%= partida.estado === 'EN_VIVO' ? '' : 'opacity-50 pointer-events-none' %> transition-all duration-300">
-            <label class="block text-slate-300 text-xs font-bold mb-2 uppercase tracking-wide flex justify-between">
-              <span>Link del Directo</span>
-              <span class="text-red-400 text-[10px] hidden" id="reqTag">* Requerido</span>
-            </label>
+          <div>
+            <label class="block text-slate-300 text-xs font-bold mb-2 uppercase tracking-wide">Link del Video (VOD)</label>
             <div class="relative">
-              <input type="url" name="stream_url" id="streamUrl" value="<%= partida.stream_url %>" placeholder="https://twitch.tv/..." class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 pl-10 text-white focus:outline-none focus:border-red-500 transition placeholder-slate-600">
-              <i class="fab fa-twitch absolute left-3 top-3.5 text-purple-500"></i>
+              <input type="url" name="vod_url" value="<%= partida.vod_url || '' %>" placeholder="https://youtube.com/watch?v=..." class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 pl-10 text-white focus:outline-none focus:border-red-500 transition placeholder-slate-600">
+              <i class="fab fa-youtube absolute left-3 top-3.5 text-red-500"></i>
             </div>
-            <p class="text-[10px] text-slate-500 mt-1">Solo una partida puede estar "En Vivo" a la vez.</p>
+            <p class="text-[10px] text-slate-500 mt-1">Pega el link del partido resubido aquí cuando finalice.</p>
           </div>
 
         </div>
@@ -112,44 +112,20 @@
 </main>
 
 <script>
-  // Script para manejar la visibilidad del input de Stream
-  const estadoSelect = document.getElementById('estadoSelect');
-  const streamContainer = document.getElementById('streamInputContainer');
-  const streamInput = document.getElementById('streamUrl');
-  const reqTag = document.getElementById('reqTag');
+  // Script simplificado solo para el Swap visual
   const swapCheck = document.getElementById('swapCheck');
   const sideBlue = document.getElementById('sideBlue');
   const sideRed = document.getElementById('sideRed');
 
-  // Lógica Estado En Vivo
-  function toggleStreamInput() {
-    if (estadoSelect.value === 'EN_VIVO') {
-      streamContainer.classList.remove('opacity-50', 'pointer-events-none');
-      streamInput.required = true;
-      reqTag.classList.remove('hidden');
-    } else {
-      streamContainer.classList.add('opacity-50', 'pointer-events-none');
-      streamInput.required = false;
-      reqTag.classList.add('hidden');
-    }
-  }
-
-  // Lógica Visual Swap (Intercambiar columnas visualmente)
   swapCheck.addEventListener('change', () => {
     if (swapCheck.checked) {
-      sideBlue.classList.add('order-last'); // Tailwind flex order
+      sideBlue.classList.add('order-last');
       sideRed.classList.add('order-first');
     } else {
       sideBlue.classList.remove('order-last');
       sideRed.classList.remove('order-first');
     }
   });
-
-  estadoSelect.addEventListener('change', toggleStreamInput);
-  
-  // Init
-  toggleStreamInput();
-
 </script>
 
 <%- include('partials/footer') %>
