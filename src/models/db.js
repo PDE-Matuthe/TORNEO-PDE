@@ -7,15 +7,11 @@ dotenv.config()
 // Crear pool de conexiones
 // NOTA: Usamos las variables MYSQL... que son las que Railway usa por defecto
 const pool = mysql.createPool({
-  connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT || '10'),
-  host: process.env.MYSQLHOST || process.env.DB_HOST || 'localhost',
-  user: process.env.MYSQLUSER || process.env.DB_USER || 'root',
-  password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD || '',
-  database: process.env.MYSQLDATABASE || process.env.DB_NAME || 'torneodb',
-  port: parseInt(process.env.MYSQLPORT || process.env.DB_PORT || '3306'),
-  waitForConnections: true,
-  enableKeepAlive: true
-  // Se eliminó keepAliveInitialDelayMs porque causaba advertencias en tu versión
+  user: process.env.MYSQLUSER || 'root',
+  password: process.env.MYSQLPASSWORD | '',
+  host: process.env.MYSQLHOST || 'localhost',
+  database: process.env.MYSQLDATABASE || 'torneodb',
+  port: parseInt(process.env.MYSQLPORT|| '3306')
 })
 
 // Probar la conexión al inicio
