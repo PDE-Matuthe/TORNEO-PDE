@@ -8,7 +8,7 @@ dotenv.config()
 // NOTA: Usamos las variables MYSQL... que son las que Railway usa por defecto
 const pool = mysql.createPool({
   user: process.env.MYSQLUSER || 'root',
-  password: process.env.MYSQLPASSWORD | '',
+  password: process.env.MYSQLPASSWORD || '',
   host: process.env.MYSQLHOST || 'localhost',
   database: process.env.MYSQLDATABASE || 'torneodb',
   port: parseInt(process.env.MYSQLPORT|| '3306'),
