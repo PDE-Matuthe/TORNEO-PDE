@@ -99,7 +99,7 @@
 
         const kda = Number(player.kda_ratio || 0).toFixed(2);
         const rolDisplay = roleMap[(player.rol_juego || '').toUpperCase()] || (player.rol_juego || 'FILL');
-        const profileLink = `/perfil/${player.id}`; 
+        const profileLink = `/jugador/${player.id}`; 
         const cardId = `player-${player.id}`; // ID ÚNICO PARA SCROLL
 
         return `
@@ -131,7 +131,7 @@
     function getListItemHTML(player, displayRank) {
         const kda = Number(player.kda_ratio || 0).toFixed(2);
         const rolDisplay = roleMap[(player.rol_juego || '').toUpperCase()] || (player.rol_juego || 'FILL');
-        const profileLink = `/perfil/${player.id}`;
+        const profileLink = `/jugador/${player.id}`;
         const cardId = `player-${player.id}`; // ID ÚNICO PARA SCROLL
 
         return `
