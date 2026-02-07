@@ -11,7 +11,7 @@
   </div>
 
   <% 
-     // --- LÓGICA DE DATOS ---
+// --- LÓGICA DE DATOS ---
      const fasesOrder = ['Dieciseisavos', 'Octavos', 'Cuartos', 'Semifinal', 'Final'];
      const bracketData = {};
      fasesOrder.forEach(f => bracketData[f] = []);
@@ -25,8 +25,25 @@
          });
      }
 
-     let activeFases = fasesOrder.filter(f => bracketData[f].length > 0);
-     if (activeFases.length === 0) activeFases = ['Octavos', 'Cuartos', 'Semifinal', 'Final'];
+     // MODIFICACIÓN: Definimos que si hay al menos una partida en Octavos (o superior),
+     // forzamos la visualización de toda la estructura competitiva estándar.
+     let activeFases = [];
+     
+     // Comprobamos si hay alguna partida cargada en el torneo
+     const tienePartidas = fasesOrder.some(f => bracketData[f].length > 0);
+
+     if (tienePartidas) {
+         // Si hay Dieciseisavos, mostramos todo desde ahí. 
+         // Si no, empezamos la estructura desde Octavos como base mínima.
+         if (bracketData['Dieciseisavos'].length > 0) {
+             activeFases = ['Dieciseisavos', 'Octavos', 'Cuartos', 'Semifinal', 'Final'];
+         } else {
+             activeFases = ['Octavos', 'Cuartos', 'Semifinal', 'Final'];
+         }
+     } else {
+         // Si el torneo está vacío, mostramos la estructura estándar por defecto
+         activeFases = ['Octavos', 'Cuartos', 'Semifinal', 'Final'];
+     }
   %>
 
   <div class="flex flex-row items-stretch justify-center px-10 pb-20 min-w-max">
