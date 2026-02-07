@@ -8,37 +8,80 @@ import * as jugadoresModel from '../models/jugadores.js'
 import * as estadisticasModel from '../models/estadisticas.js' 
 import { getPartidasBracket } from '../models/partidas.js';
 import { getTorneoActivo } from '../models/torneos.js'; 
+import Parser from 'rss-parser'; // <--- IMPORTANTE: Importar el parser
 
+// Instancia del parser
+const parser = new Parser();
 
-/**
- * GET / - Home
- */
 export async function getHome (req, res) {
   try {
+    // 1. Obtener datos de la BD (Lo que ya tenías)
     const torneoActivo = await torneosModel.getTorneoActivo()
     const allTorneos = await torneosModel.getAllTorneos();
     const allEquipos = await equiposModel.getAllEquipos();
     const allJugadores = await jugadoresModel.getAllJugadores();
     const allPartidas = await partidasModel.getAllPartidas();
 
+    // 2. LÓGICA YOUTUBE AUTOMÁTICA
+    // Reemplaza 'UC...' con TU ID REAL que conseguiste en el Paso 1
+    const YOUTUBE_CHANNEL_ID = 'UCtGaMEQCeCmmSiiYGWXFAhg'; 
+    let videosYoutube = [];
+
+    try {
+        // Leemos el feed RSS oficial de YouTube
+        const feed = await parser.parseURL(`https://www.youtube.com/feeds/videos.xml?channel_id=${YOUTUBE_CHANNEL_ID}`);
+        
+        // Tomamos los primeros 3 videos y formateamos los datos
+        videosYoutube = feed.items.slice(0, 3).map(video => ({
+            id: video.id.split(':')[2], // El ID viene como 'yt:video:VIDEO_ID'
+            titulo: video.title,
+            link: video.link,
+            fecha: new Date(video.pubDate).toLocaleDateString()
+        }));
+    } catch (err) {
+        console.error('Error cargando YouTube:', err.message);
+        // Si falla, dejamos el array vacío para que no rompa la página
+        videosYoutube = []; 
+    }
+
+    const stats = { 
+        torneos: allTorneos.length, 
+        equipos: allEquipos.length, 
+        jugadores: allJugadores.length, 
+        partidas: allPartidas.length 
+    };
+
+    // Preparar datos si no hay torneo
     if (!torneoActivo) {
       return res.render('home', {
         error: 'No hay torneo activo',
-        torneo: null,
-        stats: { torneos: allTorneos.length, equipos: allEquipos.length, jugadores: allJugadores.length, partidas: allPartidas.length },
-        partidasHoy: []
+        torneoActivo: null,
+        stats,
+        partidasHoy: [],
+        ultimasPartidas: [],
+        videosYoutube // <--- Pasamos los videos a la vista
       })
     }
 
     const partidasTorneo = await partidasModel.getPartidasByTorneo(torneoActivo.id)
+    
+    // Filtros de fechas y resultados
     const hoyString = new Date().toISOString().split('T')[0];
     const partidasHoy = partidasTorneo.filter(p => new Date(p.fecha_partida).toISOString().split('T')[0] === hoyString);
+    
+    const ultimasPartidas = partidasTorneo
+        .filter(p => p.ganador_id !== null) 
+        .sort((a, b) => new Date(b.fecha_partida) - new Date(a.fecha_partida))
+        .slice(0, 3); 
 
     res.render('home', {
-      torneo: torneoActivo,
-      stats: { torneos: allTorneos.length, equipos: allEquipos.length, jugadores: allJugadores.length, partidas: allPartidas.length },
-      partidasHoy
+      torneoActivo,
+      stats,
+      partidasHoy,
+      ultimasPartidas,
+      videosYoutube // <--- Pasamos los videos a la vista
     })
+
   } catch (error) {
     console.error('Error en getHome:', error.message)
     res.status(500).render('error', { codigo: 500, mensaje: 'Error al cargar inicio' })
