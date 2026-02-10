@@ -1,7 +1,10 @@
 <%- include('partials/head') %>
-<%- include('partials/nav') %>
 
-<main class="max-w-3xl mx-auto px-4 py-16">
+<div class="flex min-h-screen bg-slate-950 font-sans text-slate-300">
+    
+    <%- include('partials/admin-sidebar', { active: 'partidas' }) %>
+
+    <main class="flex-1 ml-64 p-8 relative overflow-y-auto min-h-screen">
   
   <div class="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 overflow-hidden">
     
@@ -109,7 +112,9 @@
 
     </form>
   </div>
-</main>
+    </main>
+
+</div>
 
 <script>
   // Script simplificado solo para el Swap visual

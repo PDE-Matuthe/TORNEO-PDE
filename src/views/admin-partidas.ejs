@@ -1,172 +1,211 @@
 <%- include('partials/head') %>
-<%- include('partials/nav') %>
 
-<main class="max-w-5xl mx-auto px-4 py-10">
-  
-  <div class="flex flex-col md:flex-row justify-between items-end mb-8 gap-4 border-b border-slate-700 pb-6">
-    <div>
-      <h1 class="text-4xl font-black text-white italic tracking-tighter uppercase">
-        <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600">Gestión</span> de Partidas
-      </h1>
-      <p class="text-slate-400 mt-1">Organizado por Torneos</p>
-    </div>
+<div class="flex min-h-screen bg-slate-950 font-sans text-slate-300">
     
-    <div class="flex gap-3 w-full md:w-auto">
-      <a href="/admin/partidas/crear" class="bg-yellow-600 hover:bg-yellow-500 text-black font-bold py-3 px-6 rounded-lg transition shadow-lg shadow-yellow-900/20 flex items-center justify-center gap-2 transform hover:-translate-y-0.5 w-full md:w-auto">
-        <i class="fas fa-plus"></i> <span>Nueva Partida</span>
-      </a>
-    </div>
-  </div>
+    <%- include('partials/admin-sidebar', { active: 'partidas' }) %>
 
-  <div class="space-y-6">
-    
-    <% if (Object.keys(partidasPorTorneo).length > 0) { %>
-      <% Object.keys(partidasPorTorneo).forEach((nombreTorneo, index) => { %>
-        <% const partidas = partidasPorTorneo[nombreTorneo]; %>
+    <main class="flex-1 ml-64 p-8 relative overflow-y-auto min-h-screen">
         
-        <div class="bg-slate-900 rounded-xl border border-slate-700 overflow-hidden">
-          
-          <button onclick="toggleAccordion('torneo-<%= index %>')" class="w-full flex items-center justify-between p-5 bg-slate-800 hover:bg-slate-750 transition border-b border-slate-700 group text-left">
-            <div class="flex items-center gap-4">
-              <div class="w-10 h-10 bg-slate-700 rounded-lg flex items-center justify-center text-yellow-500 shadow-inner">
-                <i class="fas fa-trophy text-lg"></i>
-              </div>
-              <div>
-                <h2 class="text-xl font-bold text-white group-hover:text-yellow-400 transition"><%= nombreTorneo %></h2>
-                <span class="text-sm text-slate-500"><%= partidas.length %> partidos registrados</span>
-              </div>
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-3xl font-black text-white tracking-tight uppercase italic">Gestión de <span class="text-yellow-500">Partidas</span></h1>
+                <p class="text-slate-500 text-sm mt-1">Administra los enfrentamientos, resultados y horarios.</p>
             </div>
-            <i id="icon-torneo-<%= index %>" class="fas fa-chevron-down text-slate-500 transition-transform duration-300 transform -rotate-90"></i>
-          </button>
-
-          <div id="torneo-<%= index %>" class="hidden bg-slate-900/50 p-4 space-y-3 border-t border-slate-700 shadow-inner">
-            
-            <% partidas.forEach(p => { %>
-              
-              <div class="relative bg-slate-800 rounded-lg border border-slate-700 overflow-hidden hover:border-slate-500 transition duration-200 group flex flex-col md:flex-row items-center">
-                
-                <% 
-                  let statusColor = 'bg-slate-500';
-                  if(p.estado === 'EN_VIVO') statusColor = 'bg-red-600';
-                  if(p.estado === 'FINALIZADO') statusColor = 'bg-green-500';
-                  if(p.estado === 'ACTIVO') statusColor = 'bg-blue-500';
-                %>
-                <div class="absolute left-0 top-0 bottom-0 w-1 <%= statusColor %>"></div>
-
-                <div class="p-3 w-full md:w-36 text-center md:text-left md:pl-5 flex flex-col justify-center h-full">
-                   <div class="text-white font-bold text-sm">
-                      <%= new Date(p.fecha_partida).toLocaleDateString('es-ES', {day: '2-digit', month: 'short'}) %>
-                   </div>
-                   <div class="text-[10px] text-slate-500 uppercase font-bold mb-1"><%= p.fase_torneo %></div>
-                   
-                   <div class="mt-1">
-                     <% if (p.estado === 'EN_VIVO') { %>
-                        <span class="inline-block bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded animate-pulse shadow-lg shadow-red-900/50">
-                          ● EN VIVO
-                        </span>
-                     <% } else if (p.estado === 'FINALIZADO') { %>
-                        <span class="inline-block bg-green-900/30 text-green-400 border border-green-800 text-[10px] font-bold px-2 py-0.5 rounded">
-                          FINALIZADO
-                        </span>
-                     <% } else if (p.estado === 'CANCELADO') { %>
-                        <span class="inline-block bg-slate-700 text-slate-400 border border-slate-600 text-[10px] font-bold px-2 py-0.5 rounded line-through">
-                          CANCELADO
-                        </span>
-                     <% } else { %>
-                        <span class="inline-block bg-blue-900/30 text-blue-400 border border-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">
-                          <%= new Date(p.fecha_partida).toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'}) %> HS
-                        </span>
-                     <% } %>
-                   </div>
-                </div>
-
-                <div class="flex-grow p-2 flex items-center justify-center gap-4 md:gap-8 w-full">
-                  <div class="flex items-center justify-end gap-2 flex-1 text-right">
-                    <span class="hidden md:inline text-sm font-bold text-blue-400 truncate"><%= p.azul_nombre %></span>
-                    <span class="md:hidden text-sm font-bold text-blue-400"><%= p.azul_siglas %></span>
-                    <img src="<%= p.azul_logo %>" onerror="this.src='https://via.placeholder.com/30'" class="w-8 h-8 object-contain bg-slate-900 rounded-full p-0.5 border border-blue-900/30">
-                  </div>
-                  
-                  <div class="font-mono font-bold text-white bg-slate-900 px-3 py-1 rounded border border-slate-700 text-sm min-w-[60px] text-center">
-                    <% if(p.estado === 'FINALIZADO' || p.ganador_id) { %>
-                       <span class="<%= p.azul_kills > p.rojo_kills ? 'text-green-400' : '' %>"><%= p.azul_kills %></span> 
-                       <span class="text-slate-600">:</span>
-                       <span class="<%= p.rojo_kills > p.azul_kills ? 'text-green-400' : '' %>"><%= p.rojo_kills %></span>
-                    <% } else { %>
-                       <span class="text-slate-500 italic text-xs">VS</span>
-                    <% } %>
-                  </div>
-
-                  <div class="flex items-center justify-start gap-2 flex-1 text-left">
-                    <img src="<%= p.rojo_logo %>" onerror="this.src='https://via.placeholder.com/30'" class="w-8 h-8 object-contain bg-slate-900 rounded-full p-0.5 border border-red-900/30">
-                    <span class="hidden md:inline text-sm font-bold text-red-400 truncate"><%= p.rojo_nombre %></span>
-                    <span class="md:hidden text-sm font-bold text-red-400"><%= p.rojo_siglas %></span>
-                  </div>
-                </div>
-
-                <div class="p-3 flex gap-2 w-full md:w-auto justify-end md:justify-center border-t md:border-t-0 md:border-l border-slate-700 bg-slate-800/80">
-                  
-                  <a href="/admin/partidas/<%= p.id %>/editar" class="w-8 h-8 flex items-center justify-center bg-slate-700 hover:bg-white hover:text-slate-900 text-slate-400 rounded transition" title="Configurar Partida">
-                    <i class="fas fa-cog text-xs"></i>
-                  </a>
-
-                  <% if (p.estado !== 'FINALIZADO' && !p.ganador_id) { %>
-                    <a href="/admin/partidas/<%= p.id %>/cargar" class="w-8 h-8 flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white rounded transition shadow-lg shadow-blue-900/20" title="Cargar Resultados">
-                       <i class="fas fa-upload text-xs"></i>
-                    </a>
-                  <% } else { %>
-                    <a href="/admin/partidas/<%= p.id %>/cargar" class="w-8 h-8 flex items-center justify-center bg-green-600 hover:bg-green-500 text-white rounded transition shadow-lg shadow-green-900/20" title="Ver Detalles">
-                       <i class="fas fa-chart-bar text-xs"></i>
-                    </a>
-                  <% } %>
-
-                  <form action="/admin/partidas/<%= p.id %>/delete" method="POST" class="inline">
-                    <button type="submit" class="w-8 h-8 flex items-center justify-center bg-red-900/20 hover:bg-red-600 text-red-500 hover:text-white rounded transition border border-red-900/30" onclick="return confirm('¿Borrar partida?')">
-                      <i class="fas fa-trash text-xs"></i>
-                    </button>
-                  </form>
-
-                </div>
-
-              </div>
-
-            <% }) %>
-
-          </div>
+            <div class="flex gap-3">
+                 <a href="/admin/partidas/crear" class="inline-flex items-center px-5 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-slate-950 text-sm font-bold uppercase tracking-wider rounded shadow-lg shadow-yellow-500/20 transition-all transform hover:-translate-y-0.5">
+                    <i class="fas fa-plus mr-2"></i> Nueva Partida
+                </a>
+            </div>
         </div>
-      <% }) %>
-    <% } else { %>
-      <div class="text-center py-20 bg-slate-800 rounded-xl border border-slate-700">
-        <i class="fas fa-folder-open text-4xl text-slate-600 mb-4"></i>
-        <h3 class="text-xl font-bold text-white">No hay torneos activos</h3>
-        <p class="text-slate-500">Crea un torneo y programa partidas para verlas aquí.</p>
+
+        <div class="bg-slate-900/50 border border-slate-800 rounded-lg p-4 mb-6 flex flex-wrap gap-4 items-center">
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Filtrar por:</span>
+          
+          <select id="filtroTorneo" onchange="aplicarFiltros()" class="bg-slate-950 border border-slate-700 text-slate-300 text-sm rounded px-3 py-1.5 focus:border-yellow-500 focus:outline-none min-w-[200px]">
+              <option value="todos">Todos los Torneos</option>
+              <% if (locals.torneos) { %>
+                  <% torneos.forEach(t => { %>
+                      <option value="<%= t.id %>" <%= (locals.filtroTorneo === t.id) ? 'selected' : '' %>>
+                          <%= t.nombre %>
+                      </option>
+                  <% }) %>
+              <% } %>
+          </select>
+
+          <select id="filtroFase" onchange="aplicarFiltros()" class="bg-slate-950 border border-slate-700 text-slate-300 text-sm rounded px-3 py-1.5 focus:border-yellow-500 focus:outline-none">
+              <option value="todas">Todas las Fases</option>
+              <% const fases = ['Fase de Grupos', 'Dieciseisavos', 'Octavos', 'Cuartos', 'Semifinal', 'Final']; %>
+              <% fases.forEach(f => { %>
+                  <option value="<%= f %>" <%= (locals.filtroFase === f) ? 'selected' : '' %>>
+                      <%= f %>
+                  </option>
+              <% }) %>
+          </select>
+
+          <% if (locals.filtroTorneo !== 'todos' || locals.filtroFase !== 'todas') { %>
+              <a href="/admin/partidas" class="text-xs text-red-400 hover:text-red-300 underline ml-auto">
+                  <i class="fas fa-times mr-1"></i> Borrar filtros
+              </a>
+          <% } %>
       </div>
-    <% } %>
 
-  </div>
-</main>
+        <div class="bg-slate-900 border border-slate-800 rounded-lg shadow-xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-800">
+                    <thead class="bg-slate-950/50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">ID / Fecha</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Enfrentamiento</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Torneo / Fase</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Orden Bracket</th> <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Estado</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-bold text-slate-400 uppercase tracking-wider">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/50">
+                        <% if (partidas && partidas.length > 0) { %>
+                            <% partidas.forEach(partida => { %>
+                            <tr class="hover:bg-slate-800/30 transition-colors group">
+                                
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-bold text-white font-mono">
+                                        <%= new Date(partida.fecha_partida).toLocaleDateString() %>
+                                    </div>
+                                    <div class="text-xs text-slate-500 font-mono mt-0.5">
+                                        <%= new Date(partida.fecha_partida).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) %>
+                                    </div>
+                                    <div class="text-[10px] text-slate-600 font-mono mt-1">#<%= partida.id.substring(0,6) %></div>
+                                </td>
 
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="flex items-center justify-end w-28 space-x-2">
+                                            <span class="text-sm font-medium text-slate-300 truncate"><%= partida.azul_nombre || 'TBD' %></span>
+                                            <img class="h-6 w-6 rounded-full bg-slate-800 object-contain p-0.5 border border-blue-500/30" src="<%= partida.azul_logo || '/images/default-logo.png' %>" alt="">
+                                        </div>
+                                        
+                                        <span class="text-slate-600 font-black text-xs">VS</span>
+                                        
+                                        <div class="flex items-center w-28 space-x-2">
+                                            <img class="h-6 w-6 rounded-full bg-slate-800 object-contain p-0.5 border border-red-500/30" src="<%= partida.rojo_logo || '/images/default-logo.png' %>" alt="">
+                                            <span class="text-sm font-medium text-slate-300 truncate"><%= partida.rojo_nombre || 'TBD' %></span>
+                                        </div>
+                                    </div>
+                                    <% if (partida.ganador_id) { %>
+                                        <div class="mt-2 text-center">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-green-900/30 text-green-400 border border-green-500/20">
+                                                <i class="fas fa-crown mr-1 text-[8px]"></i>
+                                                Ganador: <%= (partida.ganador_id === partida.equipo_azul_id) ? partida.azul_nombre : partida.rojo_nombre %>
+                                            </span>
+                                        </div>
+                                    <% } %>
+                                </td>
+
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-slate-300 font-bold"><%= partida.torneo_nombre %></div>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-800 text-slate-400 border border-slate-700 mt-1">
+                                        <%= partida.fase_torneo %>
+                                    </span>
+                                </td>
+                                
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <form action="/admin/partidas/<%= partida.id %>/orden" method="POST" class="flex items-center gap-2">
+                                        
+                                        <input type="hidden" name="torneo_actual" value="<%= locals.filtroTorneo || 'todos' %>">
+                                        <input type="hidden" name="fase_actual" value="<%= locals.filtroFase || 'todas' %>">
+                                        
+                                        <input 
+                                            type="number" 
+                                            name="posicion_bracket" 
+                                            value="<%= partida.posicion_bracket || 0 %>" 
+                                            min="1"
+                                            class="w-16 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-white text-center text-sm focus:border-yellow-500 focus:outline-none transition-colors placeholder-slate-600"
+                                        >
+                                        <button type="submit" ...> <i class="fas fa-save text-xs"></i> </button>
+                                    </form>
+                                </td>
+
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <% if (partida.estado === 'FINALIZADA' || partida.estado === 'FINALIZADO') { %>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-800 text-slate-400 border border-slate-700">
+                                            Finalizada
+                                        </span>
+                                    <% } else if (partida.estado === 'EN_VIVO' || partida.estado === 'EN VIVO') { %>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-900/30 text-red-500 border border-red-500/30 animate-pulse">
+                                            <span class="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5"></span>
+                                            En Vivo
+                                        </span>
+                                    <% } else { %>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-900/30 text-blue-400 border border-blue-500/30">
+                                            Programada
+                                        </span>
+                                    <% } %>
+                                </td>
+
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <div class="flex justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                                        <a href="/admin/partidas/<%= partida.id %>/cargar" class="text-blue-400 hover:text-blue-300 bg-blue-900/20 hover:bg-blue-900/40 p-2 rounded transition-colors" title="Cargar Resultados">
+                                            <i class="fas fa-file-upload"></i>
+                                        </a>
+                                        <a href="/admin/partidas/<%= partida.id %>/editar" class="text-yellow-500 hover:text-yellow-400 bg-yellow-900/20 hover:bg-yellow-900/40 p-2 rounded transition-colors" title="Editar Detalles">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button onclick="confirmarBorrado('<%= partida.id %>')" class="text-red-500 hover:text-red-400 bg-red-900/20 hover:bg-red-900/40 p-2 rounded transition-colors" title="Eliminar">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="6" class="px-6 py-12 text-center text-slate-500">
+                                    <i class="fas fa-gamepad text-4xl mb-3 opacity-30"></i>
+                                    <p class="text-sm">No hay partidas registradas aún.</p>
+                                    <a href="/admin/partidas/crear" class="text-yellow-500 hover:underline text-xs mt-2 inline-block">Crear la primera</a>
+                                </td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-  function toggleAccordion(id) {
-    const content = document.getElementById(id);
-    const icon = document.getElementById('icon-' + id);
-    
-    // Toggle visibilidad
-    if (content.classList.contains('hidden')) {
-      content.classList.remove('hidden');
-      // Rotar flecha hacia abajo (0deg)
-      icon.classList.remove('-rotate-90');
-      icon.classList.add('rotate-0');
-    } else {
-      content.classList.add('hidden');
-      // Rotar flecha hacia la izquierda (-90deg)
-      icon.classList.remove('rotate-0');
-      icon.classList.add('-rotate-90');
+    function confirmarBorrado(id) {
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "No podrás revertir esto. Se perderán las estadísticas asociadas.",
+            icon: 'warning',
+            background: '#0f172a',
+            color: '#fff',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#334155',
+            confirmButtonText: 'Sí, borrar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // SOLUCIÓN: Crear un formulario invisible para enviar POST
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/admin/partidas/${id}/delete`;
+                document.body.appendChild(form);
+                form.submit();
+            }
+        })
     }
-  }
-  
-  // NOTA: Se eliminó el script que abría automáticamente el primer torneo.
-  // Ahora todos inician cerrados.
+
+    function aplicarFiltros() {
+        const torneo = document.getElementById('filtroTorneo').value;
+        const fase = document.getElementById('filtroFase').value;
+        // Redirige a la misma página con los parámetros Query
+        window.location.href = `/admin/partidas?torneo=${torneo}&fase=${fase}`;
+    }
 </script>
 
-<%- include('partials/footer') %>
+</body>
+</html>

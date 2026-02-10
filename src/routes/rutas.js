@@ -90,6 +90,7 @@ router.post('/admin/jugadores/:id/delete', isAuthenticated, isAdmin, jugadoresCo
 router.get('/admin/partidas', isAuthenticated, isAdmin, partidasController.getPartidas)
 router.get('/admin/partidas/crear', isAuthenticated, isAdmin, partidasController.getCreatePartida)
 router.post('/admin/partidas', isAuthenticated, isAdmin, partidasController.postCreatePartida)
+router.post('/admin/partidas/:id/orden', isAuthenticated, isAdmin, partidasController.actualizarOrdenPartida);
 
 // 2. Edición (Configuración)
 router.get('/admin/partidas/:id/editar', isAuthenticated, isAdmin, partidasController.getEditPartida)

@@ -23,38 +23,48 @@ export async function resetOtrasPartidasEnVivo (partidaExcluidaId) {
 /**
  * Obtener todas las partidas (Para el Admin)
  */
-export async function getAllPartidas () {
-  try {
-    const [rows] = await pool.query(`
+// En src/models/partidas.js
+
+export const getAllPartidas = async (filtros = {}) => {
+    let query = `
       SELECT 
-        BIN_TO_UUID(p.id) as id,
-        p.fecha_partida,
-        p.fase_torneo,
-        p.estado,
+        p.id, p.fecha_partida, p.fase_torneo, p.estado, p.posicion_bracket,
         t.nombre as torneo_nombre,
-        BIN_TO_UUID(p.torneo_id) as torneo_id,
+        ea.nombre as azul_nombre, ea.logo_url as azul_logo,
+        er.nombre as rojo_nombre, er.logo_url as rojo_logo,
         BIN_TO_UUID(p.ganador_id) as ganador_id,
-        p.riot_match_id, p.duracion_segundos,
-        BIN_TO_UUID(p.equipo_azul_id) as azul_id,
-        ea.nombre as azul_nombre, ea.logo_url as azul_logo, ea.siglas as azul_siglas,
-        COALESCE(SUM(CASE WHEN e.equipo_id = p.equipo_azul_id THEN e.kills ELSE 0 END), 0) as azul_kills,
-        BIN_TO_UUID(p.equipo_rojo_id) as rojo_id,
-        er.nombre as rojo_nombre, er.logo_url as rojo_logo, er.siglas as rojo_siglas,
-        COALESCE(SUM(CASE WHEN e.equipo_id = p.equipo_rojo_id THEN e.kills ELSE 0 END), 0) as rojo_kills
+        BIN_TO_UUID(p.equipo_azul_id) as equipo_azul_id,
+        BIN_TO_UUID(p.equipo_rojo_id) as equipo_rojo_id
       FROM partidas p
-      LEFT JOIN torneos t ON p.torneo_id = t.id
-      JOIN equipos ea ON p.equipo_azul_id = ea.id
-      JOIN equipos er ON p.equipo_rojo_id = er.id
-      LEFT JOIN estadisticas e ON p.id = e.partida_id
-      GROUP BY p.id, ea.id, er.id, t.id
-      ORDER BY t.fecha_inicio DESC, p.fecha_partida DESC
-    `)
-    return rows
-  } catch (error) {
-    console.error('Error en getAllPartidas:', error.message)
-    throw error
-  }
-}
+      JOIN torneos t ON p.torneo_id = t.id
+      LEFT JOIN equipos ea ON p.equipo_azul_id = ea.id
+      LEFT JOIN equipos er ON p.equipo_rojo_id = er.id
+      WHERE 1=1
+    `;
+
+    const params = [];
+
+    // --- FILTROS DINÁMICOS ---
+    if (filtros.torneoId && filtros.torneoId !== 'todos') {
+        query += ' AND p.torneo_id = UUID_TO_BIN(?)';
+        params.push(filtros.torneoId);
+    }
+
+    if (filtros.fase && filtros.fase !== 'todas') {
+        query += ' AND p.fase_torneo = ?';
+        params.push(filtros.fase);
+    }
+    // -------------------------
+
+    query += ' ORDER BY p.fecha_partida DESC';
+
+    const [rows] = await pool.execute(query, params);
+    
+    return rows.map(row => ({
+        ...row,
+        id: Buffer.isBuffer(row.id) ? uuid.stringify(row.id) : row.id
+    }));
+};
 
 /**
  * Obtener partidas de un torneo (Para el Home/Calendario)
@@ -239,11 +249,11 @@ export async function getPartidasBracket (torneoId) {
   try {
     const [rows] = await pool.query(`
       SELECT 
-        p.id, p.fecha_partida, p.fase_torneo, p.estado,
-        -- Solo traemos el ID del ganador, ya no buscamos resultados numéricos
+        p.id, p.fecha_partida, p.fase_torneo, p.estado, p.posicion_bracket,
+        -- Traemos el ID del ganador
         BIN_TO_UUID(p.ganador_id) as ganador_id,
         
-        -- IDs de los equipos (usando los nombres correctos de tu BD)
+        -- IDs de los equipos (usando tus nombres: azul/rojo)
         BIN_TO_UUID(p.equipo_azul_id) as azul_id,
         BIN_TO_UUID(p.equipo_rojo_id) as rojo_id,
         
@@ -254,11 +264,14 @@ export async function getPartidasBracket (torneoId) {
       LEFT JOIN equipos ea ON p.equipo_azul_id = ea.id
       LEFT JOIN equipos er ON p.equipo_rojo_id = er.id
       WHERE p.torneo_id = UUID_TO_BIN(?)
-      ORDER BY p.fecha_partida ASC
+      -- ORDEN CLAVE: Primero por Fase (en orden de torneo) y luego por su lugar en el bracket
+      ORDER BY FIELD(p.fase_torneo, 'Dieciseisavos', 'Octavos', 'Cuartos', 'Semifinal', 'Final'), 
+               p.posicion_bracket ASC
     `, [torneoId])
 
     return rows.map(r => ({
         ...r,
+        // Mantengo tu mapeo de ID original
         id: Buffer.isBuffer(r.id) ? uuid.stringify(r.id) : r.id
     }));
 
@@ -267,3 +280,4 @@ export async function getPartidasBracket (torneoId) {
     throw error
   }
 }
+

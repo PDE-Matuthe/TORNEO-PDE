@@ -11,7 +11,7 @@
   </div>
 
   <% 
-// --- LÓGICA DE DATOS ---
+     // --- LÓGICA DE DATOS ---
      const fasesOrder = ['Dieciseisavos', 'Octavos', 'Cuartos', 'Semifinal', 'Final'];
      const bracketData = {};
      fasesOrder.forEach(f => bracketData[f] = []);
@@ -25,23 +25,16 @@
          });
      }
 
-     // MODIFICACIÓN: Definimos que si hay al menos una partida en Octavos (o superior),
-     // forzamos la visualización de toda la estructura competitiva estándar.
      let activeFases = [];
-     
-     // Comprobamos si hay alguna partida cargada en el torneo
      const tienePartidas = fasesOrder.some(f => bracketData[f].length > 0);
 
      if (tienePartidas) {
-         // Si hay Dieciseisavos, mostramos todo desde ahí. 
-         // Si no, empezamos la estructura desde Octavos como base mínima.
          if (bracketData['Dieciseisavos'].length > 0) {
              activeFases = ['Dieciseisavos', 'Octavos', 'Cuartos', 'Semifinal', 'Final'];
          } else {
              activeFases = ['Octavos', 'Cuartos', 'Semifinal', 'Final'];
          }
      } else {
-         // Si el torneo está vacío, mostramos la estructura estándar por defecto
          activeFases = ['Octavos', 'Cuartos', 'Semifinal', 'Final'];
      }
   %>
@@ -49,16 +42,15 @@
   <div class="flex flex-row items-stretch justify-center px-10 pb-20 min-w-max">
 
     <% activeFases.forEach((fase, faseIndex) => { 
-         const matches = bracketData[fase] || [];
-         
-         // Cálculo de slots (relleno TBD)
-         let idealCount = 0;
-         if (faseIndex === activeFases.length - 1) idealCount = 1;
-         else if (faseIndex === activeFases.length - 2) idealCount = 2;
-         else if (faseIndex === activeFases.length - 3) idealCount = 4;
-         else idealCount = Math.max(matches.length, 8);
+          const matches = bracketData[fase] || [];
+          
+          let idealCount = 0;
+          if (faseIndex === activeFases.length - 1) idealCount = 1;
+          else if (faseIndex === activeFases.length - 2) idealCount = 2;
+          else if (faseIndex === activeFases.length - 3) idealCount = 4;
+          else idealCount = Math.max(matches.length, 8);
 
-         const loopCount = Math.max(matches.length, idealCount);
+          const loopCount = Math.max(matches.length, idealCount);
     %>
 
     <div class="flex flex-col justify-center relative min-w-[300px]">
@@ -69,40 +61,66 @@
             </span>
         </div>
         
-        <div class="flex flex-col justify-around flex-grow gap-6"> <% for(let i = 0; i < loopCount; i++) {
-                   const match = matches[i];
+        <div class="flex flex-col justify-around flex-grow gap-6"> 
+            <% for(let i = 0; i < loopCount; i++) {
+                const match = matches[i];
             %>
                 
                 <div class="w-full bg-slate-900 border border-slate-700/60 rounded-lg overflow-hidden shadow-xl relative z-10 transition-all duration-300 hover:border-yellow-500/50 hover:shadow-[0_0_20px_rgba(234,179,8,0.1)] hover:-translate-y-1 group">
                     
                     <% if (match) { 
-                         const isAzulWinner = match.ganador_id && match.ganador_id === match.azul_id;
-                         const isRojoWinner = match.ganador_id && match.ganador_id === match.rojo_id;
-                         const hasWinner = match.ganador_id ? true : false;
+                          const isAzulWinner = match.ganador_id && match.ganador_id === match.azul_id;
+                          const isRojoWinner = match.ganador_id && match.ganador_id === match.rojo_id;
+                          const hasWinner = match.ganador_id ? true : false;
                     %>
                         <a href="/partida/<%= match.id %>" class="block">
-                            <div class="flex items-center justify-between px-4 py-3 border-b border-slate-800/50 bg-slate-900/50 <%= isAzulWinner ? 'bg-gradient-to-r from-green-900/10 to-transparent' : '' %>">
-                                <div class="flex items-center gap-3">
-                                    <img src="<%= match.azul_logo %>" class="w-6 h-6 object-contain drop-shadow-md" onerror="this.src='https://via.placeholder.com/24'">
-                                    <span class="text-sm font-bold truncate max-w-[130px] <%= isAzulWinner ? 'text-yellow-400' : 'text-slate-200' %> transition-colors group-hover:text-white"><%= match.azul_nombre %></span>
+                            
+                            <% if (match.azul_nombre) { %>
+                                <div class="flex items-center justify-between px-4 py-3 border-b border-slate-800/50 bg-slate-900/50 <%= isAzulWinner ? 'bg-gradient-to-r from-green-900/10 to-transparent' : '' %>">
+                                    <div class="flex items-center gap-3">
+                                        <img src="<%= match.azul_logo || '/images/default-logo.png' %>" 
+                                             class="w-6 h-6 object-contain drop-shadow-md" 
+                                             onerror="this.onerror=null; this.src='/images/default-logo.png';">
+                                        <span class="text-sm font-bold truncate max-w-[130px] <%= isAzulWinner ? 'text-yellow-400' : 'text-slate-200' %> transition-colors group-hover:text-white">
+                                            <%= match.azul_nombre %>
+                                        </span>
+                                    </div>
+                                    <span class="font-mono font-bold text-slate-500"><%= hasWinner ? (isAzulWinner ? '1' : '0') : '-' %></span>
                                 </div>
-                                <span class="font-mono font-bold text-slate-500"><%= hasWinner ? (isAzulWinner ? '1' : '0') : '-' %></span>
-                            </div>
+                            <% } else { %>
+                                <div class="flex items-center gap-3 px-4 py-3 border-b border-slate-800 bg-slate-900/30">
+                                    <div class="w-6 h-6 bg-slate-800 rounded-full flex-shrink-0"></div>
+                                    <span class="text-sm font-bold text-slate-500 italic">Por definir</span>
+                                </div>
+                            <% } %>
 
-                            <div class="flex items-center justify-between px-4 py-3 <%= isRojoWinner ? 'bg-gradient-to-r from-green-900/10 to-transparent' : '' %>">
-                                <div class="flex items-center gap-3">
-                                    <img src="<%= match.rojo_logo %>" class="w-6 h-6 object-contain drop-shadow-md" onerror="this.src='https://via.placeholder.com/24'">
-                                    <span class="text-sm font-bold truncate max-w-[130px] <%= isRojoWinner ? 'text-yellow-400' : 'text-slate-200' %> transition-colors group-hover:text-white"><%= match.rojo_nombre %></span>
+
+                            <% if (match.rojo_nombre) { %>
+                                <div class="flex items-center justify-between px-4 py-3 <%= isRojoWinner ? 'bg-gradient-to-r from-green-900/10 to-transparent' : '' %>">
+                                    <div class="flex items-center gap-3">
+                                        <img src="<%= match.rojo_logo || '/images/default-logo.png' %>" 
+                                             class="w-6 h-6 object-contain drop-shadow-md" 
+                                             onerror="this.onerror=null; this.src='/images/default-logo.png';">
+                                        <span class="text-sm font-bold truncate max-w-[130px] <%= isRojoWinner ? 'text-yellow-400' : 'text-slate-200' %> transition-colors group-hover:text-white">
+                                            <%= match.rojo_nombre %>
+                                        </span>
+                                    </div>
+                                    <span class="font-mono font-bold text-slate-500"><%= hasWinner ? (isRojoWinner ? '1' : '0') : '-' %></span>
                                 </div>
-                                <span class="font-mono font-bold text-slate-500"><%= hasWinner ? (isRojoWinner ? '1' : '0') : '-' %></span>
-                            </div>
+                            <% } else { %>
+                                <div class="flex items-center gap-3 px-4 py-3 bg-slate-900/30">
+                                    <div class="w-6 h-6 bg-slate-800 rounded-full flex-shrink-0"></div>
+                                    <span class="text-sm font-bold text-slate-500 italic">Por definir</span>
+                                </div>
+                            <% } %>
+
                         </a>
                         
                         <div class="px-3 py-1.5 bg-slate-950 flex justify-between items-center text-[9px] text-slate-600 font-bold uppercase tracking-wider border-t border-slate-800">
                             <span>#<%= match.id.substring(0,4) %></span>
-                            <% if(match.estado === 'EN_VIVO') { %> 
+                            <% if(match.estado === 'EN_VIVO' || match.estado === 'EN VIVO') { %> 
                                 <span class="text-red-500 animate-pulse flex items-center gap-1"><i class="fas fa-circle text-[6px]"></i> LIVE</span> 
-                            <% } else if(match.estado === 'FINALIZADO') { %> 
+                            <% } else if(match.estado === 'FINALIZADO' || match.estado === 'FINALIZADA') { %> 
                                 <span class="text-green-600">Finalizado</span> 
                             <% } else { %>
                                 <span><%= new Date(match.fecha_partida).toLocaleDateString(undefined, {month:'short', day:'numeric'}) %></span>

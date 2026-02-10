@@ -1,7 +1,10 @@
 <%- include('partials/head') %>
-<%- include('partials/nav') %>
 
-<main class="max-w-7xl mx-auto px-4 py-8">
+<div class="flex min-h-screen bg-slate-950 font-sans text-slate-300">
+    
+    <%- include('partials/admin-sidebar', { active: 'torneos' }) %>
+
+    <main class="flex-1 ml-64 p-8 relative overflow-y-auto min-h-screen">
   <div class="flex justify-between items-center mb-8">
     <div>
       <h1 class="text-4xl font-bold mb-2 text-white">
@@ -82,6 +85,10 @@
       </a>
     </div>
   <% } %>
+
+    </main>
+
+</div>
 </main>
 
 <%- include('partials/footer') %>

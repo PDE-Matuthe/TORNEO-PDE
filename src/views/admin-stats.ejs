@@ -1,5 +1,10 @@
 <%- include('partials/head') %>
-<%- include('partials/nav') %>
+
+<div class="flex min-h-screen bg-slate-950 font-sans text-slate-300">
+    
+    <%- include('partials/admin-sidebar', { active: 'partidas' }) %>
+
+    <main class="flex-1 ml-64 p-8 relative overflow-y-auto min-h-screen">
 
 <div class="container mt-5">
   <div class="d-flex justify-content-between align-items-center mb-4">
@@ -89,6 +94,10 @@
       <i class="fas fa-save"></i> Guardar Estadísticas
     </button>
   </form>
+</div>
+
+    </main>
+
 </div>
 
 <%- include('partials/footer') %>

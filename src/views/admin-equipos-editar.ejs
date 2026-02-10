@@ -1,7 +1,10 @@
 <%- include('partials/head') %>
-<%- include('partials/nav') %>
 
-<main class="max-w-6xl mx-auto px-4 py-12 space-y-12">
+<div class="flex min-h-screen bg-slate-950 font-sans text-slate-300">
+    
+    <%- include('partials/admin-sidebar', { active: 'equipos' }) %>
+
+    <main class="flex-1 ml-64 p-8 relative overflow-y-auto min-h-screen space-y-12">
 
   <% if (locals.messages) { %>
     <% if (messages.success) { %>
@@ -254,7 +257,9 @@
     </div>
   </div>
 
-</main>
+    </main>
+
+</div>
 
 <script>
   // 1. Script de la Preview

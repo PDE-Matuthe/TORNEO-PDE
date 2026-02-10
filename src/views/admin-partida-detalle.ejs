@@ -1,5 +1,4 @@
 <%- include('partials/head') %>
-<%- include('partials/nav') %>
 
 <script>
   const EQUIPO_AZUL_ID = "<%= partida.azul_id %>";
@@ -11,7 +10,11 @@
   const STATS_EXISTENTES = <%- JSON.stringify(stats || []) %>;
 </script>
 
-<main class="max-w-7xl mx-auto px-4 py-10">
+<div class="flex min-h-screen bg-slate-950 font-sans text-slate-300">
+    
+    <%- include('partials/admin-sidebar', { active: 'partidas' }) %>
+
+    <main class="flex-1 ml-64 p-8 relative overflow-y-auto min-h-screen">
 
   <div class="flex items-center justify-between mb-8">
     <h1 class="text-3xl font-black text-white italic uppercase">
@@ -80,7 +83,7 @@
 
   </div>
 </main>
-
+</div>
 <div id="champModal" class="fixed inset-0 bg-black/80 z-50 hidden flex flex-col items-center justify-center p-4">
   <div class="bg-slate-800 w-full max-w-4xl h-[80vh] rounded-2xl flex flex-col border border-slate-600 shadow-2xl">
     <div class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-900 rounded-t-2xl">

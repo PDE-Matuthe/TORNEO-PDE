@@ -6,41 +6,33 @@ import * as equiposModel from '../models/equipos.js'
 import * as partidasModel from '../models/partidas.js'
 import * as jugadoresModel from '../models/jugadores.js'
 import * as estadisticasModel from '../models/estadisticas.js' 
-import { getPartidasBracket } from '../models/partidas.js';
-import { getTorneoActivo } from '../models/torneos.js'; 
-import Parser from 'rss-parser'; // <--- IMPORTANTE: Importar el parser
+import Parser from 'rss-parser'; 
 
-// Instancia del parser
+// Instancia del parser RSS para YouTube
 const parser = new Parser();
 
 export async function getHome (req, res) {
   try {
-    // 1. Obtener datos de la BD (Lo que ya tenías)
     const torneoActivo = await torneosModel.getTorneoActivo()
     const allTorneos = await torneosModel.getAllTorneos();
     const allEquipos = await equiposModel.getAllEquipos();
     const allJugadores = await jugadoresModel.getAllJugadores();
     const allPartidas = await partidasModel.getAllPartidas();
 
-    // 2. LÓGICA YOUTUBE AUTOMÁTICA
-    // Reemplaza 'UC...' con TU ID REAL que conseguiste en el Paso 1
+    // LÓGICA YOUTUBE AUTOMÁTICA
     const YOUTUBE_CHANNEL_ID = 'UCtGaMEQCeCmmSiiYGWXFAhg'; 
     let videosYoutube = [];
 
     try {
-        // Leemos el feed RSS oficial de YouTube
         const feed = await parser.parseURL(`https://www.youtube.com/feeds/videos.xml?channel_id=${YOUTUBE_CHANNEL_ID}`);
-        
-        // Tomamos los primeros 3 videos y formateamos los datos
         videosYoutube = feed.items.slice(0, 3).map(video => ({
-            id: video.id.split(':')[2], // El ID viene como 'yt:video:VIDEO_ID'
+            id: video.id.split(':')[2], 
             titulo: video.title,
             link: video.link,
             fecha: new Date(video.pubDate).toLocaleDateString()
         }));
     } catch (err) {
         console.error('Error cargando YouTube:', err.message);
-        // Si falla, dejamos el array vacío para que no rompa la página
         videosYoutube = []; 
     }
 
@@ -51,7 +43,6 @@ export async function getHome (req, res) {
         partidas: allPartidas.length 
     };
 
-    // Preparar datos si no hay torneo
     if (!torneoActivo) {
       return res.render('home', {
         error: 'No hay torneo activo',
@@ -59,13 +50,12 @@ export async function getHome (req, res) {
         stats,
         partidasHoy: [],
         ultimasPartidas: [],
-        videosYoutube // <--- Pasamos los videos a la vista
+        videosYoutube
       })
     }
 
     const partidasTorneo = await partidasModel.getPartidasByTorneo(torneoActivo.id)
     
-    // Filtros de fechas y resultados
     const hoyString = new Date().toISOString().split('T')[0];
     const partidasHoy = partidasTorneo.filter(p => new Date(p.fecha_partida).toISOString().split('T')[0] === hoyString);
     
@@ -79,7 +69,7 @@ export async function getHome (req, res) {
       stats,
       partidasHoy,
       ultimasPartidas,
-      videosYoutube // <--- Pasamos los videos a la vista
+      videosYoutube
     })
 
   } catch (error) {
@@ -123,13 +113,13 @@ export async function getEquipoRoster (req, res) {
 
 export const getBracket = async (req, res) => {
   try {
-    const torneo = await getTorneoActivo();
+    const torneo = await torneosModel.getTorneoActivo();
     
     if (!torneo) {
         return res.render('bracket', { partidas: [], torneo: null });
     }
 
-    const partidas = await getPartidasBracket(torneo.id);
+    const partidas = await partidasModel.getPartidasBracket(torneo.id);
 
     res.render('bracket', { 
         partidas, 
@@ -153,19 +143,14 @@ export async function getTorneosAnteriores (req, res) {
   }
 }
 
-/**
- * GET /ranking - Ranking MVP (Vista 'mvp.ejs')
- */
 export const getRanking = async (req, res) => {
   try {
-    const torneo = await getTorneoActivo();
+    const torneo = await torneosModel.getTorneoActivo();
     
-    // Si no hay torneo, renderizamos la vista 'mvp' vacía
     if (!torneo) {
         return res.render('mvp', { ranking: [] }); 
     }
 
-    // Usamos el modelo corregido
     const ranking = await estadisticasModel.getMVPRanking(torneo.id);
 
     res.render('mvp', { 
@@ -178,7 +163,6 @@ export const getRanking = async (req, res) => {
   }
 };
 
-// --- PERFIL DE JUGADOR ---
 export async function getPerfilJugador (req, res) {
   try {
     const { id } = req.params
@@ -259,7 +243,6 @@ export async function getBracketTorneo (req, res) {
 
     const partidas = await partidasModel.getPartidasByTorneo(id)
 
-    // Agrupar por fase
     const fases = {}
     partidas.forEach(p => {
       if (!fases[p.fase_torneo]) fases[p.fase_torneo] = []
@@ -306,7 +289,6 @@ export async function getMVPTorneo (req, res) {
 
     const ranking = await estadisticasModel.getMVPRanking(id)
 
-    // Renderizamos 'mvp' también aquí para consistencia
     res.render('mvp', { 
       torneo, 
       ranking,
@@ -318,8 +300,11 @@ export async function getMVPTorneo (req, res) {
   }
 }
 
+// --- ESTA ES LA FUNCIÓN QUE DABA ERROR ---
+// Ahora usa modelos en lugar de llamar a 'db' directamente
 export async function getAdminDashboard (req, res) {
   try {
+    // AQUÍ ESTÁ EL CAMBIO: Usamos tus modelos en lugar de 'db'
     const [equipos, jugadores, partidas, torneoActivo] = await Promise.all([
       equiposModel.getAllEquipos(),
       jugadoresModel.getAllJugadores(),
