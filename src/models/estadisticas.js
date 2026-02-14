@@ -142,12 +142,16 @@ export async function deleteEstadisticasByPartida (partidaId) {
  * Ranking MVP (Para el Torneo) - CORREGIDO
  * Usa LEFT JOIN para equipos y BIN_TO_UUID directamente
  */
-export async function getMVPRanking (torneoId) {
+/**
+ * Ranking MVP (Sistema de Puntos Ponderado)
+ * Premia la constancia y el avance en el torneo, no solo el KDA de una partida.
+ */
+export async function getMVPRanking(torneoId) {
     try {
-      const [rows] = await pool.query(`
+        const [rows] = await pool.query(`
         SELECT 
             j.nombre_invocador,
-            j.rol_juego,  -- <--- AGREGADO: Para el filtro de Rol
+            j.rol_juego,
             BIN_TO_UUID(e.jugador_id) as id,
             COALESCE(eq.nombre, 'Agente Libre') as equipo_nombre,
             COALESCE(eq.logo_url, 'https://via.placeholder.com/50') as equipo_logo,
@@ -157,7 +161,16 @@ export async function getMVPRanking (torneoId) {
             COALESCE(SUM(e.deaths), 0) as total_deaths,
             COALESCE(SUM(e.assists), 0) as total_assists,
             
-            (COALESCE(SUM(e.kills),0) + COALESCE(SUM(e.assists),0)) / GREATEST(COALESCE(SUM(e.deaths),0), 1) as kda_ratio
+            (COALESCE(SUM(e.kills),0) + COALESCE(SUM(e.assists),0)) / GREATEST(COALESCE(SUM(e.deaths),0), 1) as kda_ratio,
+
+            -- NUEVA FORMULA (Sin puntos por participar)
+            (
+                (SUM(e.kills) * 3) +                 -- 3 pts por Kill
+                (SUM(e.assists) * 1.5) +             -- 1.5 pts por Assist
+                (SUM(e.deaths) * -1) +               -- -1 pt por Death
+                (SUM(CASE WHEN e.win = 1 THEN 10 ELSE 0 END)) + -- 10 pts por Victoria
+                (AVG(e.cs_min) * 1)                  -- 1 pt por cada CS/min
+            ) as mvp_score
 
         FROM estadisticas e
         JOIN partidas p ON e.partida_id = p.id
@@ -166,11 +179,12 @@ export async function getMVPRanking (torneoId) {
         
         WHERE p.torneo_id = UUID_TO_BIN(?)
         GROUP BY e.jugador_id, j.nombre_invocador, j.rol_juego, eq.id, eq.nombre, eq.logo_url
-        ORDER BY kda_ratio DESC
-        LIMIT 100 -- <--- AUMENTADO: Para que los filtros encuentren gente
+        
+        ORDER BY mvp_score DESC
+        LIMIT 100
       `, [torneoId]);
-      
-      return rows;
+
+        return rows;
     } catch (error) {
         console.error('Error SQL en getMVPRanking:', error.message);
         return [];

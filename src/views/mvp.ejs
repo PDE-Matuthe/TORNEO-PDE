@@ -3,31 +3,65 @@
 
 <main class="max-w-6xl mx-auto px-4 py-12 min-h-screen">
 
-  <div class="text-center mb-10">
+  <div class="text-center mb-10 relative">
       <h1 class="text-5xl md:text-7xl font-black text-white italic uppercase tracking-tighter mb-2 drop-shadow-lg">
           MVP Ranking
       </h1>
-      <p class="text-slate-400 uppercase tracking-widest text-xs font-bold">Estadísticas Globales</p>
+      <p class="text-slate-400 uppercase tracking-widest text-xs font-bold">Camino a la Leyenda</p>
   </div>
 
   <% if (typeof ranking !== 'undefined' && ranking.length > 0) { %>
 
       <div class="sticky top-20 z-50 bg-slate-900/95 backdrop-blur-md p-4 rounded-xl border border-slate-700 shadow-2xl mb-12 flex flex-col md:flex-row gap-4 items-center justify-between">
           
-          <div class="relative w-full md:w-96 group">
+          <div class="relative w-full md:w-80 group">
               <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                   <i class="fas fa-search text-slate-500 group-focus-within:text-yellow-500 transition-colors"></i>
               </div>
               <input type="text" id="searchInput" autocomplete="off"
-                     class="block w-full p-3 pl-10 text-sm text-white bg-slate-950 border border-slate-700 rounded-lg focus:ring-yellow-500 focus:border-yellow-500 placeholder-slate-500 transition-all" 
-                     placeholder="Buscar jugador para ir a su posición...">
+                     class="block w-full p-2.5 pl-10 text-sm text-white bg-slate-950 border border-slate-700 rounded-lg focus:ring-yellow-500 focus:border-yellow-500 placeholder-slate-500 transition-all" 
+                     placeholder="Buscar jugador...">
               
               <div id="searchResults" class="absolute top-full left-0 w-full mt-2 bg-slate-800 border border-slate-700 rounded-lg shadow-2xl hidden max-h-60 overflow-y-auto z-50 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-900">
-                  </div>
+              </div>
           </div>
 
-          <div class="flex gap-4 w-full md:w-auto">
-              <select id="roleFilter" class="bg-slate-950 border border-slate-700 text-white text-sm rounded-lg focus:ring-yellow-500 focus:border-yellow-500 block w-full p-2.5 cursor-pointer hover:bg-slate-900 transition">
+          <div class="flex gap-3 w-full md:w-auto items-center">
+              
+              <div class="relative group">
+                  <button class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2.5 rounded-lg border border-slate-700 text-sm font-bold transition-colors">
+                      <i class="fas fa-info-circle text-yellow-500"></i>
+                      <span class="hidden md:inline">Sistema de Puntos</span>
+                  </button>
+                  
+                  <div class="absolute right-0 top-full mt-2 w-64 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl p-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 translate-y-2 group-hover:translate-y-0">
+                      <h4 class="text-yellow-500 font-bold uppercase text-xs mb-3 border-b border-slate-800 pb-2">Cómo se calculan los puntos</h4>
+                      <ul class="space-y-2 text-xs text-slate-300">
+                          <li class="flex justify-between">
+                              <span><i class="fas fa-skull text-red-400 w-4"></i> Kill</span>
+                              <span class="font-bold text-green-400">+3 pts</span>
+                          </li>
+                          <li class="flex justify-between">
+                              <span><i class="fas fa-hands-helping text-blue-400 w-4"></i> Asistencia</span>
+                              <span class="font-bold text-green-400">+1.5 pts</span>
+                          </li>
+                          <li class="flex justify-between">
+                              <span><i class="fas fa-cross text-slate-500 w-4"></i> Muerte</span>
+                              <span class="font-bold text-red-400">-1 pt</span>
+                          </li>
+                          <li class="flex justify-between">
+                              <span><i class="fas fa-crown text-yellow-500 w-4"></i> Victoria</span>
+                              <span class="font-bold text-green-400">+10 pts</span>
+                          </li>
+                          <li class="flex justify-between">
+                              <span><i class="fas fa-coins text-yellow-600 w-4"></i> Farm (CS/min)</span>
+                              <span class="font-bold text-green-400">+1 pt</span>
+                          </li>
+                      </ul>
+                  </div>
+              </div>
+
+              <select id="roleFilter" class="bg-slate-950 border border-slate-700 text-white text-sm rounded-lg focus:ring-yellow-500 focus:border-yellow-500 block w-full md:w-40 p-2.5 cursor-pointer hover:bg-slate-900 transition">
                   <option value="all">Todos los Roles</option>
                   <option value="TOP">Top</option>
                   <option value="JUNGLE">Jungle</option>
@@ -38,8 +72,7 @@
           </div>
       </div>
 
-      <div id="dynamicContent" class="min-h-[50vh]">
-          </div>
+      <div id="dynamicContent" class="min-h-[50vh]"></div>
       
       <div id="noResults" class="hidden text-center py-20">
           <i class="fas fa-filter text-4xl text-slate-700 mb-4"></i>
@@ -57,25 +90,18 @@
 </main>
 
 <script>
-    // 1. OBTENER DATOS
     const allPlayers = <%- JSON.stringify(ranking) %>;
-    
-    // Referencias al DOM
     const container = document.getElementById('dynamicContent');
     const noResults = document.getElementById('noResults');
     const roleFilter = document.getElementById('roleFilter');
-    
-    // Referencias Buscador
     const searchInput = document.getElementById('searchInput');
     const searchResults = document.getElementById('searchResults');
-
-    // Mapeo de roles
     const roleMap = { 'TOP': 'Top', 'JUNGLE': 'Jungle', 'JGL': 'Jungle', 'MID': 'Mid', 'MIDDLE': 'Mid', 'ADC': 'ADC', 'BOT': 'ADC', 'SUPPORT': 'Support', 'SUPP': 'Support' };
 
     // --- GENERADORES DE HTML ---
 
     function getPodiumCardHTML(player, displayRank) {
-        let heightClass = "h-64"; 
+        let heightClass = "h-64";
         let colorClass = "border-slate-700 bg-slate-900";
         let iconColor = "text-slate-600";
         let bgNumberColor = "text-white/5"; 
@@ -86,7 +112,7 @@
             orderClass = "order-first md:order-none";
             colorClass = "border-yellow-500/50 bg-gradient-to-b from-yellow-900/20 to-slate-900 shadow-[0_0_50px_rgba(234,179,8,0.2)]";
             iconColor = "text-yellow-400";
-            bgNumberColor = "text-yellow-500/10"; 
+            bgNumberColor = "text-yellow-500/10";
         } else if (displayRank === 2) {
             heightClass = "h-72";
             colorClass = "border-slate-400/50 bg-gradient-to-b from-slate-700/20 to-slate-900";
@@ -97,10 +123,12 @@
             iconColor = "text-orange-400";
         }
 
+        const score = Math.round(player.mvp_score || 0); 
         const kda = Number(player.kda_ratio || 0).toFixed(2);
+        
         const rolDisplay = roleMap[(player.rol_juego || '').toUpperCase()] || (player.rol_juego || 'FILL');
         const profileLink = `/jugador/${player.id}`; 
-        const cardId = `player-${player.id}`; // ID ÚNICO PARA SCROLL
+        const cardId = `player-${player.id}`;
 
         return `
             <a href="${profileLink}" id="${cardId}" class="w-full md:w-1/3 ${heightClass} ${colorClass} ${orderClass} border rounded-t-2xl flex flex-col items-center justify-end p-6 relative group transition-all duration-500 animate-fade-in-up overflow-hidden hover:brightness-110 scroll-mt-40">
@@ -117,22 +145,26 @@
                          <span class="w-1 h-1 bg-slate-600 rounded-full"></span>
                          <span class="text-[10px] font-bold text-yellow-600 uppercase tracking-widest bg-slate-900/50 px-1 rounded">${rolDisplay}</span>
                     </div>
+                 
                     <div class="flex items-center justify-center gap-4 bg-slate-900/60 backdrop-blur-md py-3 rounded-lg border border-white/10 shadow-xl relative group-hover:border-yellow-500/30 transition-colors">
                         <div class="text-center px-4">
-                            <div class="text-3xl font-black ${iconColor} italic leading-none">${kda}</div>
-                            <div class="text-[9px] text-slate-500 uppercase font-bold tracking-widest mt-1">KDA RATIO</div>
+                            <div class="text-3xl font-black ${iconColor} italic leading-none">${score}</div>
+                            <div class="text-[9px] text-slate-500 uppercase font-bold tracking-widest mt-1">PUNTOS MVP</div>
                         </div>
                     </div>
+                    <div class="mt-2 text-[10px] text-slate-500 font-mono">KDA: ${kda}</div>
                 </div>
             </a>
         `;
     }
 
     function getListItemHTML(player, displayRank) {
+        const score = Math.round(player.mvp_score || 0);
         const kda = Number(player.kda_ratio || 0).toFixed(2);
+        
         const rolDisplay = roleMap[(player.rol_juego || '').toUpperCase()] || (player.rol_juego || 'FILL');
         const profileLink = `/jugador/${player.id}`;
-        const cardId = `player-${player.id}`; // ID ÚNICO PARA SCROLL
+        const cardId = `player-${player.id}`;
 
         return `
             <a href="${profileLink}" id="${cardId}" class="flex items-center bg-slate-900 border border-slate-800 p-4 rounded-lg hover:border-slate-600 hover:bg-slate-800 transition group animate-fade-in block scroll-mt-40">
@@ -142,31 +174,30 @@
                      <div>
                          <div class="text-white font-bold uppercase italic tracking-tight text-lg leading-none group-hover:text-yellow-400 transition">${player.nombre_invocador}</div>
                          <div class="flex items-center gap-2 mt-1">
-                             <span class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">${player.equipo_nombre}</span>
+                              <span class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">${player.equipo_nombre}</span>
                              <span class="text-slate-700">•</span>
                              <span class="text-slate-500 text-[10px] font-bold uppercase">${rolDisplay}</span>
-                         </div>
+                          </div>
                      </div>
                 </div>
                 <div class="flex items-center gap-8 text-right">
+                    <div class="hidden md:block">
+                         <div class="text-sm font-bold text-slate-500">${kda}</div>
+                         <div class="text-[8px] text-slate-700 uppercase font-bold">KDA</div>
+                    </div>
                     <div class="w-24">
-                        <div class="text-2xl font-black text-yellow-500 italic text-shadow-glow">${kda}</div>
-                        <div class="text-[9px] text-slate-600 uppercase font-bold tracking-wider">KDA</div>
+                        <div class="text-2xl font-black text-yellow-500 italic text-shadow-glow">${score}</div>
+                        <div class="text-[9px] text-slate-600 uppercase font-bold tracking-wider">PUNTOS</div>
                     </div>
                 </div>
             </a>
         `;
     }
 
-    // --- LÓGICA DE VISTA PRINCIPAL (Solo Filtro de Rol) ---
-
     function updateView() {
-        const selectedRole = roleFilter.value; 
-
-        // Filtrar solo por ROL (El buscador es independiente ahora)
+        const selectedRole = roleFilter.value;
         const filteredPlayers = allPlayers.filter(p => {
             const role = (p.rol_juego || 'FILL').toUpperCase();
-            
             let matchRole = (selectedRole === 'all');
             if (!matchRole) {
                 if (selectedRole === 'JUNGLE') matchRole = (role === 'JUNGLE' || role === 'JGL');
@@ -183,12 +214,10 @@
         }
         noResults.classList.add('hidden');
 
-        // Generar HTML
         const podiumPlayers = filteredPlayers.slice(0, 3);
         const listPlayers = filteredPlayers.slice(3);
         let html = '';
 
-        // Podio
         if (podiumPlayers.length > 0) {
             let podiumVisualOrder = [];
             if (podiumPlayers.length === 1) podiumVisualOrder = [podiumPlayers[0]];
@@ -203,7 +232,6 @@
             html += `</div>`;
         }
 
-        // Lista
         if (listPlayers.length > 0) {
             html += `<div class="space-y-3 animate-fade-in">`;
             listPlayers.forEach(p => {
@@ -215,35 +243,27 @@
         container.innerHTML = html;
     }
 
-    // --- LÓGICA DEL BUSCADOR (AUTOCOMPLETE + SCROLL) ---
-
     function handleSearch(e) {
         const query = e.target.value.toLowerCase();
-        
         if (query.length < 1) {
             searchResults.innerHTML = '';
             searchResults.classList.add('hidden');
             return;
         }
-
-        // Buscar en TODOS los jugadores (no importa el filtro actual)
         const matches = allPlayers.filter(p => p.nombre_invocador.toLowerCase().includes(query));
-
         if (matches.length > 0) {
             searchResults.classList.remove('hidden');
             searchResults.innerHTML = matches.map(p => {
-                // Calcular su posición global
                 const globalRank = allPlayers.indexOf(p) + 1;
-                
                 return `
                     <div class="px-4 py-3 hover:bg-slate-700 cursor-pointer border-b border-slate-700/50 last:border-0 flex justify-between items-center transition-colors"
                          onclick="scrollToPlayer('${p.id}')">
                         <div class="flex items-center gap-3">
                             <img src="${p.equipo_logo}" class="w-8 h-8 object-contain" onerror="this.src='https://via.placeholder.com/32'">
-                            <div>
+                             <div>
                                 <div class="text-white font-bold text-sm">${p.nombre_invocador}</div>
                                 <div class="text-xs text-slate-400">${p.equipo_nombre}</div>
-                            </div>
+                             </div>
                         </div>
                         <div class="text-yellow-500 font-bold italic text-xs">#${globalRank}</div>
                     </div>
@@ -255,28 +275,17 @@
         }
     }
 
-    // Función para saltar al jugador
     window.scrollToPlayer = function(playerId) {
-        // 1. Ocultar dropdown y limpiar input
         searchResults.classList.add('hidden');
         searchInput.value = '';
-
-        // 2. Verificar si el elemento existe en el DOM actual
         let element = document.getElementById(`player-${playerId}`);
-
-        // 3. Si no existe (porque el filtro de ROL lo oculta), reseteamos el filtro
         if (!element) {
-            roleFilter.value = 'all'; // Resetear select
-            updateView(); // Regenerar vista con todos
-            // Volver a buscar el elemento tras el render
+            roleFilter.value = 'all';
+            updateView();
             element = document.getElementById(`player-${playerId}`);
         }
-
-        // 4. Scroll y resaltar
         if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
-            // Efecto Flash visual
             element.classList.add('ring-4', 'ring-yellow-500', 'ring-offset-4', 'ring-offset-slate-900');
             setTimeout(() => {
                 element.classList.remove('ring-4', 'ring-yellow-500', 'ring-offset-4', 'ring-offset-slate-900');
@@ -284,20 +293,14 @@
         }
     };
 
-    // Event Listeners
     roleFilter.addEventListener('change', updateView);
     searchInput.addEventListener('input', handleSearch);
-
-    // Cerrar buscador si clic fuera
     document.addEventListener('click', (e) => {
         if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
             searchResults.classList.add('hidden');
         }
     });
-
-    // Cargar inicial
     updateView();
-
 </script>
 
 <style>
@@ -307,8 +310,6 @@
         to { opacity: 1; transform: translateY(0); }
     }
     .animate-fade-in-up { animation: fade-in-up 0.5s ease-out forwards; }
-    
-    /* Scroll offset para que el sticky header no tape la tarjeta al scrollear */
     .scroll-mt-40 { scroll-margin-top: 10rem; }
 </style>
 
